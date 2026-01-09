@@ -1,12 +1,17 @@
 {
   "name": "rd",
-  "version": "1.0.0",
-  "description": "RD Pos-System",
+  "version": "0.0.2",
+  "description": "RD Pos-System-Desktop",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/degetmateo/pos-system-desktop"
+  },
   "main": "src/app/index.js",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make"
+    "make": "electron-forge make",
+    "publish": "electron-forge publish"
   },
   "keywords": [],
   "author": "degetmateo",
@@ -26,6 +31,7 @@
   },
   "dependencies": {
     "electron-squirrel-startup": "^1.0.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "update-electron-app": "^3.1.2"
   }
 }
