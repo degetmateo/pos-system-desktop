@@ -2,20 +2,32 @@
 <html>
   <head>
     <meta charset="UTF-8" />
+    
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <meta
-      http-equiv="X-Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'"
-    />
-    <title>Hello from Electron renderer!</title>
+      content="
+        default-src 'self';
+        script-src 'self';
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data:;
+        media-src 'self';
+      "
+    >
+
+    <title>RD Pos-System</title>
+
+    <link rel="stylesheet" href="/public/styles/normalize.css" />
+    <link rel="stylesheet" href="/public/styles/main.css" />
+    <link rel="stylesheet" href="/public/components/navigation/navigation.css" />
+    <link rel="stylesheet" href="/public/views/home/home-view.css" />
+    <link rel="stylesheet" href="/public/views/scanner/scanner-view.css" />
+    <link rel="stylesheet" href="/public/views/database/database-view.css">
+
+    <script src="/public/lib/navigo.min.js"></script>
+    <script src="/public/lib/zxing.min.js"></script>
   </head>
   <body>
-    <h1>Hello from Electron renderer!</h1>
-    <p>👋</p>
-    <p id="info"></p>
+    <div class="app" id="app"></div>
   </body>
-  <script src="./renderer.js"></script>
+  <script type="module" src="/public/index.js"></script>
 </html>

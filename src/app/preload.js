@@ -1,8 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
-contextBridge.exposeInMainWorld("app", {
+contextBridge.exposeInMainWorld("api", {
     node: process.versions.node,
     chrome: process.versions.chrome,
     electron: process.versions.electron,
-    ping: () => ipcRenderer.invoke('ping')
+    ping: () => ipcRenderer.invoke('ping'),
+    ip: () => ipcRenderer.invoke('get-local-ip')
 });

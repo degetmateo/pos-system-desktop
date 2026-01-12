@@ -1,6 +1,6 @@
 {
   "name": "rd",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "RD Pos-System-Desktop",
   "repository": {
     "type": "git",
@@ -30,8 +30,12 @@
     "electron": "^39.2.7"
   },
   "dependencies": {
+    "better-sqlite3": "^12.6.0",
     "electron-squirrel-startup": "^1.0.1",
     "express": "^5.2.1",
+    "keytar": "^7.9.0",
+    "node-cron": "^4.2.1",
+    "postgres": "^3.4.8",
     "update-electron-app": "^3.1.2"
   }
 }
