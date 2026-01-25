@@ -21,7 +21,7 @@ class Database {
         this.migrations_dir = path.join(__dirname, '/migrations/');
         this.backups_dir = path.join(app.getPath('userData'), '/backups/');
 
-        this.db = new SQLite(this.database_dir, { verbose: console.log });
+        this.db = new SQLite(this.database_dir);
     };
 
     init () {
@@ -115,4 +115,6 @@ class Database {
     };
 };
 
-module.exports = new Database(); 
+const database = new Database();
+module.exports = database;
+module.exports.database = database.db;

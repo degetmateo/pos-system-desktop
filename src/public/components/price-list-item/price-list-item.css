@@ -1,0 +1,10 @@
+.price-list-item {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    gap: 10px;
+
+    font-size: 20px;
+}

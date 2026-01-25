@@ -2,6 +2,15 @@ import ErrorView from "./views/error/ErrorView.js";
 import HomeView from "./views/home/HomeView.js";
 import ScannerView from "./views/scanner/ScannerView.js";
 import DatabaseView from "./views/database/DatabaseView.js";
+import NewProductView from "./views/new-product/NewProductView.js";
+import PriceListsView from "./views/price-lists/PriceListsView.js";
+import ProductsView from "./views/products.view.js";
+import ProductView from "./views/product.view.js";
+
+import CustomersCreateView from "./views/customers.create.view.js";
+import OrdersCreateView from "./views/orders.create.view.js";
+import OrdersView from "./views/orders.view.js";
+import OrderView from "./views/order.view.js";
 
 class Router {
     constructor () {
@@ -12,6 +21,14 @@ class Router {
             home: new HomeView(),
             scanner: new ScannerView(),
             database: new DatabaseView(),
+            newProduct: new NewProductView(),
+            priceLists: new PriceListsView(),
+            products: new ProductsView(),
+            product: new ProductView(),
+            customers_create: new CustomersCreateView(),
+            orders_create: new OrdersCreateView(),
+            orders: new OrdersView(),
+            order: new OrderView(),
             error: new ErrorView(),
             // tc: new TermsConditionsView(),
             // landing: new LandingView(),
@@ -45,6 +62,14 @@ class Router {
             .on("/", () => this.views.home.init())
             .on("/scanner", () => this.views.scanner.init())
             .on('/database', () => this.views.database.init())
+            .on('/new-product', () => this.views.newProduct.init())
+            .on('/price-lists', () => this.views.priceLists.init())
+            .on('/products', () => this.views.products.init())
+            .on('/products/:id', ({ data }) => this.views.product.init(data))
+            .on('/new-customer', () => this.views.customers_create.init())
+            .on('/new-order', () => this.views.orders_create.init())
+            .on('/orders', () => this.views.orders.init())
+            .on('/orders/:id', ({ data }) => this.views.order.init(data))
             // .on("/home", () => this.views.home.init())
             // .on("/explore", ({ data, params }) => this.views.explore.init(data, params))
             // .on("/settings", () => this.views.settings.init())

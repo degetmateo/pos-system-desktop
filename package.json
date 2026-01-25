@@ -27,15 +27,20 @@
     "@electron-forge/plugin-fuses": "^7.10.2",
     "@electron-forge/publisher-github": "^7.10.2",
     "@electron/fuses": "^1.8.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "electron": "^39.2.7"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.0",
     "electron-squirrel-startup": "^1.0.1",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "keytar": "^7.9.0",
+    "multer": "^2.0.2",
     "node-cron": "^4.2.1",
+    "pdfmake": "^0.2.23",
     "postgres": "^3.4.8",
-    "update-electron-app": "^3.1.2"
+    "update-electron-app": "^3.1.2",
+    "uuid": "^13.0.0"
   }
 }

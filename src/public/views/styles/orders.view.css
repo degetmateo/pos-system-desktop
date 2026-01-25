@@ -1,0 +1,42 @@
+.orders-view-table-container {
+    overflow-y: scroll;
+    height: calc(100vh - 101px);
+}
+
+.orders-view-table {
+    width: 100%;
+}
+
+.orders-view-buttons-container {
+    width: 100%;
+    height: 100px;
+
+    border-top: 1px solid #000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.orders-view-button {
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    width: 125px;
+    height: 40px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #000;
+    border: 1px solid #000;
+}
+
+.orders-view-button:hover {
+    background-color: gray;
+}
+
+/* .orders-view-row:hover {
+    cursor: pointer;
+    background-color: gray;
+} */

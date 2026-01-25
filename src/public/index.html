@@ -6,7 +6,8 @@
     <meta
       http-equiv="Content-Security-Policy"
       content="
-        default-src 'self';
+        default-src 'self' blob: http://localhost:4000/;
+        connect-src 'self' blob: http://localhost:4000/;
         script-src 'self';
         style-src 'self' 'unsafe-inline';
         img-src 'self' data:;
@@ -14,17 +15,38 @@
       "
     >
 
-    <title>RD Pos-System</title>
+    <title>Ruben Dario</title>
 
     <link rel="stylesheet" href="/public/styles/normalize.css" />
     <link rel="stylesheet" href="/public/styles/main.css" />
+
+    <link rel="stylesheet" href="/public/views/styles/products.view.css" />
+
     <link rel="stylesheet" href="/public/components/navigation/navigation.css" />
+    <link rel="stylesheet" href="/public/components/price-list-item/price-list-item.css" />
+    <link rel="stylesheet" href="/public/components/popup-confirm/popup-confirm.css">
+
     <link rel="stylesheet" href="/public/views/home/home-view.css" />
     <link rel="stylesheet" href="/public/views/scanner/scanner-view.css" />
     <link rel="stylesheet" href="/public/views/database/database-view.css">
+    <link rel="stylesheet" href="/public/views/new-product/new-product-view.css">
+    <link rel="stylesheet" href="/public/views/price-lists/price-lists-view.css">
+
+    <link rel="stylesheet" href="/public/components/styles/product.item.css" />
+
+    <link rel="stylesheet" href="/public/views/styles/product.view.css" />
+    <link rel="stylesheet" href="/public/components/styles/product.card.css" />
+
+    <link rel="stylesheet" href="/public/views/styles/customers.create.view.css">
+    <link rel="stylesheet" href="/public/views/styles/orders.create.view.css" />
+    <link rel="stylesheet" href="/public/views/styles/orders.view.css" />
+    <link rel="stylesheet" href="/public/views/styles/order.view.css" />
 
     <script src="/public/lib/navigo.min.js"></script>
     <script src="/public/lib/zxing.min.js"></script>
+    <script src="/public/lib/gridjs.umd.js"></script>
+
+    <link rel="stylesheet" href="/public/lib/styles/mermaid.min.css" />
   </head>
   <body>
     <div class="app" id="app"></div>

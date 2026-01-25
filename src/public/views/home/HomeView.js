@@ -36,6 +36,6 @@ export default class HomeView extends GenericView {
         const infoReq = await fetch("/api/info");
         const infoRes = await infoReq.json();
 
-        this.ipSpan.textContent =infoRes.ip;
+        this.ipSpan.textContent = infoRes.ip;
     };
 };

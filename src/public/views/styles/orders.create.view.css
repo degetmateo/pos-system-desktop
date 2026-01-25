@@ -1,0 +1,95 @@
+.orders-create-container {
+    box-sizing: border-box;
+
+    width: 100%;
+    height: 100%;
+
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto;
+}
+
+.orders-create-form-container {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 10px;
+    border-right: 1px solid #000;
+}
+
+.orders-create-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.orders-create-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.orders-create-button {
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    padding: 8px;
+    font-size: 18px;
+    color: #000;
+    text-transform: uppercase;
+    font-weight: bold;
+    border: 1px solid #000;
+}
+
+/* .orders-create-button-create {
+    background-color: darkblue;
+}
+
+.orders-create-button-reset {
+    background-color: firebrick;
+} */
+
+.orders-create-button:hover {
+    background-color: gray;
+}
+
+.orders-create-light {
+    width: 100%;
+    height: 50px;
+    border: 1px solid #000;
+}
+
+.orders-create-light-success {
+    background-color: green;
+}
+
+.orders-create-light-error {
+    background-color: red;
+}
+
+.orders-create-products-container {
+    padding: 10px;
+    height: calc(100vh - 20px);
+    overflow-y: scroll;
+}
+
+.orders-create-products-table {
+    width: 100%;
+}
+
+.orders-create-price-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.orders-create-price {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 3px;
+
+    font-size: 20px;
+    font-weight: bold;
+} 

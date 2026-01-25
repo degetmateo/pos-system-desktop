@@ -10,7 +10,6 @@
 .view {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 20px;
 
     width: 100%;
     height: 100%;

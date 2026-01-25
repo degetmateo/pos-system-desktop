@@ -1,9 +1,13 @@
 const express = require('express');
 const path = require('path');
 
-const infoRouter = require('./routes/info.js');
-const productsRouter = require('./routes/products.js');
-const databaseRouter = require('./routes/database.js');
+const productsRouter = require('./routes/products.router.js');
+const infoRouter = require('./routes/info.router.js');
+const customersRouter = require('./routes/customers.router.js');
+const ordersRouter = require('./routes/orders.router.js');
+
+const PUBLIC_PATH = path.join(__dirname, '../public');
+const HTML_PATH = path.join(PUBLIC_PATH, 'index.html');
 
 module.exports = class Server {
     constructor () {
@@ -11,15 +15,17 @@ module.exports = class Server {
         this.app.set("port", 4000);
     
         this.paths = {
-            info: '/api/info',
             products: '/api/products',
-            database: "/api/database"
+            info: '/api/info',
+            customers: '/api/customers',
+            orders: '/api/orders'
         };
     };
 
     middlewares () {
         this.app.use(express.json());
-        this.app.use('/public', express.static(path.join(__dirname, '../public')));
+        this.app.use(express.urlencoded({ extended: true }));
+        this.app.use('/public', express.static(PUBLIC_PATH));
 
         this.app.use((_, res, next) => {
             res.setHeader('X-Frame-Options', 'SAMEORIGIN');
@@ -29,12 +35,13 @@ module.exports = class Server {
     };
 
     routes () {
-        this.app.use(this.paths.info, infoRouter);
         this.app.use(this.paths.products, productsRouter);
-        this.app.use(this.paths.database, databaseRouter);
+        this.app.use(this.paths.info, infoRouter);
+        this.app.use(this.paths.customers, customersRouter);
+        this.app.use(this.paths.orders, ordersRouter);
 
         this.app.use((_, res) => {
-            res.sendFile(path.join(__dirname, "../public/index.html"));
+            res.sendFile(HTML_PATH);
         });
     };
 

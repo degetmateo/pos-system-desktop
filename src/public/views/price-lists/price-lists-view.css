@@ -1,0 +1,39 @@
+.price-lists-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+}
+
+.price-lists-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+
+    font-size: 20px;
+}
+
+.price-list-name-input {
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.price-list-create-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.price-list-create-button:hover {
+    background-color: #eee;
+}
+
+.price-lists-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
