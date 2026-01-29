@@ -33,6 +33,10 @@ export default class OrdersCreateView extends GenericView {
                             <button id="order-create-customer-button" class="order-create-customer-button">
                                 Buscar Cliente
                             </button>
+                            <button 
+                                id="order-create-button-customer-delete" 
+                                class="order-create-customer-button"
+                            >Eliminar Cliente</button>
                         </div>
 
                         <div class="order-create-payment-container">
@@ -144,6 +148,13 @@ export default class OrdersCreateView extends GenericView {
         });
 
         this.container.addEventListener('click', async (event) => {
+            if (event.target.matches('#order-create-button-customer-delete')) {
+                const storage = JSON.parse(localStorage.getItem('order'));
+                storage.customer = null;
+                localStorage.setItem('order', JSON.stringify(storage));
+                this.draw();
+            };
+
             if (event.target.matches('#order-create-customer-button')) {
                 router.navigateTo('/customers?to=order');
             };
