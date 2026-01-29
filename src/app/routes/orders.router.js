@@ -156,9 +156,9 @@ router.post('/', (req, res) => {
                     const order_item_id = uuid.v4();
 
                     database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date);
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_major);
                 };
             } else {
                 for (const item of items) {
@@ -195,18 +195,19 @@ router.post('/', (req, res) => {
                         const discount_id = uuid.v4();
 
                         database.prepare(`
-                            INSERT INTO discounts (id, minor_price_id, order_id)
-                            VALUES (?, ?, ?);
-                        `).run(discount_id, minor_price_id, order_id);
+                            INSERT INTO discounts (id, minor_price_id, order_id, product_id, original_price, discount_price)
+                            VALUES (?, ?, ?, ?, ?, ?);
+                        `).run(discount_id, minor_price_id, order_id, product.id, product.price_minor, minor_price);
                     };
 
                     amount += minor_price * quantity;
 
                     const order_item_id = uuid.v4();
+
                     database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date);
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_minor);
                 };
             };
 
@@ -302,11 +303,13 @@ router.get('/receipt/:id', async (req, res) => {
         const response = await request.json();
         const order = response.data[0];
 
+        req.query.action === 'print' ?
+            res.setHeader('Content-Disposition', `inline; filename=factura_${order_id}.pdf`) :
+            res.setHeader('Content-Disposition', `attachment; filename=factura_${order_id}.pdf`);
+
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=factura_${order_id}.pdf`);
 
         const doc = PDFCreator.receipt(order);
-
         doc.pipe(res);
         doc.end();
     } catch (error) {

@@ -49,3 +49,16 @@
 .orders-view-button:hover {
     background-color: gray;
 }
+
+.order-view-table-row-td-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+
+    align-items: center;
+    justify-content: space-around;
+}
+
+.order-view-pdf-link {
+    font-size: 18px;
+}

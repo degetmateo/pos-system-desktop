@@ -20,20 +20,48 @@ class PDFCreator {
                 { text: 'Producto', style: 'tableHeader' },
                 { text: 'Cant.', style: 'tableHeader', alignment: 'center' },
                 { text: 'Precio Unit.', style: 'tableHeader', alignment: 'right' },
+                { text: 'Precio c/Descuento', style: 'tableHeader', alignment: 'right' },
                 { text: 'Subtotal', style: 'tableHeader', alignment: 'right' }
             ]
         ];
 
         order.items.forEach(item => {
-            const precio = order.type === 'major' ? item.product.price_major : item.product.price_minor;
-            const subtotal = precio * item.quantity;
+            if (order.discounts && order.discounts.length > 0) {
+                const index = order.discounts.findIndex((d) => d.product_id === item.product.id);
 
-            tableBody.push([
-                item.product.name,
-                { text: item.quantity.toString(), alignment: 'center' },
-                { text: `$${(precio / 100).toLocaleString()}`, alignment: 'right' },
-                { text: `$${(subtotal / 100).toLocaleString()}`, alignment: 'right' }
-            ]);
+                if (index < 0) {
+                    const subtotal = item.price * item.quantity;
+                    
+                    tableBody.push([
+                        item.product.name,
+                        { text: item.quantity.toString(), alignment: 'center' },
+                        { text: `$${(item.price / 100).toLocaleString()}`, alignment: 'right' },
+                        { text: `N/D`, alignment: 'right' },
+                        { text: `$${(subtotal / 100).toLocaleString()}`, alignment: 'right' }
+                    ]);
+                } else {
+                    const discount = order.discounts[index];
+                    const subtotal = discount.discount_price * item.quantity;
+
+                    tableBody.push([
+                        item.product.name,
+                        { text: item.quantity.toString(), alignment: 'center' },
+                        { text: `$${(discount.original_price / 100).toLocaleString()}`, alignment: 'right' },
+                        { text: `$${(discount.discount_price / 100).toLocaleString()}`, alignment: 'right' },
+                        { text: `$${(subtotal / 100).toLocaleString()}`, alignment: 'right' }
+                    ]);
+                };
+            } else {
+                const subtotal = item.price * item.quantity;
+                
+                tableBody.push([
+                    item.product.name,
+                    { text: item.quantity.toString(), alignment: 'center' },
+                    { text: `$${(item.price / 100).toLocaleString()}`, alignment: 'right' },
+                    { text: `N/D`, alignment: 'right' },
+                    { text: `$${(subtotal / 100).toLocaleString()}`, alignment: 'right' }
+                ]);
+            }
         });
 
         const definition = {
@@ -74,7 +102,7 @@ class PDFCreator {
                 {
                     table: {
                         headerRows: 1,
-                        widths: ['*', 'auto', 'auto', 'auto'],
+                        widths: ['*', 'auto', 'auto', 'auto', 'auto'],
                         body: tableBody
                     },
                     layout: 'lightHorizontalLines'

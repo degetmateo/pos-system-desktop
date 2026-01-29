@@ -61,6 +61,32 @@ export default class OrdersView extends GenericView {
             if (event.target.matches('#orders-view-button-next')) {
                 this.next();
             };
+
+            if (event.target.matches('.order-view-pdf-link')) {
+                event.preventDefault();
+
+                const href = event.target.getAttribute('href');
+                const iframe = document.createElement('iframe');
+
+                const timestamp = new Date().getTime();
+
+                iframe.src = `${href}&t=${timestamp}`;
+                document.body.append(iframe);
+
+                iframe.style = `
+                    style="position: absolute; left: -10000px; top: 0; width: 1px; height: 1px;"
+                `;
+
+                iframe.onload = () => {
+                    iframe.focus();
+                    iframe.contentWindow.print();
+                    setTimeout(() => iframe.remove(), 2000);
+                };
+
+                iframe.onerror = (error) => {
+                    console.log(error);
+                };
+            };
         });
 
         this.offset = 0;
@@ -100,8 +126,15 @@ export default class OrdersView extends GenericView {
                     <td id="${order.id}" class="order-view-table-row-td">${order.type === 'major' ? "MAYORISTA" : "MINORISTA"}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.total_price / 100}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()} - ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
-                    <td id="${order.id}" class="order-view-table-row-td">
-                        <a href="/api/orders/receipt/${order.id}">Descargar Factura</a>
+                    <td id="${order.id}" class="order-view-table-row-td order-view-table-row-td-actions">
+                        <a 
+                            class="order-view-pdf-link" 
+                            href="/api/orders/receipt/${order.id}?action=save"
+                        >Descargar</a>
+                        <a 
+                            class="order-view-pdf-link" 
+                            href="/api/orders/receipt/${order.id}?action=print"
+                        >Imprimir</a>
                     </td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.status.toUpperCase()}</td>
                 </tr>
