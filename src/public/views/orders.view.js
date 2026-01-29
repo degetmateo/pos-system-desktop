@@ -102,22 +102,21 @@ export default class OrdersView extends GenericView {
 
             row.classList.add('orders-view-row');
 
+            const date = new Date(order.created_at);
+
+            date.getDate();
+
             row.innerHTML = `
                 <td>${order.number}</td>
-                <td>${order.customer ? order.customer.name : 'Sin asignar'}</td>
-                <td>${order.type === 'major' ? "Mayorista" : "Minorista"}</td>
+                <td>${order.customer ? order.customer.name : 'SIN ASIGNAR'}</td>
+                <td>${order.type === 'major' ? "MAYORISTA" : "MINORISTA"}</td>
                 <td>${order.total_price / 100}</td>
-                <td>${new Date(order.created_at).toLocaleDateString()}</td>
+                <td>${date.toLocaleDateString()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
                 <td>
                     <a href="/api/orders/receipt/${order.id}">Descargar Factura</a>
                 </td>
                 <td>${order.status}</td>
             `;
-
-            // row.addEventListener('click', (event) => {
-            //     event.preventDefault();
-            //     router.navigateTo('/orders/'+order.id);
-            // });
 
             this.body.append(row);
         };

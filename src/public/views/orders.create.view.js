@@ -1,4 +1,6 @@
 import Navigation from "../components/navigation/navigation.js";
+import audioManager from "../modules/audio.manager.js";
+import router from "../router.js";
 import GenericView from "./GenericView.js";
 
 export default class OrdersCreateView extends GenericView {
@@ -14,355 +16,417 @@ export default class OrdersCreateView extends GenericView {
         this.container.classList.add('container', 'orders-create-container');
         this.view.append(this.container);
 
-        this.formContainer = document.createElement('div');
-        this.formContainer.classList.add('orders-create-form-container');
-        this.container.append(this.formContainer);
+        this.container.innerHTML = `
+            <div class="order-create-container-r1">
+                <div class="order-create-container-c1">
+                    <div class="order-create-info-container">
+                        <select id="order-create-type" class="order-create-type">
+                            <option value="major">MAYORISTA</option>
+                            <option value="minor">MINORISTA</option>
+                        </select>
 
-        this.form = document.createElement('form');
-        this.form.classList.add('orders-create-form');
-        this.formContainer.append(this.form);
+                        <div class="order-create-customer-container">
+                            <div 
+                                id="order-create-customer" 
+                                class="order-create-customer"
+                            >CLIENTE SIN ASIGNAR</div>
+                            <button id="order-create-customer-button" class="order-create-customer-button">
+                                Buscar Cliente
+                            </button>
+                        </div>
 
-        this.selectType = document.createElement('select');
-        this.form.append(this.selectType);
+                        <div class="order-create-payment-container">
+                            <span class="order-create-payment-title">
+                                Metodo de Pago
+                            </span>
+                            <select id="order-create-payment-method" class="order-create-payment-method">
+                                <option value=null>Sin Asignar</option>
+                                <option value="cash">Efectivo</option>
+                                <option value="transfer">Transferencia</option>
+                                <option value="card">Tarjeta</option>
+                                <option value="current_account">Cuenta Corriente</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="order-create-inputs-container">
+                        <input 
+                            type="text" 
+                            placeholder="Código de Barras" 
+                            id="order-create-input-barcode"
+                            class="order-create-input-barcode" 
+                        />
+                        <button 
+                            type="button" 
+                            id="order-create-button-product-search"
+                            class="order-create-button-product-search"
+                        >Producto Manual</button>
+                    </div>
+                    <div class="order-create-total-container">
+                        <span
+                            id="order-create-total"
+                            class="order-create-total"
+                        >$0</span>
+                    </div>
 
-        this.selectType.innerHTML = `
-            <option value="major">Mayorista</option>
-            <option value="minor">Minorista</option>
+                    <div class="order-create-buttons-container">
+                        <button
+                            type="button"
+                            id="order-create-button-create"
+                            class="order-create-button order-create-button-create"
+                        >Crear Orden</button>
+                        <button
+                            type="button"
+                            id="order-create-button-reset"
+                            class="order-create-button order-create-button-reset"
+                        >Reiniciar</button>
+                    </div>
+                </div>
+                <div class="order-create-container-c2">
+                    <table class="order-create-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Precio</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody
+                            id="order-create-table-body"
+                        ></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="order-create-container-r2" class="order-create-container-r2">
+                <div
+                    id="order-create-discounts-container"
+                    class="order-create-discounts-container"
+                ></div>
+
+                <div
+                    id="order-create-message-container"
+                    class="order-create-message-container"
+                ></div>
+            </div>
         `;
 
-        this.selectCustomer = document.createElement('select');
-        this.form.append(this.selectCustomer);
+        this.container.addEventListener('change', (event) => {
+            if (event.target.matches('#order-create-type')) {
+                const storage = JSON.parse(localStorage.getItem('order'));
+                storage.type = document.querySelector('#order-create-type').value;
+                localStorage.setItem('order', JSON.stringify(storage));
 
-        this.selectCustomer.innerHTML = `
-            <option value="none">Sin asignar</option>
-        `;
+                this.check_discounts();
+                this.draw();
+            };
 
-        this.barcode = document.createElement('input');
-        this.barcode.type = 'text';
-        this.barcode.placeholder = 'Código de Barras';
-        this.form.append(this.barcode);
+            if (event.target.matches('#order-create-payment-method')) {
+                const storage = JSON.parse(localStorage.getItem('order'));
+                storage.payment_method = document.querySelector('#order-create-payment-method').value;
+                localStorage.setItem('order', JSON.stringify(storage));
+            };
 
-        this.priceContainer = document.createElement('div');
-        this.priceContainer.classList.add('orders-create-price-container');
-        this.form.append(this.priceContainer);
+            if (event.target.matches('.order-create-input-quantity')) {
+                const product_id = event.target.getAttribute('id');
+                const value = event.target.value;
 
-        this.price = document.createElement('span');
-        this.price.classList.add('orders-create-price');
-        this.price.innerHTML = `
-            <span>$</span>
-            <span>0</span>
-        `;
-        this.priceContainer.append(this.price);
+                const storage = JSON.parse(localStorage.getItem('order'));
+                const index = storage.items.findIndex((p) => p.id === product_id);
+                storage.items[index].quantity = Number(value);
 
-        this.buttons = document.createElement('div');
-        this.buttons.classList.add('orders-create-buttons');
-        this.form.append(this.buttons);
+                localStorage.setItem('order', JSON.stringify(storage));
 
-        this.button = document.createElement('button');
-        this.button.classList.add('orders-create-button', 'orders-create-button-create');
-        this.button.type = 'button';
-        this.button.textContent = 'Crear Orden';
-        this.buttons.append(this.button);
-
-        this.buttonCancel = document.createElement('button');
-        this.buttonCancel.classList.add('orders-create-button', 'orders-create-button-reset');
-        this.buttonCancel.type = 'button';
-        this.buttonCancel.textContent = 'Reiniciar';
-        this.buttons.append(this.buttonCancel);
-
-        this.message = document.createElement('span');
-        this.message.hidden = true;
-        this.form.append(this.message);
-
-        this.light = document.createElement('div');
-        this.light.classList.add('orders-create-light');
-        this.form.append(this.light);
-
-        this.form.addEventListener('submit', (event) => {
-            event.preventDefault();
-        });
-
-        this.button.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.submit();
-        });
-
-        this.buttonCancel.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.reset();
-        });
-
-        this.barcode.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') {
-                this.fetch_product();
+                this.check_discounts();
+                this.draw();
             };
         });
 
-        this.selectType.addEventListener('change', (event) => {
-            event.preventDefault();
-            this.calculate_price();
-            this.draw_products();
-        });
-
-        this.total = 0;
-        this.products = [];
-
-        this.productsContainer = document.createElement('div');
-        this.productsContainer.classList.add('orders-create-products-container');
-        this.container.append(this.productsContainer);
-
-        this.table = document.createElement('table');
-        this.table.classList.add('orders-create-products-table');
-        this.productsContainer.append(this.table);
-
-        this.table.innerHTML = `
-            <thead>
-                <tr>
-                    <th>Código</th>
-                    <th>Nombre</th>
-                    <th>Precio p/Unidad</th>
-                    <th>Cantidad</th>
-                    <th>Subtotal</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-        `;
-
-        this.tbody = document.createElement('tbody');
-        this.table.append(this.tbody);
-
-
-        this.timeout = null;
-    };
-
-    async init () {
-        this.app.innerHTML = '';
-        this.app.append(this.view);
-        this.barcode.focus();
-        localStorage.setItem('items', JSON.stringify([]));
-        this.clear();
-        this.fetch_customers();
-    };
-
-    async fetch_customers () {
-        try {
-            const request = await fetch('/api/customers', { method: "GET" });
-            const response = await request.json();
-
-            if (!request.ok) throw new Error();
-
-            const customers = response.data;
-
-            for (const customer of customers) {
-                this.selectCustomer.innerHTML += `
-                    <option value="${customer.id}">${customer.name}</option>
-                `;
+        this.container.addEventListener('click', async (event) => {
+            if (event.target.matches('#order-create-customer-button')) {
+                router.navigateTo('/customers?to=order');
             };
-        } catch (error) {
-            console.error(error);
-        };
-    };
 
-    clear () {
-        this.barcode.value = '';
-        this.selectCustomer.innerHTML = `
-            <option value="none">Sin asignar</option>
-        `;
-    };
+            if (event.target.matches('#order-create-button-product-search')) {
+                router.navigateTo('/products?to=order');
+            };
 
-    async fetch_product () {
-        try {
-            const barcode = this.barcode.value;
-
-            if (!barcode || barcode === '') return;
-
-            this.barcode.value = '';
-
-            const request = await fetch("/api/products?barcode="+barcode, {
-                method: "GET"
-            });
-
-            const response = await request.json();
-            if (!request.ok) throw new Error(response.error.message);
-
-            const product = response.data[0];
-
-            let flag = false;
-            for (let i = 0; i < this.products.length; i++) {
-                if (this.products[i].id === product.id) {
-                    flag = true;
-                    this.products[i].name = product.name;
-                    this.products[i].barcode = product.barcode;
-                    this.products[i].quantity += 1;
-                    this.products[i].price_major = product.price_major;
-                    this.products[i].price_minor = product.price_minor;
-                    break;
+            if (event.target.matches('#order-create-button-create')) {
+                try {
+                    const request = await fetch('/api/orders', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: localStorage.getItem('order')
+                    });
+                    const response = await request.json();
+                    if (!request.ok) throw new Error(response.error.message);
+                    this.reset();
+                    this.show_message("Orden creada correctamente.", false);
+                } catch (error) {
+                    console.error(error);
+                    this.show_message(error.message, true);
                 };
             };
 
-            if (!flag) {
-                this.products.push({
-                    id: product.id,
-                    barcode: product.barcode,
-                    name: product.name,
-                    quantity: 1,
-                    price_major: product.price_major,
-                    price_minor: product.price_minor
-                });
+            if (event.target.matches('#order-create-button-reset')) {
+                this.reset();
             };
 
-            this.calculate_price();
-            this.barcode.focus();
-            this.draw_products();
+            if (event.target.matches('.order-create-button-delete')) {
+                const id = event.target.getAttribute('id');
+                const storage = JSON.parse(localStorage.getItem('order'));
 
-            this.light.classList.remove('orders-create-light-error');
-            this.light.classList.add('orders-create-light-success');
-        } catch (error) {
-            console.error(error);
-            this.light.classList.remove('orders-create-light-success');
-            this.light.classList.add('orders-create-light-error');
-        };
-    };
+                storage.items = storage.items.filter((p) => p.id !== id);
+                storage.discounts = storage.discounts.filter((d) => d.product_id !== id);
 
-    calculate_price () {
-        const type = this.selectType.value;
-        let price = 0;
+                localStorage.setItem('order', JSON.stringify(storage));
 
-        for (const product of this.products) {
-            if (type === 'major') {
-                price += product.price_major * product.quantity;
-            } else if (type === 'minor') {
-                price += product.price_minor * product.quantity;
+                this.check_discounts();
+                this.draw();
             };
-        };
+        });
 
-        this.total = price;
+        this.container.addEventListener('keydown', async (event) => {
+            if (event.target.matches('#order-create-input-barcode')) {                
+                if (event.key === 'Enter') {
+                    try {
+                        const barcode = document.querySelector('#order-create-input-barcode').value;
+                        if (!barcode || !barcode.trim()) return;
 
-        this.price.innerHTML = `
-            <span>$</span>
-            <span>${price / 100}</span>
-        `;
-    };
+                        document.querySelector('#order-create-input-barcode').value = '';
 
-    draw_products () {
-        this.tbody.innerHTML = '';
-        
-        for (let i = 0; i < this.products.length; i++) {
-            const row = document.createElement('tr');
+                        const request = await fetch("/api/products?barcode="+barcode, {
+                            method: "GET"
+                        });
 
-            const cBarcode = document.createElement('td');
-            const cName = document.createElement('td');
-            const cPrice = document.createElement('td');
-            const cQuantity = document.createElement('td');
-            const cSubtotal = document.createElement('td');
-            const cActions = document.createElement('td');
+                        const response = await request.json();
+                        if (!request.ok) throw new Error(response.error.message);
 
-            const price = (this.selectType.value === 'major' ? this.products[i].price_major : this.products[i].price_minor);
+                        const product = response.data[0];
+                        const storage = JSON.parse(localStorage.getItem('order'));
+                        const index = storage.items.findIndex((p) => p.id === product.id);
 
-            cBarcode.textContent = this.products[i].barcode;
-            cName.textContent = this.products[i].name;
-            cPrice.textContent = (price/100);
-            cSubtotal.textContent = (this.products[i].quantity * price)/100;
-            
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.value = this.products[i].quantity;
-            input.min = 1;
-            cQuantity.append(input);
+                        if (index >= 0) {
+                            storage.items[index].quantity += 1;
+                        } else {
+                            storage.items.push({
+                                id: product.id,
+                                quantity: 1,
+                                price: 0,
+                                data: product
+                            });
+                        };
 
-            input.addEventListener('change', (event) => {
-                event.preventDefault();
-                let value = input.value;
-                if (!value || value <= 0) {
-                    input.value = 1;
-                    value = 1;
-                }
-
-                this.products[i].quantity = value;
-                this.calculate_price();
-                this.draw_products();
-            });
-
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.textContent = 'Eliminar';
-            cActions.append(button);
-
-            button.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.products = this.products.filter((p) => p.id !== this.products[i].id);
-                this.calculate_price();
-                this.draw_products();
-            });
-
-            row.append(cBarcode);
-            row.append(cName);
-            row.append(cPrice);
-            row.append(cQuantity);
-            row.append(cSubtotal);
-            row.append(cActions);
-
-            this.tbody.prepend(row);
-        };
-    };
-
-    async submit () {
-        try {
-            const request = await fetch('/api/orders', {
-                method: "POST",
-                headers: {
-                    "Content-type": "application/json"
-                },
-                body: JSON.stringify({
-                    customer_id: this.selectCustomer.value,
-                    type: this.selectType.value,
-                    items: this.products.map((p) => ({
-                        id: p.id,
-                        quantity: p.quantity
-                    }))
-                })
-            });
-
-            const response = await request.json();
-            if (!request.ok) throw new Error(response.error.message);
-
-            this.reset();
-            this.barcode.focus();
-            this.show_message("Orden creada correctamente.", false);
-        } catch (error) {
-            console.error(error);
-            this.show_message(error.message, true);
-        };
+                        localStorage.setItem('order', JSON.stringify(storage));
+                        this.check_discounts();
+                        this.draw();
+                        audioManager.play('success');
+                    } catch (error) {
+                        console.error(error);
+                        audioManager.play('error');
+                    };
+                };
+            };
+        });
     };
 
     reset () {
-        this.products = [];
-        this.tbody.innerHTML = '';
-        this.form.reset();
-        this.calculate_price();
-        this.total = 0;
+        localStorage.setItem('order', JSON.stringify({
+            type: "major",
+            payment_method: null,
+            customer: null,
+            items: [],
+            discounts: []
+        }));
+        document.querySelector('#order-create-message-container').innerHTML = '';
+        this.check_discounts();
+        this.draw();
     };
- 
-    show_message (text, error = false) {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
+
+    async init (url) {
+        this.app.innerHTML = '';
+        this.app.append(this.view);
+
+        if (!localStorage.getItem('order')) {
+            localStorage.setItem('order', JSON.stringify({
+                type: "major",
+                payment_method: null,
+                customer: null,
+                items: [],
+                discounts: []
+            }));
         };
 
-        this.message.hidden = false;
-        this.message.textContent = text;
+        if (url.params) {
+            if (url.params.product_id) {
+                try {
+                    const request = await fetch('/api/products?id='+url.params.product_id, { method: "GET" });
+                    const response = await request.json();
+                    if (!request.ok) throw new Error(response.error.message);
 
-        if (error) {
-            this.message.classList.remove('message-success');
-            this.message.classList.add('message-error');
+                    const product = response.data[0];
+                    const storage = JSON.parse(localStorage.getItem('order'));
+                    const index = storage.items.findIndex((p) => p.id === product.id);
+
+                    if (index >= 0) {
+                        storage.items[index].quantity += 1;
+                    } else {
+                        storage.items.push({
+                            id: product.id,
+                            quantity: 1,
+                            price: 0,
+                            data: product
+                        });
+                    };
+
+                    localStorage.setItem('order', JSON.stringify(storage));
+                    this.check_discounts();
+                } catch (error) {
+                    console.error(error);
+                };
+            };
+
+            if (url.params.customer_id) {
+                try {
+                    const request = await fetch('/api/customers?id='+url.params.customer_id, { method: "GET" });
+                    const response = await request.json();
+                    if (!request.ok) throw new Error(response.error.message);
+    
+                    const customer = response.data[0];
+                    const storage = JSON.parse(localStorage.getItem('order'));
+    
+                    storage.customer = customer;
+    
+                    localStorage.setItem('order', JSON.stringify(storage));
+                    this.draw();
+                } catch (error) {
+                    console.error(error);
+                };
+            };
+        };
+
+        this.draw();
+    };
+
+    check_discounts () {
+        const storage = JSON.parse(localStorage.getItem('order'));
+
+        storage.discounts = [];
+
+        if (storage.type === 'minor') {
+            for (let i = 0; i < storage.items.length; i++) {
+                const quantity = storage.items[i].quantity;
+                const product = storage.items[i].data;
+
+                let minor_price_id = null;
+                let minor_price_condition = 0;
+                let minor_price = product.price_minor;
+
+                const minor_prices = product.minor_prices;
+                for (let j = 0; j < minor_prices.length; j++) {
+                    if (quantity >= minor_prices[j].condition_value) {
+                        if (minor_price_condition < minor_prices[j].condition_value) {
+                            minor_price_id = minor_prices[j].id;
+                            minor_price_condition = minor_prices[j].condition_value;
+                            minor_price = minor_prices[j].price_value;
+                        };
+                    };
+                };
+                if (minor_price_id) {
+                    storage.discounts.push({
+                        id: minor_price_id,
+                        product_id: product.id
+                    });
+
+                    storage.items[i].price = minor_price;
+                } else {
+                    storage.items[i].price = product.price_minor;
+                };
+            };
         } else {
-            this.message.classList.remove('message-error');
-            this.message.classList.add('message-success');
+            storage.discounts = [];
+
+            for (let i = 0; i < storage.items.length; i++) {
+                storage.items[i].price = storage.items[i].data.price_major;
+            };
         };
 
-        this.timeout = setTimeout(() => {
-            this.message.hidden = true;
-            this.timeout = null;
-        }, 6000);
+        localStorage.setItem('order', JSON.stringify(storage));
+    };
+
+    draw () {
+        const storage = JSON.parse(localStorage.getItem('order'));
+        storage.type ?
+            document.querySelector('#order-create-type').value = storage.type :
+            document.querySelector('#order-create-type').value = 'major';
+        document.querySelector('#order-create-payment-method').value = storage.payment_method;
+
+        storage.customer ?
+            document.querySelector('#order-create-customer').textContent = storage.customer.name :
+            document.querySelector('#order-create-customer').textContent = 'CLIENTE SIN ASIGNAR';
+
+        document.querySelector('#order-create-table-body').innerHTML = '';
+        
+        for (let i = storage.items.length - 1; i >= 0; i--) {
+            const product = storage.items[i].data;
+            const price = storage.items[i].price;
+            document.querySelector('#order-create-table-body').innerHTML += `
+                <tr>
+                    <td>${product.barcode}</td>
+                    <td>${product.name}</td>
+                    <td>${price / 100}</td>
+                    <td>
+                        <input 
+                            type="number"
+                            value=${storage.items[i].quantity}
+                            placeholder="Cantidad"
+                            id="${product.id}"
+                            class="order-create-input-quantity"
+                        />
+                    </td>
+                    <td>${(storage.items[i].quantity * price) / 100}</td>
+                    <td>
+                        <button
+                            id="${product.id}"
+                            class="order-create-button-delete"
+                            type="button"
+                        >Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        };
+
+        document.querySelector('#order-create-discounts-container').innerHTML = '';
+        for (let i = 0; i < storage.discounts.length; i++) {
+            const item = storage.items.find((p) => p.id === storage.discounts[i].product_id);
+            const product = item.data;
+            const minor_price = product.minor_prices.find((m) => m.id === storage.discounts[i].id);
+            document.querySelector('#order-create-discounts-container').innerHTML += `
+                <span>Se aplica descuento: <b>${product.name}</b> | Cantidad mayor a <b>${minor_price.condition_value}</b></span>
+            `;
+        };
+
+        document.querySelector('#order-create-total').textContent = '$'+this.calculate_total().toLocaleString('es-ES');
+    };  
+
+    calculate_total () {
+        const storage = JSON.parse(localStorage.getItem('order'));
+        const items = storage.items;
+
+        let amount = 0;
+        for (let i = 0; i < items.length; i++) {
+            amount += items[i].price * items[i].quantity;
+        };
+        return amount / 100;
+    };
+
+    show_message (message, error = false) {
+        document.querySelector('#order-create-message-container').innerHTML = `
+            <span 
+                id="order-create-message" 
+                class="order-create-message ${error ? 'order-create-message-error' : 'order-create-message-success'}"
+            >${message}</span>
+        `;
     };
 };

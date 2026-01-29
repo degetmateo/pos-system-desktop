@@ -5,65 +5,55 @@ export default class Navigation extends HTMLElement {
         super();
         this.classList.add('navigation');
 
-        this.buttonHome = document.createElement('button');
-        this.buttonProducts = document.createElement('button');
-        this.buttonNewProduct = document.createElement('button');
-        this.buttonPriceLists = document.createElement('button');
-        this.buttonNewCustomer = document.createElement('button');
-        this.buttonNewOrder = document.createElement('button');
-        this.buttonOrders = document.createElement('button');
+        this.innerHTML = `
+            <button
+                type="button"
+                href="/"
+                class="navigation-button"
+            >Inicio</button>
 
-        this.buttonHome.textContent = "Inicio";
-        this.buttonPriceLists.textContent = 'Listas';
-        this.buttonProducts.textContent = 'Productos';
-        this.buttonNewProduct.textContent = 'Nuevo Producto';
-        this.buttonNewCustomer.textContent = 'Nuevo Cliente';
-        this.buttonNewOrder.textContent = 'Nueva Orden';
-        this.buttonOrders.textContent = 'Órdenes';
+            <button
+                type="button"
+                href="/new-product"
+                class="navigation-button"
+            >Nuevo Producto</button>
 
-        this.buttonHome.classList.add('navigation-button');
-        this.buttonPriceLists.classList.add('navigation-button');
-        this.buttonProducts.classList.add('navigation-button');
-        this.buttonNewProduct.classList.add('navigation-button');
-        this.buttonNewCustomer.classList.add('navigation-button');
-        this.buttonNewOrder.classList.add('navigation-button');
-        this.buttonOrders.classList.add('navigation-button');
+            <button
+                type="button"
+                href="/products"
+                class="navigation-button"
+            >Productos</button>
 
-        this.buttonHome.addEventListener('click', () => {
-            router.navigateTo('/');
+            <button
+                type="button"
+                href="/new-customer"
+                class="navigation-button"
+            >Nuevo Cliente</button>
+
+            <button
+                type="button"
+                href="/customers"
+                class="navigation-button"
+            >Clientes</button>
+
+            <button
+                type="button"
+                href="/new-order"
+                class="navigation-button"
+            >Nueva Orden</button>
+
+            <button
+                type="button"
+                href="/orders"
+                class="navigation-button"
+            >Ordenes</button>
+        `;
+
+        this.addEventListener('click', (event) => {
+            if (event.target.matches('.navigation-button')) {
+                router.navigateTo(event.target.getAttribute('href'));
+            };
         });
-
-        this.buttonPriceLists.addEventListener('click', () => {
-            router.navigateTo('/price-lists');
-        });
-
-        this.buttonProducts.addEventListener('click', () => {
-            router.navigateTo('/products');
-        });
-
-        this.buttonNewProduct.addEventListener('click', () => {
-            router.navigateTo('/new-product');
-        });
-
-        this.buttonNewCustomer.addEventListener('click', (e) => {
-            router.navigateTo('/new-customer');
-        });
-
-        this.buttonNewOrder.addEventListener('click', () => {
-            router.navigateTo('/new-order');
-        });
-
-        this.buttonOrders.addEventListener('click', () => {
-            router.navigateTo('/orders');
-        });
-
-        this.append(this.buttonHome);
-        // this.append(this.buttonPriceLists);
-        this.append(this.buttonNewProduct);
-        this.append(this.buttonProducts);
-        this.append(this.buttonNewCustomer);
-        this.append(this.buttonNewOrder);
-        this.append(this.buttonOrders);
     };
 };
 

@@ -1,4 +1,5 @@
 import Navigation from "../components/navigation/navigation.js";
+import audioManager from "../modules/audio.manager.js";
 import router from "../router.js";
 import GenericView from "./GenericView.js";
 
@@ -11,141 +12,154 @@ export default class ProductsView extends GenericView {
         this.view.append(new Navigation());
 
         this.container = document.createElement('div');
-        this.container.classList.add('products-container');
+        this.container.classList.add('products-view-container');
         this.view.append(this.container);
 
-        this.inputContainer = document.createElement('div');
-        this.inputContainer.classList.add('products-input-container');
-        this.container.append(this.inputContainer)
+        this.container.innerHTML = `
+            <div class="products-view-filters-container">
+                <input 
+                    type="text" 
+                    placeholder="Filtrar por Nombre" 
+                    id="products-view-name-input"
+                    class="products-view-input products-view-name-input"
+                />
 
-        this.input = document.createElement('input');
-        this.input.type = 'text';
-        this.input.placeholder = 'Filtrar por Nombre';
-        this.input.classList.add('products-input');
-        this.inputContainer.append(this.input);
+                <input
+                    type="text"
+                    placeholder="Código de Barras"
+                    id="products-view-barcode-input"
+                    class="products-view-input products-view-barcode-input"
+                />
+            </div>
 
-        this.input.addEventListener('change', () => {
-            this.onChange();
+            <div class="products-view-table-container">
+                <table class="products-view-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Stock</th>
+                            <th>Precio Mayorista</th>
+                            <th>Precio Minorista</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="products-view-table-body">
+                    
+                    </tbody>
+                </table>
+            </div>
+
+            <div
+                class="products-view-buttons-container"
+            >
+                <button
+                    type="button"
+                    id="products-view-button-previous"
+                    class="products-view-button"
+                >Anterior</button>
+
+                <button
+                    type="button"
+                    id="products-view-button-next"
+                    class="products-view-button"
+                >Siguiente</button>
+            </div>
+        `;
+
+        this.container.addEventListener('click', (event) => {
+            if (event.target.matches('#products-view-button-previous')) {
+                this.previous();
+            };
+
+            if (event.target.matches('#products-view-button-next')) {
+                this.next();
+            };
+
+            if (event.target.matches('.products-view-table-row-data')) {
+                router.navigateTo('/products/'+event.target.getAttribute('id'));
+            };
         });
 
-        this.list = document.createElement('div');
-        this.list.classList.add('products-products-list');
-        this.container.append(this.list);
-
-        this.table = document.createElement('table');
-        this.table.classList.add('products-table');
-        this.list.append(this.table);
-
-        this.thead = document.createElement('thead');
-        this.table.append(this.thead);
-
-        this.tr = document.createElement('tr');
-        this.thead.append(this.tr);
-
-        this.thBarcode = document.createElement('th');
-        this.thBarcode.textContent = 'Código';
-        this.tr.append(this.thBarcode);
-
-        this.thName = document.createElement('th');
-        this.thName.textContent = 'Nombre';
-        this.tr.append(this.thName);
-
-        this.thStock = document.createElement('th');
-        this.thStock.textContent = 'Stock';
-        this.tr.append(this.thStock);
-
-        this.thPriceMajor = document.createElement('th');
-        this.thPriceMajor.textContent = 'Precio Mayorista';
-        this.tr.append(this.thPriceMajor);
-
-        this.thPriceMinor = document.createElement('th');
-        this.thPriceMinor.textContent = 'Precio Minorista';
-        this.tr.append(this.thPriceMinor);
-
-        this.thDate = document.createElement('th');
-        this.thDate.textContent = 'Fecha';
-        this.tr.append(this.thDate);
-
-        this.tbody = document.createElement('tbody');
-        this.table.append(this.tbody);
-
-        this.buttonsContainer = document.createElement('div');
-        this.buttonsContainer.classList.add('products-view-buttons-container');
-        this.container.append(this.buttonsContainer);
-
-        this.buttonPrevious = document.createElement('button');
-        this.buttonPrevious.classList.add('products-view-button');
-        this.buttonPrevious.textContent = 'Anterior';
-        this.buttonsContainer.append(this.buttonPrevious);
-
-        this.buttonNext = document.createElement('button');
-        this.buttonNext.classList.add('products-view-button');
-        this.buttonNext.textContent = 'Siguiente';
-        this.buttonsContainer.append(this.buttonNext);
-
-        this.buttonPrevious.addEventListener('click', () => {
-            this.previous();
-        });
-
-        this.buttonNext.addEventListener('click', () => {
-            this.next();
+        this.container.addEventListener('keypress', async (event) => {
+            if (event.key === 'Enter') {
+                if (event.target.matches('#products-view-name-input')) {
+                    const name = event.target.value;
+                    const products = await this.fetch_products(name);
+                    this.draw_products(products);
+                };
+    
+                if (event.target.matches('#products-view-barcode-input')) {
+                    try {
+                        const barcode = event.target.value;
+                        const request = await fetch(`/api/products?barcode=${barcode}`, { method: "GET" });
+                        const response = await request.json();
+                        if(!request.ok) throw new Error(response.error.message);
+                        audioManager.play('success');
+                        event.target.value = '';
+                        router.navigateTo('/products/'+response.data[0].id);
+                    } catch (error) {
+                        console.error(error);
+                        audioManager.play('error');
+                    };
+                };
+            };
         });
 
         this.offset = 0;
         this.continue = true;
+        this.to = null;
     };
 
-    async init () {
+    async init (url) {
         this.app.innerHTML = '';
         this.app.append(this.view);
+        
+        this.continue = true;
         this.offset = 0;
+        this.to = null;
 
-        const products = await this.fetch_products(null);
+        if (url.params) {
+            if (url.params.to) {
+                this.to = url.params.to;
+            };
+        };
 
-        this.clear_products();
-        this.draw_products(products);
-    };
-
-    async onChange () {
-        const value = this.input.value;
-        const products = await this.fetch_products(value);
-
-        this.clear_products();
+        const products = await this.fetch_products();
         this.draw_products(products);
     };
 
     async fetch_products (name) {
-        if (!name) name = '';
-        const request = await fetch(`/api/products?name=${name}&offset=${this.offset}`, { method: "GET" });
-        const response = await request.json();
-        return response.data;
-    };
-
-    draw_products (products) {
-        for (const prod of products) {
-            const row = document.createElement('tr');
-            
-            row.classList.add('product-row');
-
-            row.addEventListener('click', () => {
-                router.navigateTo(`/products/${prod.id}`);
-            });
-
-            row.innerHTML = `
-                <td>${prod.barcode}</td>
-                <td>${prod.name}</td>
-                <td>${prod.stock}</td>
-                <td>${prod.price_major/100}</td>
-                <td>${prod.price_minor/100}</td>
-                <td>${new Date(prod.created_at).toLocaleDateString()}</td>
-            `;
-
-            this.tbody.append(row);
+        try {
+            if (!name || !name.trim()) name = '';
+            const request = await fetch(`/api/products?name=${name}&offset=${this.offset}`, { method: "GET" });
+            const response = await request.json();
+            if(!request.ok) throw new Error(response.error.message);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            return [];
         };
     };
 
-    clear_products () {
-        this.tbody.innerHTML = '';
+    draw_products (products) {
+        document.querySelector('#products-view-table-body').innerHTML = '';
+        for (const product of products) {
+            document.querySelector('#products-view-table-body').innerHTML += `
+                <tr class="product-view-table-row">
+                    <td id="${product.id}" class="products-view-table-row-data">${product.barcode}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${product.name}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${product.stock}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${product.price_major / 100}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${product.price_minor / 100}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${new Date(product.created_at).toLocaleDateString()}</td>
+                </tr>
+            `;
+        };
+    };
+
+    clear () {
+        document.querySelector('#products-view-table-body').innerHTML = '';
     };
 
     async previous () {
@@ -158,11 +172,8 @@ export default class ProductsView extends GenericView {
 
         this.continue = true;
 
-        this.clear_products();
-
-        const value = this.input.value;
-        const products = await this.fetch_products(value);
-  console.log(products);
+        const name = document.querySelector('#products-view-name-input').value;
+        const products = await this.fetch_products(name);
         this.draw_products(products);
     };
 
@@ -170,13 +181,13 @@ export default class ProductsView extends GenericView {
         if (!this.continue) return;
 
         this.offset += 20;
-        this.clear_products();
 
-        const value = this.input.value;
-        const products = await this.fetch_products(value);
+        const name = document.querySelector('#products-view-name-input').value;
+        const products = await this.fetch_products(name);
 
         if (!products || products.length <= 0) {
             this.continue = false;
+            this.offset -= 20;
             return;
         };
 

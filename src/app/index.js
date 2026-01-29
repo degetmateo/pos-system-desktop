@@ -1,6 +1,8 @@
 const { updateElectronApp } = require('update-electron-app');
 const { app, BrowserWindow, ipcMain, Menu, globalShortcut } = require('electron');
 
+if (require('electron-squirrel-startup')) app.quit();
+
 const path = require('path');
 const Server = require('./server.js');
 const getLanIp = require('./helpers/getLanIp.js');

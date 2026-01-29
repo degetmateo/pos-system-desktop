@@ -1,13 +1,12 @@
 const { Router } = require('express');
 const uuid = require('uuid');
-const Printer = require('pdfmake');
-const path = require('path');
 const { database } = require('../database/database.js');
 const { ResponseError, ResponseOk } = require('../helpers/controllerResponse.js');
 const responses = require('../static/responses.js');
 const InvalidArgumentError = require('../errors/invalidArgumentError.js');
 const NotFoundError = require('../errors/notFoundError.js');
 const GenericError = require('../errors/genericError.js');
+const PDFCreator = require('../helpers/pdf.creator.js');
 
 const router = Router();
 
@@ -30,6 +29,7 @@ router.get('/', (req, res) => {
                     o.customer_id,
                     o.total_price,
                     o.type,
+                    o.payment_method,
                     o.created_at,
                     o.updated_at,
                     o.status
@@ -84,6 +84,16 @@ router.get('/', (req, res) => {
 
                 orders[i].items = items;
             };
+
+            for (let i = 0; i < orders.length; i++) {
+                let discounts = database.prepare(`
+                    SELECT * FROM discounts WHERE order_id = :order_id;
+                `).all({ order_id: orders[i].id });
+
+                if (!discounts || discounts.length <= 0) discounts = [];
+
+                orders[i].discounts = discounts;
+            };
         })();
 
         ResponseOk(res, responses.OK, orders);
@@ -95,69 +105,144 @@ router.get('/', (req, res) => {
 
 router.post('/', (req, res) => {
     try {
-        let { customer_id, type, items } = req.body;
+        let {
+            type,
+            payment_method,
+            customer,
+            items 
+        } = req.body;
 
         if (!type) throw new InvalidArgumentError("Type is required.");
+        if (!['major', 'minor'].includes(type)) throw new InvalidArgumentError("Incorrect type.");
+        if (!['cash', 'transfer', 'card', 'current_account'].includes(payment_method)) payment_method = null;
         if (!items || items.length <= 0) throw new InvalidArgumentError("Items are required.");
 
-        if (customer_id === 'none') customer_id = null;
-
-        const order_id = uuid.v4();
-        const date = new Date().toISOString();
         
         database.transaction(() => {
+            const order_id = uuid.v4();
+            const date = new Date().toISOString();
+
             const orders_count = database.prepare(`
                 SELECT * FROM metadata WHERE key = :key;
             `).get({ key: 'orders-count' });
     
             const count = orders_count.value_int;
 
-            if (customer_id) {
-                const customer = database.prepare(`
+            if (customer) {
+                const qCustomer = database.prepare(`
                     SELECT * FROM customers WHERE id = :id;
                 `).get({
-                    id: customer_id
+                    id: customer.id
                 });
 
-                if (!customer) throw new NotFoundError();
+                if (!qCustomer) throw new NotFoundError("No existe tal cliente.");
             };
 
-            let total_price = 0;
+            let amount = 0;
+            
+            if (type === 'major') {
+                for (const item of items) {
+                    const product = database.prepare(`
+                        SELECT * FROM products WHERE id = :id;
+                    `).get({
+                        id: item.id
+                    });
+    
+                    if (!product) throw new NotFoundError();
+                    if (!product.price_major || product.price_major <= 0) throw new GenericError(`${product.name} no tiene precio mayorista.`);
 
-            for (const item of items) {
-                const product = database.prepare(`
-                    SELECT * FROM products WHERE id = :id;
-                `).get({
-                    id: item.id
-                });
+                    amount += product.price_major * item.quantity;
 
-                if (!product) throw new NotFoundError();
+                    const order_item_id = uuid.v4();
 
-                if (type === 'major') {
-                    if (!product.price_major || product.price_major <= 0) 
-                        throw new GenericError(`${product.name} no tiene precio mayorista.`);
-                    total_price += product.price_major * item.quantity;
-                }
-                else if (type === 'minor') {
-                    if (!product.price_minor || product.price_minor <= 0)
-                        throw new GenericError(`${product.name} no tiene precio minorista.`);
-                    total_price += product.price_minor * item.quantity;
-                } else {
-                    throw new InvalidArgumentError();
+                    database.prepare(`
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date);
                 };
+            } else {
+                for (const item of items) {
+                    const product = database.prepare(`
+                        SELECT * FROM products WHERE id = :id;
+                    `).get({
+                        id: item.id
+                    });
+    
+                    if (!product) throw new NotFoundError();
+                    if (!product.price_minor || product.price_minor <= 0) throw new GenericError(`${product.name} no tiene precio minorista.`);
+         
+                    const minor_prices = database.prepare(`
+                        SELECT * FROM minor_prices WHERE product_id = :product_id;
+                    `).all({ product_id: product.id });
 
-                const order_item_id = uuid.v4();
+                    const quantity = Number(item.quantity);
 
-                database.prepare(`
-                    INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                `).run(order_item_id, order_id, product.id, item.quantity, date, date);
+                    let minor_price_id = null;
+                    let minor_price_condition = 0;
+                    let minor_price = product.price_minor;
+
+                    for (let j = 0; j < minor_prices.length; j++) {
+                        if (quantity >= Number(minor_prices[j].condition_value)) {
+                            if (minor_price_condition < Number(minor_prices[j].condition_value)) {
+                                minor_price_id = minor_prices[j].id;
+                                minor_price_condition = Number(minor_prices[j].condition_value);
+                                minor_price = Number(minor_prices[j].price_value);
+                            };
+                        };
+                    };
+
+                    if (minor_price_id) {
+                        const discount_id = uuid.v4();
+
+                        database.prepare(`
+                            INSERT INTO discounts (id, minor_price_id, order_id)
+                            VALUES (?, ?, ?);
+                        `).run(discount_id, minor_price_id, order_id);
+                    };
+
+                    amount += minor_price * quantity;
+
+                    const order_item_id = uuid.v4();
+                    database.prepare(`
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date);
+                };
             };
 
             database.prepare(`
-                INSERT INTO orders (id, number, customer_id, total_price, type, created_at, updated_at, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            `).run(order_id, count + 1, customer_id, total_price, type, date, date, "PENDING");
+                INSERT INTO orders (
+                    id, 
+                    number, 
+                    customer_id, 
+                    payment_method, 
+                    total_price, 
+                    type, 
+                    created_at, 
+                    updated_at, 
+                    status
+                ) VALUES (
+                    :id, 
+                    :number, 
+                    :customer_id, 
+                    :payment_method, 
+                    :total_price, 
+                    :type, 
+                    :created_at, 
+                    :updated_at, 
+                    :status
+                );
+            `).run({
+                id: order_id, 
+                number: count + 1, 
+                customer_id: customer ? customer.id : null, 
+                payment_method: payment_method ? payment_method : null, 
+                total_price: amount, 
+                type: type, 
+                created_at: date, 
+                updated_at: date, 
+                status: "PENDING"
+            });
 
             database.prepare(`
                 UPDATE metadata
@@ -205,15 +290,6 @@ router.put('/update-status/:id', (req, res) => {
     };
 });
 
-const fonts = {
-    Roboto: {
-        normal: path.join(__dirname, '../../shared/fonts/Roboto-Regular.ttf'),
-        bold: path.join(__dirname, '../../shared/fonts/Roboto-Bold.ttf')
-    }
-};
-
-const printer = new Printer(fonts);
-
 router.get('/receipt/:id', async (req, res) => {
     try {
         const order_id = req.params.id;
@@ -226,115 +302,17 @@ router.get('/receipt/:id', async (req, res) => {
         const response = await request.json();
         const order = response.data[0];
 
-        // 1. Preparar las filas de la tabla de productos
-        const tableBody = [
-            [
-            { text: 'Producto', style: 'tableHeader' },
-            { text: 'Cant.', style: 'tableHeader', alignment: 'center' },
-            { text: 'Precio Unit.', style: 'tableHeader', alignment: 'right' },
-            { text: 'Subtotal', style: 'tableHeader', alignment: 'right' }
-            ]
-        ];
-
-        order.items.forEach(item => {
-            // Usamos el precio según el tipo de orden (mayorista o minorista)
-            const precio = order.type === 'major' ? item.product.price_major : item.product.price_minor;
-            const subtotal = precio * item.quantity;
-
-            tableBody.push([
-                item.product.name,
-                    { text: item.quantity.toString(), alignment: 'center' },
-                    { text: `$${(precio/100).toLocaleString()}`, alignment: 'right' },
-                    { text: `$${(subtotal/100).toLocaleString()}`, alignment: 'right' }
-            ]);
-        });
-
-        // 2. Definición del Documento
-        const docDefinition = {
-            content: [
-            // Encabezado
-            {
-                columns: [
-                    { text: 'LIBRERIA RUBEN DARIO', style: 'brand' },
-                    { text: `ORDEN DE VENTA N° ${order.number}`, alignment: 'right', style: 'orderTitle' }
-                ]
-            },
-            { text: `Fecha: ${new Date(order.created_at).toLocaleDateString()}`, alignment: 'right', margin: [0, 0, 0, 20] },
-
-            { canvas: [{ type: 'line', x1: 0, y1: 5, x2: 515, y2: 5, lineWidth: 1, lineColor: '#eeeeee' }] },
-
-            // Información del Cliente
-            {
-                margin: [0, 20, 0, 20],
-                columns: [
-                {
-                    text: [
-                    { text: 'CLIENTE:\n', style: 'subheader' },
-                    { text: `${order.customer ? order.customer.name : 'N/D'}\n`, bold: true },
-                    { text: `CUIL: ${order.customer ? order.customer.cuil : 'N/D'}\n` },
-                    { text: `Email: ${order.customer ? order.customer.email : 'N/D'}` }
-                    ]
-                },
-                {
-                    text: [
-                        { text: 'ESTADO:\n', style: 'subheader' },
-                        { text: order.status, color: order.status === 'PENDING' ? 'orange' : 'green' }
-                    ],
-                    alignment: 'right'
-                }
-                ]
-            },
-
-            // Tabla de Items
-            {
-                table: {
-                headerRows: 1,
-                widths: ['*', 'auto', 'auto', 'auto'],
-                body: tableBody
-                },
-                layout: 'lightHorizontalLines'
-            },
-
-            // Total
-            {
-                margin: [0, 20, 0, 0],
-                columns: [
-                { text: '', width: '*' },
-                {
-                    width: 'auto',
-                    table: {
-                    body: [
-                        [
-                        { text: 'TOTAL:', style: 'totalLabel' },
-                        { text: `$${(order.total_price / 100).toLocaleString()}`, style: 'totalAmount' }
-                        ]
-                    ]
-                    },
-                    layout: 'noBorders'
-                }
-                ]
-            }
-            ],
-            styles: {
-            brand: { fontSize: 18, bold: true, color: '#2c3e50' },
-            orderTitle: { fontSize: 14, bold: true },
-            subheader: { fontSize: 10, color: 'gray', marginBottom: 4 },
-            tableHeader: { bold: true, fontSize: 11, color: 'black', margin: [0, 5, 0, 5] },
-            totalLabel: { fontSize: 14, bold: true, margin: [0, 5, 20, 5] },
-            totalAmount: { fontSize: 16, bold: true, color: '#27ae60' }
-            }
-        };
-
-        const doc = printer.createPdfKitDocument(docDefinition);
-
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=factura_${order_id}.pdf`);
+
+        const doc = PDFCreator.receipt(order);
 
         doc.pipe(res);
         doc.end();
     } catch (error) {
         console.error(error);
-    }
+        ResponseError(res, error);
+    };
 });
 
 module.exports = router;
