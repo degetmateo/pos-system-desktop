@@ -77,7 +77,15 @@ export default class ProductsView extends GenericView {
             };
 
             if (event.target.matches('.products-view-table-row-data')) {
-                router.navigateTo('/products/'+event.target.getAttribute('id'));
+                if (this.to) {
+                    switch (this.to) {
+                        case 'order':
+                            router.navigateTo('/new-order?product_id='+event.target.getAttribute('id'));
+                        break;
+                    };
+                } else {
+                    router.navigateTo('/products/'+event.target.getAttribute('id'));
+                };
             };
         });
 

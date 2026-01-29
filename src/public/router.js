@@ -41,7 +41,7 @@ class Router {
             .on('/new-product', () => this.views.productsCreate.init())
             .on('/price-lists', () => this.views.priceLists.init())
             .on('/products', (data) => this.views.products.init(data))
-            .on('/products/:id', ({ data }) => this.views.product.init(data))
+            .on('/products/:id', (data) => this.views.product.init(data))
             .on('/new-customer', () => this.views.customers_create.init())
             .on('/new-order', (data) => this.views.orders_create.init(data))
             .on('/orders', () => this.views.orders.init())

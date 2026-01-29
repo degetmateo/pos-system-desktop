@@ -394,6 +394,7 @@ export default class OrdersCreateView extends GenericView {
                             placeholder="Cantidad"
                             id="${product.id}"
                             class="order-create-input-quantity"
+                            min="0"
                         />
                     </td>
                     <td>${(storage.items[i].quantity * price) / 100}</td>

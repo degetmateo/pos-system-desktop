@@ -99,7 +99,7 @@ export default class OrdersView extends GenericView {
                     <td id="${order.id}" class="order-view-table-row-td">${order.customer ? order.customer.name : 'SIN ASIGNAR'}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.type === 'major' ? "MAYORISTA" : "MINORISTA"}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.total_price / 100}</td>
-                    <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()} ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
+                    <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()} - ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
                     <td id="${order.id}" class="order-view-table-row-td">
                         <a href="/api/orders/receipt/${order.id}">Descargar Factura</a>
                     </td>

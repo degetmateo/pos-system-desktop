@@ -102,7 +102,6 @@ export default class OrderView extends GenericView {
         this.app.append(this.view);
 
         const order = await this.fetch_order(data.id);
-        console.log(order);
 
         this.buttonDownload.href = '/api/orders/receipt/'+order.id;
     };

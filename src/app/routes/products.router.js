@@ -13,6 +13,77 @@ const InvalidArgumentError = require("../errors/invalidArgumentError");
 
 const router = Router();
 
+router.post('/update/:id', async (req, _, next) => {
+    req.data = {
+        id: req.params.id
+    };
+
+    next();
+}, upload.single('image'), async (req, res) => {
+    try {
+        let {
+            id,
+            barcode,
+            name,
+            stock,
+            price_major,
+            price_minor,
+            minor_prices
+        } = JSON.parse(req.body.data);
+
+        if (!name || !name.trim()) throw new InvalidArgumentError("Name is required.");
+        if (!minor_prices || minor_prices.length <= 0) minor_prices = [];
+
+        let filename = req.file ? req.file.filename : null;
+
+        const date = new Date().toISOString();
+
+        database.transaction(() => {
+            database.prepare(`
+                UPDATE 
+                    products
+                SET
+                    barcode = :barcode,
+                    name = :name,
+                    stock = :stock,
+                    price_major = :price_major,
+                    price_minor = :price_minor
+                WHERE
+                    id = :id;
+            `).run({ id, barcode, name, stock, price_major, price_minor });
+
+            if (filename) {
+                database.prepare(`
+                    UPDATE 
+                        products
+                    SET
+                        image_name = :filename
+                    WHERE
+                        id = :id;
+                `).run({ id, filename });
+            };
+
+            database.prepare(`
+                DELETE FROM minor_prices 
+                WHERE product_id = :product_id;
+            `).run({ product_id: id });
+
+            for (const minor_price of minor_prices) {
+                const minor_price_id = uuid.v4();
+                database.prepare(`
+                    INSERT INTO minor_prices (id, product_id, condition, condition_value, price_value, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?);
+                `).run(minor_price_id, id, 'discount', Number(minor_price.condition_value), Number(minor_price.price_value), date, date);
+            };
+        }).exclusive();
+        
+        ResponseOk(res, responses.ACCEPTED, null);
+    } catch (error) {
+        console.error(error);
+        ResponseError(res, error);  
+    };
+});
+
 router.post('/', (req, _, next) => {
     req.data = {
         id: uuid.v4()
