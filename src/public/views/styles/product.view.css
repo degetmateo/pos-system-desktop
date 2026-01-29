@@ -153,3 +153,9 @@
 .product-view-message-error {
     color: red;
 }
+
+.product-view-provider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}

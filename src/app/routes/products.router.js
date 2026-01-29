@@ -26,6 +26,7 @@ router.post('/update/:id', async (req, _, next) => {
             barcode,
             name,
             stock,
+            provider_id,
             price_major,
             price_minor,
             minor_prices
@@ -47,10 +48,11 @@ router.post('/update/:id', async (req, _, next) => {
                     name = :name,
                     stock = :stock,
                     price_major = :price_major,
-                    price_minor = :price_minor
+                    price_minor = :price_minor,
+                    provider_id = :provider_id
                 WHERE
                     id = :id;
-            `).run({ id, barcode, name, stock, price_major, price_minor });
+            `).run({ id, barcode, name, stock, price_major, price_minor, provider_id });
 
             if (filename) {
                 database.prepare(`

@@ -92,6 +92,13 @@ export default class ProductView extends GenericView {
                     <div id="product-view-minor-prices" class="product-view-minor-prices"></div>
                 </div>
 
+                <div class="product-view-provider-container">
+                    <span class="product-view-detail-title">Seleccionar Proveedor</span>
+                    <select id="product-view-provider">
+                        <option value="none">SIN ASIGNAR</option>
+                    </select>
+                </div>
+
                 <input
                     type="file"
                     accept="image/*"
@@ -144,6 +151,12 @@ export default class ProductView extends GenericView {
         this.container.addEventListener('change', (event) => {
             const storage = JSON.parse(localStorage.getItem('product'));
             
+            if (event.target.matches('#product-view-provider')) {
+                storage.provider_id = event.target.value;
+                localStorage.setItem('product', JSON.stringify(storage));
+                this.draw();
+            };
+
             if (event.target.matches('#product-view-barcode-input')) {
                 storage.barcode = event.target.value;
                 localStorage.setItem('product', JSON.stringify(storage));
@@ -204,6 +217,10 @@ export default class ProductView extends GenericView {
 
         document.querySelector('#product-view-image-input').value = null;
 
+        const providers = await this.fetch_providers();
+        providers.sort((a, b) => a.name.localeCompare(b.name));
+        this.draw_providers(providers);
+
         const product = await this.fetch_product(url.data.id);
         localStorage.setItem('product', JSON.stringify(product));
         this.draw();
@@ -222,6 +239,31 @@ export default class ProductView extends GenericView {
         };
     };
 
+    async fetch_providers () {
+        try {
+            const request = await fetch('/api/providers', { method: "GET" });
+            const response = await request.json();
+            if (!request.ok) throw new Error(response.error.message);
+            return response.data;
+        } catch (error) {
+            console.error(error);
+            return [];  
+        };
+    };
+
+    draw_providers (providers) {
+        const select = document.querySelector('#product-view-provider');
+        select.innerHTML = '';
+        select.innerHTML = `
+            <option value="none">SIN ASIGNAR</option>
+        `;
+        for (const provider of providers) {
+            select.innerHTML += `
+                <option value="${provider.id}">${provider.name}</option>
+            `;
+        };
+    };
+
     draw () {
         const storage = JSON.parse(localStorage.getItem('product'));
         if (!storage) return;
@@ -234,6 +276,8 @@ export default class ProductView extends GenericView {
         document.querySelector('#product-view-stock-input').value = storage.stock;
         document.querySelector('#product-view-price-major-input').value = storage.price_major / 100;
         document.querySelector('#product-view-price-minor-input').value = storage.price_minor / 100;
+
+        document.querySelector('#product-view-provider').value = storage.provider_id || 'none';
 
         document.querySelector('#product-view-minor-prices').innerHTML = '';
         for (const minor_price of storage.minor_prices) {
