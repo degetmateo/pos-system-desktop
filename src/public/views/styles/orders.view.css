@@ -1,16 +1,33 @@
+.orders-view-container {
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+
+    height: 100vh;
+    width: 100%;
+};
+
 .orders-view-table-container {
+    flex: 1;
+    width: 100%;
     overflow-y: scroll;
-    height: calc(100vh - 101px);
+    height: calc(100vh - 80px - 80px);
 }
 
 .orders-view-table {
     width: 100%;
 }
 
-.orders-view-buttons-container {
-    width: 100%;
-    height: 100px;
+.orders-view-table-head-row {
+    background-color: #FFF;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
 
+.orders-view-buttons-container {
+    height: 80px;
     border-top: 1px solid #000;
 
     display: flex;
@@ -20,23 +37,15 @@
 }
 
 .orders-view-button {
+    font-size: 18px;
+    padding: 10px;
+    cursor: pointer;
     border: none;
     outline: none;
-    cursor: pointer;
-
-    width: 125px;
-    height: 40px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #000;
     border: 1px solid #000;
+    border-radius: 5px;
 }
 
 .orders-view-button:hover {
     background-color: gray;
 }
-
-/* .orders-view-row:hover {
-    cursor: pointer;
-    background-color: gray;
-} */
