@@ -7,6 +7,8 @@ const InvalidArgumentError = require('../errors/invalidArgumentError.js');
 const NotFoundError = require('../errors/notFoundError.js');
 const GenericError = require('../errors/genericError.js');
 const PDFCreator = require('../helpers/pdf.creator.js');
+const ReceiptTemplate = require('../templates/receipt.template.js');
+const { BrowserWindow } = require('electron');
 
 const router = Router();
 
@@ -117,9 +119,10 @@ router.post('/', (req, res) => {
         if (!['cash', 'transfer', 'card', 'current_account'].includes(payment_method)) payment_method = null;
         if (!items || items.length <= 0) throw new InvalidArgumentError("Items are required.");
 
+        let order_id = null;
         
         database.transaction(() => {
-            const order_id = uuid.v4();
+            order_id = uuid.v4();
             const date = new Date().toISOString();
 
             const orders_count = database.prepare(`
@@ -252,7 +255,7 @@ router.post('/', (req, res) => {
             `).run({ value: count + 1, id: orders_count.id });
         }).exclusive();
 
-        ResponseOk(res, responses.CREATED, null);
+        ResponseOk(res, responses.CREATED, order_id);
     } catch (error) {
         console.error(error);
         ResponseError(res, error);
@@ -293,25 +296,64 @@ router.put('/update-status/:id', (req, res) => {
 
 router.get('/receipt/:id', async (req, res) => {
     try {
-        const order_id = req.params.id;
-        if (!order_id) throw new InvalidArgumentError();
+        const { id } = req.params;
+        const { action } = req.query;
 
-        const request = await fetch('http://localhost:4000/api/orders?id='+order_id, {
+        const request = await fetch('http://localhost:4000/api/orders?id='+id, {
             method: "GET"
         });
 
         const response = await request.json();
         const order = response.data[0];
+        const html = ReceiptTemplate(order);
 
-        req.query.action === 'print' ?
-            res.setHeader('Content-Disposition', `inline; filename=factura_${order_id}.pdf`) :
-            res.setHeader('Content-Disposition', `attachment; filename=factura_${order_id}.pdf`);
+        if (action === 'print') {
+            const htmlToPrint = html + `
+                <script>
+                    document.title = "check_${id}";
+                    
+                    window.onload = () => {
+                        setTimeout(() => { 
+                            window.print(); 
+                            window.close();
+                        }, 500);
+                    }
+                </script>
+            `;
 
-        res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Type', 'text/html');
+            res.send(htmlToPrint);
+        } else {
+            let workerWindow = null;
+            try {
+                workerWindow = new BrowserWindow({
+                    show: false,
+                    webPreferences: { nodeIntegration: true }
+                });
 
-        const doc = PDFCreator.receipt(order);
-        doc.pipe(res);
-        doc.end();
+                await workerWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+
+                const buffer = await workerWindow.webContents.printToPDF({
+                    printBackground: true,
+                    format: "A4",
+                    displayHeaderFooter: false,
+                    margins: {
+                        top: 0, 
+                        bottom: 0, 
+                        left: 0, 
+                        right: 0
+                    }
+                });
+
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Disposition', `attachment; filename=check_${id}.pdf`);
+                res.send(buffer);
+            } catch (error) {
+                throw error;
+            } finally {
+                if (workerWindow) workerWindow.close();
+            };
+        };
     } catch (error) {
         console.error(error);
         ResponseError(res, error);

@@ -63,29 +63,36 @@ export default class OrdersView extends GenericView {
             };
 
             if (event.target.matches('.order-view-pdf-link')) {
-                event.preventDefault();
+                // event.preventDefault();
+                // const href = event.target.getAttribute('href');
+                // const order_id = event.target.getAttribute('id');
 
-                const href = event.target.getAttribute('href');
-                const iframe = document.createElement('iframe');
+                // if (window.api) {
+                //     window.api.print(href);
+                // } else {
+                    // const iframe = document.createElement('iframe');
+                    // const timestamp = new Date().getTime();
 
-                const timestamp = new Date().getTime();
-
-                iframe.src = `${href}&t=${timestamp}`;
-                document.body.append(iframe);
-
-                iframe.style = `
-                    style="position: absolute; left: -10000px; top: 0; width: 1px; height: 1px;"
-                `;
-
-                iframe.onload = () => {
-                    iframe.focus();
-                    iframe.contentWindow.print();
-                    setTimeout(() => iframe.remove(), 2000);
-                };
-
-                iframe.onerror = (error) => {
-                    console.log(error);
-                };
+                    // iframe.src = `${href}&t=${timestamp}`;
+                    // document.body.append(iframe);
+    
+                    // iframe.style = `
+                    //     style="position: absolute; left: -10000px; top: 0; width: 1px; height: 1px;"
+                    // `;
+    
+                    // iframe.onload = () => {
+                    //     iframe.contentWindow.focus();
+                    //     iframe.contentWindow.print();
+                    //     setTimeout(() => {
+                    //         iframe.remove();
+                    //         document.title = 'Ruben Dario';
+                    //     }, 2000);
+                    // };
+    
+                    // iframe.onerror = (error) => {
+                    //     console.log(error);
+                    // };
+                // };
             };
         });
 
@@ -128,12 +135,15 @@ export default class OrdersView extends GenericView {
                     <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()} - ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
                     <td id="${order.id}" class="order-view-table-row-td order-view-table-row-td-actions">
                         <a 
+                            id="${order.id}"
                             class="order-view-pdf-link" 
                             href="/api/orders/receipt/${order.id}?action=save"
                         >Descargar</a>
                         <a 
+                            id="${order.id}"
                             class="order-view-pdf-link" 
                             href="/api/orders/receipt/${order.id}?action=print"
+                            target="_blank"
                         >Imprimir</a>
                     </td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.status.toUpperCase()}</td>

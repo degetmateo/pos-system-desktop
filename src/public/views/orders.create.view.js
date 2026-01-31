@@ -83,6 +83,11 @@ export default class OrdersCreateView extends GenericView {
                             id="order-create-button-reset"
                             class="order-create-button order-create-button-reset"
                         >Reiniciar</button>
+                        <a
+                            id="order-create-button-print"
+                            class="order-create-button-print" 
+                            target="_blank"
+                        >Imprimir Última</a>
                     </div>
                 </div>
                 <div class="order-create-container-c2">
@@ -172,6 +177,9 @@ export default class OrdersCreateView extends GenericView {
                     });
                     const response = await request.json();
                     if (!request.ok) throw new Error(response.error.message);
+
+                    localStorage.setItem('last-order-id', response.data);
+
                     this.reset();
                     this.show_message("Orden creada correctamente.", false);
                 } catch (error) {
@@ -420,6 +428,11 @@ export default class OrdersCreateView extends GenericView {
         };
 
         document.querySelector('#order-create-total').textContent = '$'+this.calculate_total().toLocaleString('es-ES');
+    
+        const last_order_id = localStorage.getItem('last-order-id');
+        last_order_id ?
+            document.querySelector('#order-create-button-print').setAttribute('href', `/api/orders/receipt/${last_order_id}?action=print`) :
+            document.querySelector('#order-create-button-print').removeAttribute('href');
     };  
 
     calculate_total () {
