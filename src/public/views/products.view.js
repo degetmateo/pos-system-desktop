@@ -30,6 +30,11 @@ export default class ProductsView extends GenericView {
                     id="products-view-barcode-input"
                     class="products-view-input products-view-barcode-input"
                 />
+
+                <select id="products-view-select" class="products-view-select">
+                    <option value=null>NO ORDENAR</option>
+                    <option value="abc">ORDENAR ALFABÉTICAMENTE</option>
+                </select>
             </div>
 
             <div class="products-view-table-container">
@@ -114,6 +119,18 @@ export default class ProductsView extends GenericView {
             };
         });
 
+        this.container.addEventListener('change', async (event) => {
+            if (event.target.matches('#products-view-select')) {
+                const storage = JSON.parse(localStorage.getItem('products-view'));
+                const selector = document.querySelector('#products-view-select');
+                storage.sorting = selector.value;
+                localStorage.setItem('products-view', JSON.stringify(storage));
+
+                const products = await this.fetch_products();
+                this.draw_products(products);
+            };
+        });
+
         this.offset = 0;
         this.continue = true;
         this.to = null;
@@ -123,6 +140,14 @@ export default class ProductsView extends GenericView {
         this.app.innerHTML = '';
         this.app.append(this.view);
         
+        if (!localStorage.getItem('products-view')) {
+            localStorage.setItem('products-view', JSON.stringify({
+                sorting: null
+            }));
+        };
+
+        this.draw();
+
         this.continue = true;
         this.offset = 0;
         this.to = null;
@@ -137,10 +162,17 @@ export default class ProductsView extends GenericView {
         this.draw_products(products);
     };
 
+    draw () {
+        const storage = JSON.parse(localStorage.getItem('products-view'));
+        const selector = document.querySelector('#products-view-select');
+        selector.value = storage.sorting;
+    };
+
     async fetch_products (name) {
         try {
             if (!name || !name.trim()) name = '';
-            const request = await fetch(`/api/products?name=${name}&offset=${this.offset}`, { method: "GET" });
+            const storage = JSON.parse(localStorage.getItem('products-view'));
+            const request = await fetch(`/api/products?name=${name}&sorting=${storage.sorting}&offset=${this.offset}`, { method: "GET" });
             const response = await request.json();
             if(!request.ok) throw new Error(response.error.message);
             return response.data;

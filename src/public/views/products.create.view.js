@@ -239,83 +239,55 @@ export default class ProductsCreateView extends GenericView {
         this.containerC3.classList.add('products-create-container-c3');
         this.r1.append(this.containerC3);
 
-        this.providerContainer = document.createElement('div');
-        this.providerContainer.classList.add('products-create-provider-container');
-        this.containerC3.append(this.providerContainer);
+        this.containerC3.innerHTML = `
+            <div class="products-create-provider-container">
+                <span class="products-create-title">Establecer proveedor.</span>
+                <select id="products-create-provider-select">
+                    <option value="none">SIN ASIGNAR</option>
+                </select>
+            </div>
 
-        this.providerTitle = document.createElement('span');
-        this.providerTitle.textContent = 'Establecer proveedor.';
-        this.providerTitle.classList.add('products-create-title');
-        this.providerContainer.append(this.providerTitle);
+            <div class="products-create-provider-create-container">
+                <input 
+                    type="text" 
+                    placeholder="Nombre" 
+                    class="products-create-input-text products-create-provider-input"
+                    id="products-create-provider-input" 
+                />
 
-        this.providerSelectionContainer = document.createElement('div');
-        this.providerSelectionContainer.classList.add('products-create-provider-selection-container');
-        this.providerContainer.append(this.providerSelectionContainer);
+                <button
+                    type="button"
+                    id="products-create-button-create-provider"
+                    class="products-create-button"
+                >Crear</button>
+            </div>
+        `;
 
-        this.providerSelection = document.createElement('span');
-        this.providerSelection.classList.add('products-create-provider-selection');
-        this.providerSelection.textContent = 'SIN ASIGNAR';
-        this.providerSelection.setAttribute('value', 'none');
-        this.providerSelectionContainer.append(this.providerSelection);
+        this.containerC3.addEventListener('click', async (event) => {
+            if (event.target.matches('#products-create-button-create-provider')) {
+                try {
+                    const request = await fetch('/api/providers', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            name: document.querySelector('#products-create-provider-input').value
+                        })
+                    });
+                    const response = await request.json();
+                    if (!request.ok) throw new Error(response.error.message);
+                    document.querySelector('#products-create-provider-input').value = '';
 
-        this.providerSelectonDeleteButton = document.createElement('button');
-        this.providerSelectonDeleteButton.textContent = 'Eliminar';
-        this.providerSelectonDeleteButton.type = 'button';
-        this.providerSelectonDeleteButton.classList.add('products-create-button');
-        this.providerSelectionContainer.append(this.providerSelectonDeleteButton);
+                    const providers = await this.fetch_providers();
+                    providers.sort((a, b) => a.name.localeCompare(b.name));
+                    this.draw_providers(providers);
 
-        this.providerSelectonDeleteButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.providerSelection.textContent = 'SIN ASIGNAR';
-            this.providerSelection.setAttribute('value', 'none');
-        });
-
-        this.createProviderContainer = document.createElement('div');
-        this.createProviderContainer.classList.add('products-create-provider-create-container');
-        this.providerContainer.append(this.createProviderContainer);
-
-        this.providerName = document.createElement('input');
-        this.providerName.type = 'text';
-        this.providerName.placeholder = 'Nombre';
-        this.providerName.classList.add('products-create-input-text', 'products-create-provider-input');
-        this.createProviderContainer.append(this.providerName);
-
-        this.buttonProvider = document.createElement('button');
-        this.buttonProvider.classList.add('products-create-button');
-        this.buttonProvider.type = 'button';
-        this.buttonProvider.textContent = 'Crear';
-        this.createProviderContainer.append(this.buttonProvider);
-
-        this.buttonProvider.addEventListener('click', async (event) => {
-            event.preventDefault();
-
-            try {
-                const request = await fetch('/api/providers', {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        name: this.providerName.value
-                    })
-                });
-                const response = await request.json();
-                if (!request.ok) throw new Error(response.error.message);
-
-                this.providerName.value = '';
-
-                const providers = await this.fetch_providers();
-                providers.sort((a, b) => a.name.localeCompare(b.name));
-                this.draw_providers(providers);
-
-                this.show_message("Proveedor creado correctamente.", false);
-            } catch (error) {
-                console.error(error);
-                this.show_message(error.message, true);
+                    this.show_message("Proveedor creado correctamente.", false);
+                } catch (error) {
+                    console.error(error);
+                    this.show_message(error.message, true);
+                };
             };
         });
-
-        this.providersContainer = document.createElement('div');
-        this.providersContainer.classList.add('products-create-providers-container');
-        this.providerContainer.append(this.providersContainer);
     };
 
     async init () {
@@ -366,23 +338,16 @@ export default class ProductsCreateView extends GenericView {
     };
 
     draw_providers (providers) {
-        this.providersContainer.innerHTML = '';
+        const selector = document.querySelector('#products-create-provider-select');
+
+        selector.innerHTML = `
+            <option value="none">SIN ASIGNAR</option>
+        `;
 
         for (const provider of providers) {
-            const container = document.createElement('div');
-            container.classList.add('products-create-provider-item-container');
-            this.providersContainer.append(container);
-
-            const name = document.createElement('span');
-            name.classList.add('products-create-provider-name');
-            name.textContent = provider.name;
-            container.append(name);
-
-            container.addEventListener('click', (event) => {
-                event.preventDefault();
-                this.providerSelection.textContent = provider.name;
-                this.providerSelection.setAttribute('value', provider.id);
-            });
+            selector.innerHTML += `
+                <option value="${provider.id}">${provider.name}</option>
+            `;
         };
     };
 
@@ -401,12 +366,12 @@ export default class ProductsCreateView extends GenericView {
 
     async submit () {
         try {
-            console.log("SUBMIT");
+            const providerSelector = document.querySelector('#products-create-provider-select');
 
             const barcode = this.barcode.value;
             const name = this.name.value;
             const stock = this.stock.value;
-            const provider_id = this.providerSelection.getAttribute('value');
+            const provider_id = providerSelector.value;
             const price_major = this.majorPrice.value;
             const price_minor = this.baseMinorPrice.value;
             const image = this.image.files[0];
@@ -445,18 +410,18 @@ export default class ProductsCreateView extends GenericView {
     };
 
     reset () {
-        console.log("RESET");
+        const providerSelector = document.querySelector('#products-create-provider-select');
+        providerSelector.value = 'none';
+
         this.barcode.value = '';
         this.name.value = '';
         this.stock.value = null;
-        this.providerSelection.setAttribute('value', 'none');
-        this.providerSelection.textContent = 'SIN ASIGNAR';
+
         this.majorPrice.value = null;
         this.baseMinorPrice.value = null;
         this.image.value = null;
         this.imageName.textContent = 'Ninguna imagen seleccionada.';
         this.minor_prices = [];
         this.minorPricesContainer.innerHTML = '';
-        this.providerName.value = '';
     };
 };

@@ -198,3 +198,9 @@
     font-size: 18px;
     padding: 10px;
 }
+
+.products-create-container-c3 {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

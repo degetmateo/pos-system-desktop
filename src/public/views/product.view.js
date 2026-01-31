@@ -1,5 +1,7 @@
 import Navigation from "../components/navigation/navigation.js";
+import PopupConfirm from "../components/popup-confirm/popup-confirm.js";
 import ProductCard from "../components/product.card.js";
+import router from "../router.js";
 import GenericView from "./GenericView.js";
 
 export default class ProductView extends GenericView {
@@ -53,6 +55,12 @@ export default class ProductView extends GenericView {
                         id="product-view-button-save"
                         class="product-view-button"
                     >Guardar Cambios</button>
+
+                    <button
+                        type="button"
+                        id="product-view-button-delete"
+                        class="product-view-button product-view-button-delete"
+                    >Eliminar</button>
                 </div>
             </div>
 
@@ -145,6 +153,27 @@ export default class ProductView extends GenericView {
 
             if (event.target.matches('#product-view-button-save')) {
                 this.submit();
+            };
+
+            if (event.target.matches('#product-view-button-delete')) {
+                const storage = JSON.parse(localStorage.getItem('product'));
+
+                new PopupConfirm({
+                    message: '¿Estás seguro de que querés eliminar este producto?',
+                    onConfirm: async () => {
+                        try {
+                            const request = await fetch(`/api/products/${storage.id}`, { method: "DELETE" });
+                            const response = await request.json();
+                            if (!request.ok) throw new Error(response.error.message);
+                            router.goBack();
+                        } catch (error) {
+                            console.error(error);  
+                        };
+                    },
+                    onCancel: () => {
+                        console.log('CANCELADO');
+                    }
+                });
             };
         });
 

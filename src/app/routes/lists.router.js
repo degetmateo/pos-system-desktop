@@ -19,10 +19,17 @@ router.get('/products-internal', async (req, res) => {
             SELECT * FROM minor_prices WHERE product_id = :product_id;
         `);
 
+        const queryProvider = database.prepare(`
+            SELECT * FROM providers WHERE id = :id;
+        `);
+
         for (let i = 0; i < products.length; i++) {
             const minor_prices = queryMinorPrices.all({ product_id: products[i].id });
             minor_prices.sort((a, b) => a.condition_value - b.condition_value);
             products[i].minor_prices = minor_prices;
+
+            const provider = queryProvider.get({ id: products[i].provider_id });
+            products[i].provider = provider;
         };
 
         const book  = new excel.Workbook();
@@ -32,6 +39,7 @@ router.get('/products-internal', async (req, res) => {
             { header: 'ID', key: 'id', width: 10 },
             { header: 'CÓDIGO', key: 'barcode', width: 12 },
             { header: 'NOMBRE', key: 'name', width: 24 },
+            { header: 'PROVEEDOR', key: 'provider', width: 24 },
             { header: 'P. MAYOR.', key: 'major_price', width: 14 },
             { header: 'P. MINOR.', key: 'minor_price', width: 14 },
 
@@ -67,6 +75,7 @@ router.get('/products-internal', async (req, res) => {
                 id: products[i].id,
                 barcode: products[i].barcode,
                 name: products[i].name,
+                provider: products[i].provider ? products[i].provider.name : 'SIN ASIGNAR',
                 major_price: products[i].price_major / 100,
                 minor_price: products[i].price_minor / 100,
 
@@ -181,20 +190,21 @@ router.post('/products-internal', uploadExcel.single('excel'), async (req, res) 
                 id: row.getCell(1).value,
                 barcode: barcode,
                 name: row.getCell(3).value,
-                price_major: row.getCell(4).value,
-                price_minor: row.getCell(5).value,
+                provider: row.getCell(4).value,
+                price_major: row.getCell(5).value,
+                price_minor: row.getCell(6).value,
 
-                discount_cond_1: row.getCell(6).value,
-                discount_price_1: row.getCell(7).value,
+                discount_cond_1: row.getCell(7).value,
+                discount_price_1: row.getCell(8).value,
 
-                discount_cond_2: row.getCell(8).value,
-                discount_price_2: row.getCell(9).value,
+                discount_cond_2: row.getCell(9).value,
+                discount_price_2: row.getCell(10).value,
 
-                discount_cond_3: row.getCell(10).value,
-                discount_price_3: row.getCell(11).value,
+                discount_cond_3: row.getCell(11).value,
+                discount_price_3: row.getCell(12).value,
 
-                discount_cond_4: row.getCell(12).value,
-                discount_price_4: row.getCell(13).value
+                discount_cond_4: row.getCell(13).value,
+                discount_price_4: row.getCell(14).value
             });
         });
 

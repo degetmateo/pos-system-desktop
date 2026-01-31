@@ -267,6 +267,7 @@ router.get('/image/:id', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
+        const sorting = req.query.sorting ? req.query.sorting : null;
         const nameFilter = req.query.name ? `%${req.query.name}%` : null;
         const idFilter = req.query.id ? req.query.id : null;
         const barcodeFilter = req.query.barcode ? req.query.barcode : null;
@@ -274,6 +275,12 @@ router.get('/', async (req, res) => {
         const limit = 20;
 
         let products = [];
+
+        let orderByClause = "p.created_at ASC";
+
+        if (sorting === 'abc') {
+            orderByClause = "p.name COLLATE NOCASE ASC";
+        };
 
         database.transaction(() => {
             products = database.prepare(`
@@ -296,7 +303,7 @@ router.get('/', async (req, res) => {
                     (:barcode IS NULL or p.barcode = :barcode)
                 
                 GROUP BY p.id
-                ORDER BY p.created_at ASC
+                ORDER BY ${orderByClause}
                 LIMIT :limit 
                 OFFSET :offset;    
             `).all({
@@ -322,6 +329,28 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error(error);
         ResponseError(res, error);
+    };
+});
+
+router.delete('/:id', (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) throw new InvalidArgumentError();
+
+        database.transaction(() => {
+            database.prepare(`
+                DELETE FROM products WHERE id = :id;
+            `).run({ id });
+
+            database.prepare(`
+                DELETE FROM minor_prices WHERE product_id = :id;
+            `).run({ id });
+        })();
+
+        ResponseOk(res, responses.OK, null);
+    } catch (error) {
+        console.error(error);
+        ResponseError(res, error);  
     };
 });
 
