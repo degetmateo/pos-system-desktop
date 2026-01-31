@@ -7,6 +7,7 @@ const customersRouter = require('./routes/customers.router.js');
 const ordersRouter = require('./routes/orders.router.js');
 const barcodesRouter = require('./routes/barcodes.router.js');
 const providersRouter = require('./routes/providers.router.js');
+const listsRouter = require('./routes/lists.router.js');
 
 const PUBLIC_PATH = path.join(__dirname, '../public');
 const HTML_PATH = path.join(PUBLIC_PATH, 'index.html');
@@ -22,7 +23,8 @@ module.exports = class Server {
             customers: '/api/customers',
             orders: '/api/orders',
             barcodes: '/api/barcodes',
-            providers: '/api/providers'
+            providers: '/api/providers',
+            lists: '/api/lists'
         };
     };
 
@@ -45,6 +47,7 @@ module.exports = class Server {
         this.app.use(this.paths.orders, ordersRouter);
         this.app.use(this.paths.barcodes, barcodesRouter);
         this.app.use(this.paths.providers, providersRouter);
+        this.app.use(this.paths.lists, listsRouter);
 
         this.app.use((_, res) => {
             res.sendFile(HTML_PATH);
