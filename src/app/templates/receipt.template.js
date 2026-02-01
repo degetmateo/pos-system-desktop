@@ -5,7 +5,7 @@ module.exports = ReceiptTemplate = (order) => {
         rows = order.items.map((item, number) => `
             <tr>
                 <td class="text-left">${number + 1}</td>
-                <td class="text-left">${item.product.name}</td>
+                <td class="text-left">${item.product ? item.product.name : 'Producto Eliminado'}</td>
                 <td class="text-right">${item.quantity}</td>
                 <td class="text-right">$${(item.price / 100).toLocaleString()}</td>
                 <td class="text-right">N/D</td>
@@ -20,7 +20,7 @@ module.exports = ReceiptTemplate = (order) => {
                 return `
                     <tr>
                         <td class="text-left">${number + 1}</td>
-                        <td class="text-left">${item.product.name}</td>
+                        <td class="text-left">${item.product ? item.product.name : 'Producto Eliminado'}</td>
                         <td class="text-right">${item.quantity}</td>
                         <td class="text-right">$${(item.price / 100).toLocaleString()}</td>
                         <td class="text-right">N/D</td>
@@ -34,7 +34,7 @@ module.exports = ReceiptTemplate = (order) => {
                 return `
                     <tr>
                         <td class="text-left">${number + 1}</td>
-                        <td class="text-left">${item.product.name}</td>
+                        <td class="text-left">${item.product ? item.product.name : 'Producto Eliminado'}</td>
                         <td class="text-right">${item.quantity}</td>
                         <td class="text-right">$${(discount.original_price / 100).toLocaleString()}</td>
                         <td class="text-right">$${(discount.discount_price / 100).toLocaleString()}</td>
