@@ -159,9 +159,9 @@ router.post('/', (req, res) => {
                     const order_item_id = uuid.v4();
 
                     database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_major);
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price, product_name)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_major, product.name);
                 };
             } else {
                 for (const item of items) {
@@ -208,9 +208,9 @@ router.post('/', (req, res) => {
                     const order_item_id = uuid.v4();
 
                     database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_minor);
+                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price, product_name)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_minor, product.name);
                 };
             };
 

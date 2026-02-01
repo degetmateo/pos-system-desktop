@@ -5,5 +5,11 @@ contextBridge.exposeInMainWorld("api", {
     chrome: process.versions.chrome,
     electron: process.versions.electron,
     ping: () => ipcRenderer.invoke('ping'),
-    ip: () => ipcRenderer.invoke('get-local-ip')
+    ip: () => ipcRenderer.invoke('get-local-ip'),
+    sql: (query, values) => ipcRenderer.invoke('sql', query, values),
+
+    on: (event, callback) => {
+        ipcRenderer.on(event, (_, value) => callback(value));
+        return () => ipcRenderer.removeAllListeners(event);
+    }
 });

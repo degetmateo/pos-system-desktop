@@ -6,18 +6,19 @@ if (require('electron-squirrel-startup')) app.quit();
 const path = require('path');
 const Server = require('./server.js');
 const getLanIp = require('./helpers/getLanIp.js');
-const database = require('./database/database.js');
+const db = require('./database/database.js');
+const { database } = require('./database/database.js');
 
 updateElectronApp();
 
-database.init();
+db.init();
 
 const server = new Server();
 server.start();
 
 let win;
 
-function createWindow () {
+function create_window () {
     win = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -25,14 +26,12 @@ function createWindow () {
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: false,
-            contextIsolation: true,
-            // plugins: true,
-            // webSecurity: false
+            contextIsolation: true
         }
     });
 
     win.loadURL('http://localhost:4000');
-}
+};
 
 app.whenReady().then(() => {
     Menu.setApplicationMenu(null);
@@ -45,7 +44,11 @@ app.whenReady().then(() => {
         return getLanIp() + ":4000";
     });
 
-    createWindow();
+    ipcMain.handle('sql', (_, query, values) => {
+        database.prepare(query).run(values);
+    });
+
+    create_window();
 
     globalShortcut.register('CommandOrControl+Shift+I', () => {
       if (!win) return
@@ -64,3 +67,5 @@ app.on('window-all-closed', () => {
     app.quit()
   }
 });
+
+module.exports.win = win;

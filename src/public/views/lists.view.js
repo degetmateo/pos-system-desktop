@@ -1,3 +1,4 @@
+import Alert from "../components/alert.js";
 import Navigation from "../components/navigation/navigation.js";
 import GenericView from "./GenericView.js";
 
@@ -45,7 +46,7 @@ export default class ListsView extends GenericView {
                     const a = document.createElement('a');
 
                     a.href = url;
-                    a.download = `rd_lista_interna_${new Date().getTime()}.xlsx`;
+                    a.download = `LISTA_INTERNA_RD_${new Date().getTime()}.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
@@ -68,7 +69,7 @@ export default class ListsView extends GenericView {
                     const a = document.createElement('a');
 
                     a.href = url;
-                    a.download = `LIBRERIA_RUBEN_DARIO.xlsx`;
+                    a.download = `LISTA_DE_PRECIOS_RUBEN_DARIO.xlsx`;
                     document.body.appendChild(a);
                     a.click();
                     a.remove();
@@ -90,9 +91,10 @@ export default class ListsView extends GenericView {
                     });
                     const response = await request.json();
                     if (!request.ok) throw new Error(response.error.message);
-                    console.log('Datos de planilla procesados.');
+                    new Alert({ message: "Datos procesados correctamente", error: false, timeout: 4000 }).render();
                 } catch (error) {
-                    console.error(error);  
+                    console.error(error);
+                    new Alert({ message: error.message, error: true, timeout: 4000 }).render();
                 };
             };
         });

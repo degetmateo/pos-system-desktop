@@ -65,6 +65,12 @@ export default class ProductsCreateView extends GenericView {
         this.barcode.placeholder = 'Código de Barras';
         this.form.append(this.barcode);
 
+        this.barcode.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                this.name.focus();
+            };
+        });
+
         this.name = document.createElement('input');
         this.name.classList.add('products-create-input-text');
         this.name.type = 'text';

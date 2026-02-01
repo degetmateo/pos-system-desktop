@@ -7,3 +7,9 @@ window.addEventListener('popstate', () => {
 document.addEventListener("DOMContentLoaded", () => {
     router.resolve();
 });
+
+if (window.api) {
+    window.api.on('error', (error) => {
+        console.error(error);
+    });
+};

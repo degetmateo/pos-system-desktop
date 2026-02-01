@@ -1,0 +1,28 @@
+.alert {
+    padding: 10px;
+    border: 2px solid green;
+    background-color: #FFF;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    cursor: pointer;
+
+    z-index: 1;
+}
+
+.alert-error {
+    border: 2px solid rgb(255, 0, 0);
+}
+
+.alert-message {
+    font-size: 18px;
+    font-weight: bold;
+    color: #000;
+    text-transform: uppercase;
+}
