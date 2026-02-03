@@ -21,8 +21,8 @@ export default class OrdersCreateView extends GenericView {
                 <div class="order-create-container-c1">
                     <div class="order-create-info-container">
                         <select id="order-create-type" class="order-create-type">
-                            <option value="major">MAYORISTA</option>
                             <option value="minor">MINORISTA</option>
+                            <option value="major">MAYORISTA</option>
                         </select>
 
                         <div class="order-create-customer-container">
@@ -269,7 +269,7 @@ export default class OrdersCreateView extends GenericView {
 
         if (!localStorage.getItem('order')) {
             localStorage.setItem('order', JSON.stringify({
-                type: "major",
+                type: "minor",
                 payment_method: null,
                 customer: null,
                 items: [],
@@ -378,7 +378,7 @@ export default class OrdersCreateView extends GenericView {
         const storage = JSON.parse(localStorage.getItem('order'));
         storage.type ?
             document.querySelector('#order-create-type').value = storage.type :
-            document.querySelector('#order-create-type').value = 'major';
+            document.querySelector('#order-create-type').value = 'minor';
         document.querySelector('#order-create-payment-method').value = storage.payment_method;
 
         storage.customer ?
