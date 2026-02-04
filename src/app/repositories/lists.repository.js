@@ -1,19 +1,20 @@
 const { database } = require("../database/database");
 const uuid = require('uuid');
 
-const qProducts = database.prepare(`
-    SELECT * FROM products;
-`);
-
-const qMinorPrices = database.prepare(`
-    SELECT * FROM minor_prices WHERE product_id = :product_id;
-`);
-
-const qProvider = database.prepare(`
-    SELECT * FROM providers WHERE id = :id;
-`);
 
 const get = () => {
+    const qProducts = database.prepare(`
+        SELECT * FROM products;
+    `);
+    
+    const qMinorPrices = database.prepare(`
+        SELECT * FROM minor_prices WHERE product_id = :product_id;
+    `);
+    
+    const qProvider = database.prepare(`
+        SELECT * FROM providers WHERE id = :id;
+    `);
+    
     const products = qProducts.all();
 
     for (let i = 0; i < products.length; i++) {
@@ -28,28 +29,29 @@ const get = () => {
     return products;
 };
 
-const update_product = database.prepare(`
-    UPDATE products
-    SET
-        barcode = :barcode,
-        name = :name,
-        price_major = :price_major,
-        price_minor = :price_minor,
-        updated_at = :updated_at
-    WHERE
-        id = :id;
-`);
-
-const delete_minor_prices = database.prepare(`
-    DELETE FROM minor_prices WHERE product_id = :product_id;
-`);
-
-const create_minor_price = database.prepare(`
-    INSERT INTO minor_prices (id, product_id, condition, condition_value, price_value, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?);
-`);
 
 const update = (data) => {
+    const update_product = database.prepare(`
+        UPDATE products
+        SET
+            barcode = :barcode,
+            name = :name,
+            price_major = :price_major,
+            price_minor = :price_minor,
+            updated_at = :updated_at
+        WHERE
+            id = :id;
+    `);
+    
+    const delete_minor_prices = database.prepare(`
+        DELETE FROM minor_prices WHERE product_id = :product_id;
+    `);
+    
+    const create_minor_price = database.prepare(`
+        INSERT INTO minor_prices (id, product_id, condition, condition_value, price_value, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+    `);
+
     const date = new Date().toISOString();
     database.transaction(() => {
         for (const product of data) {
@@ -120,6 +122,9 @@ const update = (data) => {
 };
 
 const getForCustomers = () => {
+    const qProducts = database.prepare(`
+        SELECT * FROM products;
+    `);
     const products = qProducts.all();
     return products;
 };

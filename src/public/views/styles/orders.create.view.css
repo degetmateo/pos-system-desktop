@@ -93,11 +93,12 @@
 }
 
 .order-create-total-container {
-    font-size: 22px;
-    font-weight: bold;
+    font-size: 18px;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px;
 }
 
 .order-create-buttons-container {
@@ -178,4 +179,12 @@
 
 .order-create-message-error {
     color: red;
+}
+
+.order-create-advancement-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }

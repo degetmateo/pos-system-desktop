@@ -24,18 +24,22 @@ class Database {
         this.db = new SQLite(this.database_dir);
     };
 
-    init () {
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS meta (
-                key TEXT PRIMARY KEY,
-                value TEXT,
-                updated_at TEXT
-            );
-        `);
-        
-        this.run_migrations();
-        this.ready = true;
-        this.schedule_backups();
+    async init () {
+        return new Promise((resolve, reject) => {
+            this.db.exec(`
+                CREATE TABLE IF NOT EXISTS meta (
+                    key TEXT PRIMARY KEY,
+                    value TEXT,
+                    updated_at TEXT
+                );
+            `);
+            
+            this.run_migrations();
+            this.ready = true;
+            this.schedule_backups();
+
+            resolve(null);
+        });
     };
 
     get_version () {

@@ -65,11 +65,26 @@ export default class OrdersCreateView extends GenericView {
                             class="order-create-button-product-search"
                         >Producto Manual</button>
                     </div>
+
+                    <div class="order-create-advancement-container">
+                        <span class="order-create-payment-title">Adelanto</span>
+                        <input 
+                            type="number" 
+                            min="0" 
+                            placeholder="Adelanto"
+                            id="order-create-input-advancement"
+                        />
+                    </div>
+
                     <div class="order-create-total-container">
                         <span
                             id="order-create-total"
                             class="order-create-total"
-                        >$0</span>
+                        >TOTAL: <b>$0</b></span>
+                        <span
+                            id="order-create-total-advancement"
+                            class="order-create-total"
+                        >C/ADELANTO: <b>$0</b></span>
                     </div>
 
                     <div class="order-create-buttons-container">
@@ -147,6 +162,15 @@ export default class OrdersCreateView extends GenericView {
 
                 localStorage.setItem('order', JSON.stringify(storage));
 
+                this.check_discounts();
+                this.draw();
+            };
+
+            if (event.target.matches('#order-create-input-advancement')) {
+                const advancement = Number(event.target.value);
+                const storage = JSON.parse(localStorage.getItem('order'));
+                storage.advancement = advancement * 100;
+                localStorage.setItem('order', JSON.stringify(storage));
                 this.check_discounts();
                 this.draw();
             };
@@ -252,7 +276,8 @@ export default class OrdersCreateView extends GenericView {
 
     reset () {
         localStorage.setItem('order', JSON.stringify({
-            type: "major",
+            type: "minor",
+            advancement: 0,
             payment_method: null,
             customer: null,
             items: [],
@@ -270,6 +295,7 @@ export default class OrdersCreateView extends GenericView {
         if (!localStorage.getItem('order')) {
             localStorage.setItem('order', JSON.stringify({
                 type: "minor",
+                advancement: 0,
                 payment_method: null,
                 customer: null,
                 items: [],
@@ -427,8 +453,16 @@ export default class OrdersCreateView extends GenericView {
             `;
         };
 
-        document.querySelector('#order-create-total').textContent = '$'+this.calculate_total().toLocaleString('es-ES');
-    
+        document.querySelector('#order-create-total').innerHTML = `
+            TOTAL: <b>$${this.calculate_total().toLocaleString('es-ES')}</b>  
+        `;
+
+        document.querySelector('#order-create-total-advancement').innerHTML = `
+            C/ADELANTO: <b>$${this.calculate_total_with_advancement().toLocaleString('es-ES')}</b>
+        `;
+
+        document.querySelector('#order-create-input-advancement').value = Number(storage.advancement) / 100;
+
         const last_order_id = localStorage.getItem('last-order-id');
         last_order_id ?
             document.querySelector('#order-create-button-print').setAttribute('href', `/api/orders/receipt/${last_order_id}?action=print`) :
@@ -444,6 +478,11 @@ export default class OrdersCreateView extends GenericView {
             amount += items[i].price * items[i].quantity;
         };
         return amount / 100;
+    };
+
+    calculate_total_with_advancement () {
+        const storage = JSON.parse(localStorage.getItem('order'));
+        return this.calculate_total() - (Number(storage.advancement) / 100);
     };
 
     show_message (message, error = false) {

@@ -9,6 +9,7 @@ const GenericError = require('../errors/genericError.js');
 const PDFCreator = require('../helpers/pdf.creator.js');
 const ReceiptTemplate = require('../templates/receipt.template.js');
 const { BrowserWindow } = require('electron');
+const { ordersRepository } = require('../repositories/orders.repository.js');
 
 const router = Router();
 
@@ -25,17 +26,7 @@ router.get('/', (req, res) => {
 
         database.transaction(() => {
             orders = database.prepare(`
-                SELECT 
-                    o.id,
-                    o.number,
-                    o.customer_id,
-                    o.total_price,
-                    o.type,
-                    o.payment_method,
-                    o.created_at,
-                    o.updated_at,
-                    o.status
-                FROM orders o
+                SELECT * FROM orders o
 
                 WHERE 
                     (:id IS NULL OR o.id = :id) AND
@@ -111,151 +102,26 @@ router.post('/', (req, res) => {
             type,
             payment_method,
             customer,
-            items 
+            items,
+            advancement
         } = req.body;
 
         if (!type) throw new InvalidArgumentError("Type is required.");
         if (!['major', 'minor'].includes(type)) throw new InvalidArgumentError("Incorrect type.");
         if (!['cash', 'transfer', 'card', 'current_account'].includes(payment_method)) payment_method = null;
         if (!items || items.length <= 0) throw new InvalidArgumentError("Items are required.");
+        if (isNaN(Number(advancement))) throw new InvalidArgumentError();
+        if (!advancement || advancement <= 0) advancement = 0;
 
-        let order_id = null;
-        
-        database.transaction(() => {
-            order_id = uuid.v4();
-            const date = new Date().toISOString();
+        const response = ordersRepository.insert({
+            type,
+            customer,
+            advancement,
+            payment_method,
+            items
+        });
 
-            const orders_count = database.prepare(`
-                SELECT * FROM metadata WHERE key = :key;
-            `).get({ key: 'orders-count' });
-    
-            const count = orders_count.value_int;
-
-            if (customer) {
-                const qCustomer = database.prepare(`
-                    SELECT * FROM customers WHERE id = :id;
-                `).get({
-                    id: customer.id
-                });
-
-                if (!qCustomer) throw new NotFoundError("No existe tal cliente.");
-            };
-
-            let amount = 0;
-            
-            if (type === 'major') {
-                for (const item of items) {
-                    const product = database.prepare(`
-                        SELECT * FROM products WHERE id = :id;
-                    `).get({
-                        id: item.id
-                    });
-    
-                    if (!product) throw new NotFoundError();
-                    if (!product.price_major || product.price_major <= 0) throw new GenericError(`${product.name} no tiene precio mayorista.`);
-
-                    amount += product.price_major * item.quantity;
-
-                    const order_item_id = uuid.v4();
-
-                    database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price, product_name)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_major, product.name);
-                };
-            } else {
-                for (const item of items) {
-                    const product = database.prepare(`
-                        SELECT * FROM products WHERE id = :id;
-                    `).get({
-                        id: item.id
-                    });
-    
-                    if (!product) throw new NotFoundError();
-                    if (!product.price_minor || product.price_minor <= 0) throw new GenericError(`${product.name} no tiene precio minorista.`);
-         
-                    const minor_prices = database.prepare(`
-                        SELECT * FROM minor_prices WHERE product_id = :product_id;
-                    `).all({ product_id: product.id });
-
-                    const quantity = Number(item.quantity);
-
-                    let minor_price_id = null;
-                    let minor_price_condition = 0;
-                    let minor_price = product.price_minor;
-
-                    for (let j = 0; j < minor_prices.length; j++) {
-                        if (quantity >= Number(minor_prices[j].condition_value)) {
-                            if (minor_price_condition < Number(minor_prices[j].condition_value)) {
-                                minor_price_id = minor_prices[j].id;
-                                minor_price_condition = Number(minor_prices[j].condition_value);
-                                minor_price = Number(minor_prices[j].price_value);
-                            };
-                        };
-                    };
-
-                    if (minor_price_id) {
-                        const discount_id = uuid.v4();
-
-                        database.prepare(`
-                            INSERT INTO discounts (id, minor_price_id, order_id, product_id, original_price, discount_price)
-                            VALUES (?, ?, ?, ?, ?, ?);
-                        `).run(discount_id, minor_price_id, order_id, product.id, product.price_minor, minor_price);
-                    };
-
-                    amount += minor_price * quantity;
-
-                    const order_item_id = uuid.v4();
-
-                    database.prepare(`
-                        INSERT INTO order_item (id, order_id, product_id, quantity, created_at, updated_at, price, product_name)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    `).run(order_item_id, order_id, product.id, item.quantity, date, date, product.price_minor, product.name);
-                };
-            };
-
-            database.prepare(`
-                INSERT INTO orders (
-                    id, 
-                    number, 
-                    customer_id, 
-                    payment_method, 
-                    total_price, 
-                    type, 
-                    created_at, 
-                    updated_at, 
-                    status
-                ) VALUES (
-                    :id, 
-                    :number, 
-                    :customer_id, 
-                    :payment_method, 
-                    :total_price, 
-                    :type, 
-                    :created_at, 
-                    :updated_at, 
-                    :status
-                );
-            `).run({
-                id: order_id, 
-                number: count + 1, 
-                customer_id: customer ? customer.id : null, 
-                payment_method: payment_method ? payment_method : null, 
-                total_price: amount, 
-                type: type, 
-                created_at: date, 
-                updated_at: date, 
-                status: "PENDING"
-            });
-
-            database.prepare(`
-                UPDATE metadata
-                SET value_int = :value
-                WHERE id = :id;
-            `).run({ value: count + 1, id: orders_count.id });
-        }).exclusive();
-
-        ResponseOk(res, responses.CREATED, order_id);
+        ResponseOk(res, responses.CREATED, response);
     } catch (error) {
         console.error(error);
         ResponseError(res, error);

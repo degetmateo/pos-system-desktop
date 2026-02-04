@@ -1,109 +1,61 @@
 import Navigation from "../components/navigation/navigation.js";
+import payments from "../static/payments.js";
 import GenericView from "./GenericView.js";
 
 export default class OrderView extends GenericView {
     constructor () {
         super();
-
         this.view = document.createElement('div');
         this.view.classList.add('view');
-
         this.view.append(new Navigation());
-
         this.container = document.createElement('div');
         this.container.classList.add('container', 'order-view-container');
         this.view.append(this.container);
 
-        this.detailsContainer = document.createElement('div');
-        this.detailsContainer.classList.add('order-view-details-container');
-        this.container.append(this.detailsContainer);
-
-        this.orderNumber = document.createElement('span');
-        this.orderNumber.classList.add('order-view-order-number');
-        this.orderNumber.textContent = 'Orden #5173';
-        this.detailsContainer.append(this.orderNumber);
-
-        this.orderAmount = document.createElement('span');
-        this.orderAmount.classList.add('order-view-order-amount');
-        this.orderAmount.textContent = '$9758';
-        this.detailsContainer.append(this.orderAmount);
-
-        this.orderType = document.createElement('span');
-        this.orderType.classList.add('order-view-detail', 'order-view-order-type');
-        this.orderType.textContent = 'Mayorista';
-        this.detailsContainer.append(this.orderType);
-
-        this.orderDate = document.createElement('span');
-        this.orderDate.classList.add('order-view-detail', 'order-view-order-date');
-        this.orderDate.textContent = '27/1/2026';
-        this.detailsContainer.append(this.orderDate);
-
-        this.orderStatus = document.createElement('span');
-        this.orderStatus.textContent = 'Estado: Pendiente';
-        this.detailsContainer.append(this.orderStatus);
-
-        this.customerContainer = document.createElement('div');
-        this.customerContainer.classList.add('order-view-customer-container');
-        this.detailsContainer.append(this.customerContainer);
-
-        this.customerTitle = document.createElement('div');
-        this.customerTitle.classList.add('order-view-customer-title');
-        this.customerTitle.innerHTML = `
-            <span>Datos del Cliente</span>
+        this.container.innerHTML = `
+            <div class="order-view-details-container">
+                <div class="order-view-info-container">
+                    <span id="order-view-number"></span>
+                    <span id="order-view-type"></span>
+                    <span id="order-view-amount"></span>
+                    <span id="order-view-advancement"></span>
+                    <span id="order-view-final-amount"></span>
+                    <span id="order-view-payment"></span>
+                </div>
+                <div class="order-view-customer-container">
+                    <span id="order-view-customer-name"></span>
+                    <span id="order-view-customer-cuil"></span>
+                    <span id="order-view-customer-email"></span>
+                    <span id="order-view-customer-phone"></span>
+                    <span id="order-view-customer-address"></span>
+                </div>
+                <div class="order-view-buttons-container">
+                    <a class="order-view-button" id="order-view-button-download">DESCARGAR</a>
+                    <a class="order-view-button" target="_blank" id="order-view-button-print">IMPRIMIR</a>
+                </div>
+            </div>
+            <div class="order-view-table-container">
+                <table class="order-view-table">
+                    <thead>
+                        <tr>
+                            <th>NOMBRE</th>
+                            <th>CANTIDAD</th>
+                            <th>PRECIO</th>
+                            <th>SUBTOTAL</th>
+                            <th>DESCUENTO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-view-table-body"></tbody>
+                </table>
+            </div>
         `;
-        this.customerContainer.append(this.customerTitle);
-
-        this.customerName = document.createElement('span');
-        this.customerName.textContent = 'Nombre: Mateo';
-        this.customerContainer.append(this.customerName);
-
-        this.customerCuil = document.createElement('span');
-        this.customerCuil.textContent = 'CUIL: 20446190211';
-        this.customerContainer.append(this.customerCuil);
-
-        this.customerEmail = document.createElement('span');
-        this.customerEmail.textContent = 'Correo: degetmateo@gmail.com';
-        this.customerContainer.append(this.customerEmail);
-
-        this.customerPhone = document.createElement('span');
-        this.customerPhone.textContent = 'Teléfono: 1130926776';
-        this.customerContainer.append(this.customerPhone);
-
-        this.itemsContainer = document.createElement('div');
-        this.itemsContainer.classList.add('order-view-items-container');
-        this.container.append(this.itemsContainer);
-
-        this.table = document.createElement('table');
-        this.table.classList.add('order-view-items-table');
-        this.itemsContainer.append(this.table);
-
-        this.tableHead = document.createElement('thead');
-        this.tableHead.innerHTML = `
-            <tr>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Cantidad</th>
-                <th>Precio p/Unidad</th>
-                <th>Subtotal</th>
-            </tr>
-        `;
-        this.table.append(this.tableHead);
-
-        this.tableBody = document.createElement('tbody');
-        this.table.append(this.tableBody);
-
-        this.buttonDownload = document.createElement('a');
-        this.buttonDownload.textContent = 'Descargar';
-        this.detailsContainer.append(this.buttonDownload);
     };
 
     async init (data) {
         this.app.innerHTML = '';
         this.app.append(this.view);
-
         const order = await this.fetch_order(data.id);
-
-        this.buttonDownload.href = '/api/orders/receipt/'+order.id;
+        this.draw(order);
     };
 
     async fetch_order (id) {
@@ -114,6 +66,72 @@ export default class OrderView extends GenericView {
             return response.data[0];
         } catch (error) {
             console.error(error);
+            return null;
+        };
+    };
+
+    draw (order) {
+        const orderNumber = document.querySelector('#order-view-number');
+        const orderType = document.querySelector('#order-view-type');
+        const orderAmount = document.querySelector('#order-view-amount');
+        const orderAdvancement = document.querySelector('#order-view-advancement');
+        const orderFinalAmount = document.querySelector('#order-view-final-amount');
+        const orderPayment = document.querySelector('#order-view-payment');
+
+        orderNumber.innerHTML = `ÓRDEN <b>N° ${Number(order.number)}</b>`;
+        orderType.innerHTML = `TIPO: <b>${order.type === 'major' ? 'MAYORISTA' : 'MINORISTA'}</b>`;
+        orderAmount.innerHTML = `MONTO TOTAL: <b>$${(Number(order.total_price)/100).toLocaleString({ baseName:'es-ES' })}</b>`;
+        orderAdvancement.innerHTML = `ADELANTO: <b>$${(Number(order.advancement)/100).toLocaleString({ baseName:'es-ES' })}</b>`;
+        orderFinalAmount.innerHTML = `MONTO FINAL: <b>$${((Number(order.total_price) - Number(order.advancement)) / 100).toLocaleString({ baseName:'es-ES' })}</b>`;
+        orderPayment.innerHTML = `MÉTODO DE PAGO: <b>${order.payment_method ? payments[order.payment_method] : 'SIN ASIGNAR'}</b>`;
+
+        const customerName = document.querySelector('#order-view-customer-name');
+        const customerCuil = document.querySelector('#order-view-customer-cuil');
+        const customerEmail = document.querySelector('#order-view-customer-email');
+        const customerPhone = document.querySelector('#order-view-customer-phone');
+        const customerAddress = document.querySelector('#order-view-customer-address');
+
+        if (order.customer) {
+            customerName.innerHTML = `CLIENTE: <b>${order.customer.name || 'Desconocido'}</b>`;
+            customerCuil.innerHTML = `CUIL/CUIT: <b>${order.customer.cuil || 'Desconocido'}</b>`;
+            customerEmail.innerHTML = `EMAIL: <b>${order.customer.email || 'Desconocido'}</b>`;
+            customerPhone.innerHTML = `TELÉFONO: <b>${order.customer.phone || 'Desconocido'}</b>`;
+            customerAddress.innerHTML = `DIRECCIÓN: <b>${order.customer.address || 'Desconocido'}</b>`;
+        };
+
+        const buttonDownload = document.querySelector('#order-view-button-download');
+        const buttonPrint = document.querySelector('#order-view-button-print');
+
+        buttonDownload.href = `/api/orders/receipt/${order.id}?action=save`;
+        buttonPrint.href = `/api/orders/receipt/${order.id}?action=print`;
+
+        const table = document.querySelector('#order-view-table-body');
+        table.innerHTML = '';
+
+        for (const item of order.items) {
+            const discount = order.discounts.find((d) => d.product_id === item.product_id);
+
+            if (discount) {
+                table.innerHTML += `
+                    <tr>
+                        <td>${item.product_name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${(Number(item.price)/100).toLocaleString({ baseName:'es-ES' })}</td>
+                        <td>${(Number(discount.discount_price * item.quantity)/100).toLocaleString({baseName:'es-ES'})}</td>
+                        <td>${discount ? 'SÍ' : 'NO'}</td>
+                    </tr>
+                `;
+            } else {
+                table.innerHTML += `
+                    <tr>
+                        <td>${item.product_name}</td>
+                        <td>${item.quantity}</td>
+                        <td>${(Number(item.price)/100).toLocaleString({ baseName:'es-ES' })}</td>
+                        <td>${(Number(item.price * item.quantity)/100).toLocaleString({baseName:'es-ES'})}</td>
+                        <td>${discount ? 'SÍ' : 'NO'}</td>
+                    </tr>
+                `;
+            };
         };
     };
 };

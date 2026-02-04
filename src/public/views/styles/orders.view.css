@@ -25,6 +25,13 @@
     top: 0;
     left: 0;
 }
+.order-view-table-row {
+    cursor: pointer;
+}
+
+.order-view-table-row:hover {
+    background-color: gray;
+}
 
 .orders-view-buttons-container {
     height: 80px;

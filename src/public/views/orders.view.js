@@ -1,4 +1,6 @@
 import Navigation from "../components/navigation/navigation.js";
+import router from "../router.js";
+import payments from "../static/payments.js";
 import GenericView from "./GenericView.js";
 
 export default class OrdersView extends GenericView {
@@ -26,13 +28,14 @@ export default class OrdersView extends GenericView {
                 <table class="orders-view-table">
                     <thead>
                         <tr class="orders-view-table-head-row">
-                            <th>NOMBRE</th>
+                            <th>N°</th>
                             <th>CLIENTE</th>
                             <th>TIPO</th>
                             <th>MONTO</th>
+                            <th>SEÑA</th>
+                            <th>PAGO</th>
                             <th>FECHA</th>
                             <th>FACTURA</th>
-                            <th>ESTADO</th>
                         </tr>
                     </thead>
                     <tbody id="orders-view-table-body"></tbody>
@@ -54,6 +57,11 @@ export default class OrdersView extends GenericView {
         `;
 
         this.container.addEventListener('click', (event) => {
+            if (event.target.matches('.order-view-table-row-td')) {
+                const id = event.target.getAttribute('id');
+                router.navigateTo(`/orders/${id}`);
+            };
+
             if (event.target.matches('#orders-view-button-previous')) {
                 this.previous();
             };
@@ -127,12 +135,14 @@ export default class OrdersView extends GenericView {
         for (const order of orders) {
             const date = new Date(order.created_at);
             document.querySelector('#orders-view-table-body').innerHTML += `
-                <tr>
+                <tr class="order-view-table-row">
                     <td id="${order.id}" class="order-view-table-row-td">${order.number}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.customer ? order.customer.name : 'SIN ASIGNAR'}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.type === 'major' ? "MAYORISTA" : "MINORISTA"}</td>
                     <td id="${order.id}" class="order-view-table-row-td">${order.total_price / 100}</td>
-                    <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()} - ${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
+                    <td id="${order.id}" class="order-view-table-row-td">${order.advancement / 100}</td>
+                    <td id="${order.id}" class="order-view-table-row-td">${order.payment_method ? payments[order.payment_method] : 'SIN ASIGNAR'}</td>
+                    <td id="${order.id}" class="order-view-table-row-td">${date.toLocaleDateString()}-${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}</td>
                     <td id="${order.id}" class="order-view-table-row-td order-view-table-row-td-actions">
                         <a 
                             id="${order.id}"
@@ -146,9 +156,9 @@ export default class OrdersView extends GenericView {
                             target="_blank"
                         >Imprimir</a>
                     </td>
-                    <td id="${order.id}" class="order-view-table-row-td">${order.status.toUpperCase()}</td>
-                </tr>
-            `;
+                    </tr>
+                    `;
+                    // <td id="${order.id}" class="order-view-table-row-td">${order.status.toUpperCase()}</td>
         };
     };
 

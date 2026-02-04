@@ -1,3 +1,10 @@
+const paymentsMap = {
+    'cash': 'EFECTIVO',
+    'transfer': 'TRANSFERENCIA',
+    'card': 'TARJETA',
+    'current_account': 'CUENTA CORRIENTE'
+};
+
 module.exports = ReceiptTemplate = (order) => {
     let rows;
 
@@ -111,8 +118,11 @@ module.exports = ReceiptTemplate = (order) => {
                     
                     .total {
                         font-size: 20px; 
-                        font-weight: bold; 
-                        text-align: right;
+                        font-weight: bold;
+
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
                     }
 
                     .table-head {
@@ -197,6 +207,7 @@ module.exports = ReceiptTemplate = (order) => {
                     <span class="text-bold">${order.customer ? order.customer.name || 'N/D' : 'N/D'}</span>
                     <span>CUIL/CUIT: ${order.customer ? order.customer.cuil || 'N/D' : 'N/D'}</span>
                     <span>EMAIL: ${order.customer ? order.customer.email || 'N/D' : 'N/D'}</span>
+                    <span>MÉTODO DE PAGO: <b>${order.payment_method ? paymentsMap[order.payment_method] : 'SIN ASIGNAR'}</b></span>
                 </div>
             
                 <table>
@@ -222,7 +233,9 @@ module.exports = ReceiptTemplate = (order) => {
                 </table>
                 
                 <div class="total">
-                    Total: $${(order.total_price / 100).toLocaleString()}
+                    <span>TOTAL: $${(order.total_price / 100).toLocaleString()}</span>
+                    <span>ADELANTO: $${(order.advancement / 100).toLocaleString()}</span>
+                    <span>MONTO FINAL: $${((order.total_price - order.advancement) / 100).toLocaleString()}</span>
                 </div>
 
                 ${order.discounts.length > 0 ? `<p>* Esta orden incluye descuentos aplicados.</p>` : ''}

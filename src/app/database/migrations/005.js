@@ -1,10 +1,10 @@
 module.exports = {
-    version: 4,
+    version: 5,
     up: (db) => {
         db.transaction(() => {
             db.prepare(`
-                ALTER TABLE order_item
-                ADD COLUMN product_name TEXT DEFAULT NULL;
+                ALTER TABLE orders
+                ADD COLUMN advancement INTEGER DEFAULT 0;
             `).run();
         })();
     }
