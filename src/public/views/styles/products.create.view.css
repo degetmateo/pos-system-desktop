@@ -1,206 +1,78 @@
 .products-create-container {
     box-sizing: border-box;
-    padding: 10px;
+    padding: 5px;
 
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) auto;
-    gap: 10px;
-
-    height: 100vh;
-    max-height: 100vh;
-    overflow: hidden;
-}
-
-.products-create-container-r1 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 100%;
+    grid-template-rows: 1fr;
     gap: 10px;
-
-    height: 100%;
-    min-height: 0;
 }
 
-.products-create-container-r2 {
-    width: 100%;
-    height: 100px;
-    border-top: 1px solid #000;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.products-create-message {
-    font-size: 24px;
-    font-weight: bold;
-}
-
-.products-create-message-success {
-    color: green;
-}
-
-.products-create-message-error {
-    color: red;
-}
-
-.products-create-container-c1 {
+.products-create-column {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 5px;
 }
 
 .products-create-form {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }
 
-.products-create-button-barcode-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.products-create-image-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.products-create-input-text {
-    padding: 10px;
+.products-create-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 10px;
+    height: 40px;
+    border: none;
+    outline: none;
     font-size: 18px;
     border: 1px solid #000;
-    border-radius: 5px;
 }
 
-.products-create-title {
-    font-size: 18px;
-    font-weight: bold;
+.products-create-input:focus {
+    outline: 2px solid red;
 }
 
 .products-create-button {
-    padding: 10px;
-    font-size: 18px;
     border: none;
     outline: none;
-    border: 1px solid #000;
     cursor: pointer;
-    border-radius: 5px;
+
+    border: 1px solid #000;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
 }
 
 .products-create-button:hover {
     background-color: gray;
 }
 
-.products-create-container-c2 {
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-
-    height: 100%;
-    min-height: 0;
+.products-create-button:focus {
+    outline: 2px solid red;
 }
 
-.products-create-major-price-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.products-create-minor-price-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-
-    height: 100%;
-}
-
-.products-create-minor-prices-container {
-    padding: 5px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-
-    border: 1px solid #000;
-
-    overflow-y: auto; 
-    height: 300px;
-}
-
-.products-create-minor-price-updated-container {
+.products-create-minorprice {
     display: flex;
     flex-direction: row;
     gap: 5px;
-
-    width: 100%;
 }
 
-.products-create-minor-price-updated-input {
-    width: 50px;
-    flex: 1;
-}
-
-.products-create-provider-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.products-create-provider-selection-container {
-    display: flex;
-    flex-direction: row;
-    gap: 10px;
-}
-
-.products-create-provider-selection {
+.products-create-select {
     font-size: 18px;
-    padding: 10px;
     font-weight: bold;
-    border: 1px solid #000;
-    background-color: beige;
-    border-radius: 5px;
-    flex: 1;
+    padding: 0 10px;
+    height: 40px;
 }
 
-.products-create-providers-container {
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #000;
-    height: 300px;
-    overflow-y: scroll;
+.products-create-select:focus {
+    outline: 2px solid red;
 }
 
-.products-create-provider-item-container {
-    cursor: pointer;
-    font-size: 18px;
-    padding: 5px;
-}
-
-.products-create-provider-item-container:hover {
-    background-color: gray;
-}
-
-.products-create-provider-create-container {
+.products-create-provider {
     display: flex;
     flex-direction: row;
-    gap: 10px;
-}
-
-.products-create-provider-input {
-    flex: 1;
-}
-
-.products-create-provider-button {
-    font-size: 18px;
-    padding: 10px;
-}
-
-.products-create-container-c3 {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    gap: 5px;
 }

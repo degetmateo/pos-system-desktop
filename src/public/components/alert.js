@@ -1,32 +1,31 @@
 export default class Alert {
-    constructor (data = {
-        message: '',
-        error: false,
-        timeout: 4000
-    }) {
+    constructor (message, error, timeout, onRemove) {
+        this.onRemove = onRemove;
+
         this.container = document.createElement('div');
         this.container.classList.add('alert');
 
-        if (data.error) this.container.classList.add('alert-error');
+        if (error) this.container.classList.add('alert-error');
 
         this.container.innerHTML = `
-            <span class="alert-message">${data.message}</span>
+            <span class="alert-message">${message}</span>
         `;
 
-        this.container.addEventListener('click', (event) => {
+        this.container.addEventListener('click', () => {
             this.remove();
         });
 
         setTimeout(() => {
             this.remove();
-        }, data.timeout || 4000);
+        }, timeout || 4000);
     };
 
     render () {
-        document.querySelector('#app').append(this.container);
+        return this.container;
     };
 
     remove () {
         this.container.remove();
+        if (this.onRemove) this.onRemove();
     };
 };

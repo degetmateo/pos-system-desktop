@@ -342,6 +342,10 @@ export default class OrdersCreateView extends GenericView {
                     const storage = JSON.parse(localStorage.getItem('order'));
     
                     storage.customer = customer;
+
+                    if (customer.default_order_type) {
+                        storage.type = customer.default_order_type;
+                    };
     
                     localStorage.setItem('order', JSON.stringify(storage));
                     this.draw();

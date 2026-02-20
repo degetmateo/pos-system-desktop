@@ -1,5 +1,7 @@
 import Navigation from "../components/navigation/navigation.js";
+import alertsManager from "../modules/alerts.manager.js";
 import GenericView from "./GenericView.js";
+import productsCreateTemplate from "./templates/products.create.template.js";
 
 export default class ProductsCreateView extends GenericView {
     constructor () {
@@ -12,285 +14,147 @@ export default class ProductsCreateView extends GenericView {
         this.container.classList.add('container', 'products-create-container');
         this.view.append(this.container);
 
-        this.r1 = document.createElement('div');
-        this.r1.classList.add('products-create-container-r1');
-        this.container.append(this.r1);
+        this.container.innerHTML = productsCreateTemplate;
 
-        this.r2 = document.createElement('div');
-        this.r2.classList.add('products-create-container-r2');
-        this.container.append(this.r2);
+        this.container.addEventListener('change', (event) => {
+            const storage = JSON.parse(localStorage.getItem('new-product'));
 
-        this.message = document.createElement('span');
-        this.message.classList.add('products-create-message');
-        this.r2.append(this.message);
-        this.message.textContent = 'Nada que reportar.';
+            if (event.target.matches('#products-create-input-barcode')) {
+                storage.barcode = event.target.value;
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
 
-        this.draw_c1();
-        this.draw_c2();
-        this.draw_c3();
+            if (event.target.matches('#products-create-input-name')) {
+                storage.name = event.target.value;
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
 
-        this.minor_prices = [];
+            if (event.target.matches('#products-create-input-majorprice')) {
+                storage.major_price = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
 
-        this.data = {
-            barcode: null,
-            name: null,
-            stock: null,
-            image: null,
-            major_price: null,
-            minor_price: null,
-            provider_id: null,
-            minor_prices: []
-        };
+            if (event.target.matches('#products-create-input-minorprice')) {
+                storage.minor_price = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
 
-        this.timeout = null;
-    };
+            if (event.target.matches('#products-create-input-stock')) {
+                storage.stock = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage)); 
+            };
 
-    draw_c1 () {
-        this.containerC1 = document.createElement('div');
-        this.containerC1.classList.add('products-create-container-c1');
-        this.r1.append(this.containerC1);
+            if (event.target.matches('#products-create-input-condition-1')) {
+                storage.minor_price_condition_1 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage)); 
+            };
 
-        this.form = document.createElement('form');
-        this.form.classList.add('products-create-form');
-        this.containerC1.append(this.form);
+            if (event.target.matches('#products-create-input-condition-2')) {
+                storage.minor_price_condition_2 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage)); 
+            };
 
-        this.formTitle = document.createElement('span');
-        this.formTitle.classList.add('products-create-title');
-        this.formTitle.textContent = 'Información básica.';
-        this.form.append(this.formTitle);
+            if (event.target.matches('#products-create-input-condition-3')) {
+                storage.minor_price_condition_3 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage)); 
+            };
 
-        this.barcode = document.createElement('input');
-        this.barcode.classList.add('products-create-input-text');
-        this.barcode.type = 'text';
-        this.barcode.placeholder = 'Código de Barras';
-        this.form.append(this.barcode);
+            if (event.target.matches('#products-create-input-condition-4')) {
+                storage.minor_price_condition_4 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage)); 
+            };
 
-        this.barcode.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
-                this.name.focus();
+            if (event.target.matches('#products-create-input-minorprice-1')) {
+                storage.minor_price_value_1 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-input-minorprice-2')) {
+                storage.minor_price_value_2 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-input-minorprice-3')) {
+                storage.minor_price_value_3 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-input-minorprice-4')) {
+                storage.minor_price_value_4 = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-select-provider')) {
+                if (event.target.value == 'null' || event.target.value == null) {
+                    event.target.value = null;
+                };
+                storage.provider_id = event.target.value;
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-input-cost')) {
+                storage.cost = Number(event.target.value);
+                localStorage.setItem('new-product', JSON.stringify(storage));
+            };
+
+            if (event.target.matches('#products-create-input-image')) {
+                document.querySelector('#products-create-button-image').textContent = event.target.files[0].name;
             };
         });
 
-        this.name = document.createElement('input');
-        this.name.classList.add('products-create-input-text');
-        this.name.type = 'text';
-        this.name.placeholder = 'Nombre';
-        this.form.append(this.name);
+        this.container.addEventListener('click', async (event) => {
+            const storage = JSON.parse(localStorage.getItem('new-product'));
+            
+            if (event.target.matches('#products-create-button-barcode')) {
+                document.querySelector('#products-create-input-barcode').value = 'INTERNAL_BARCODE';
+                storage.barcode = 'INTERNAL_BARCODE';
+                localStorage.setItem('new-product', JSON.stringify(storage));
+                document.querySelector('#products-create-input-name').focus();
+            };
+            
+            if (event.target.matches('#products-create-button-image')) {
+                document.querySelector('#products-create-input-image').click();
+            };
 
-        this.stock = document.createElement('input');
-        this.stock.classList.add('products-create-input-text');
-        this.stock.type = 'number';
-        this.stock.placeholder = 'Stock';
-        this.stock.min = 0;
-        this.form.append(this.stock);
+            if (event.target.matches('#products-create-button-reset')) {
+                this.reset_storage();
+                this.draw();
+            };
 
-        this.buttonForm = document.createElement('button');
-        this.buttonForm.classList.add('products-create-button');
-        this.buttonForm.type = 'button';
-        this.buttonForm.textContent = 'Crear Producto';
-        this.form.append(this.buttonForm);
-
-        this.buttonForm.addEventListener('click', (event) => {
-            event.preventDefault();
-            console.log("BOTON PRESIONADO");
-            this.submit();
-        });
-
-        this.buttonBarcodeContainer = document.createElement('div');
-        this.buttonBarcodeContainer.classList.add('products-create-button-barcode-container');
-        this.containerC1.append(this.buttonBarcodeContainer);
-
-        this.buttonBarcodeTitle = document.createElement('span');
-        this.buttonBarcodeTitle.classList.add('products-create-title');
-        this.buttonBarcodeTitle.textContent = 'Generar un nuevo código de barras.';
-        this.buttonBarcodeContainer.append(this.buttonBarcodeTitle);
-
-        this.buttonBarcode = document.createElement('button');
-        this.buttonBarcode.classList.add('products-create-button');
-        this.buttonBarcode.type ='button';
-        this.buttonBarcode.textContent = 'Generar Código';
-        this.buttonBarcodeContainer.append(this.buttonBarcode);
-
-        this.buttonBarcode.addEventListener('click', async (event) => {
-            event.preventDefault();
-            this.barcode.value = 'INTERNAL_BARCODE';
-        });
-
-        this.imageContainer = document.createElement('div');
-        this.imageContainer.classList.add('products-create-image-container');
-        this.containerC1.append(this.imageContainer);
-
-        this.imageTitle = document.createElement('span');
-        this.imageTitle.classList.add('products-create-title');
-        this.imageTitle.textContent = 'Seleccionar imagen del producto.';
-        this.imageContainer.append(this.imageTitle);
-
-        this.image = document.createElement('input');
-        this.image.type = 'file';
-        this.image.accept = 'image/*';
-
-        this.image.addEventListener('change', () => {
-            this.imageName.textContent = this.image.files[0].name;
-        });
-
-        this.buttonImage = document.createElement('button');
-        this.buttonImage.classList.add('products-create-button');
-        this.buttonImage.textContent = 'Seleccionar Imagen';
-        this.imageContainer.append(this.buttonImage);
-
-        this.buttonImage.addEventListener('click', (event) => {
-            event.preventDefault();
-            this.image.click();
-        });
-
-        this.imageName = document.createElement('span');
-        this.imageName.textContent = 'Ninguna imagen seleccionada.';
-        this.imageName.classList.add('products-create-text');
-        this.imageContainer.append(this.imageName);
-
-        this.messageContainer = document.createElement('div');
-        this.messageContainer.classList.add('products-create-message-container');
-        this.containerC1.append(this.messageContainer);
-    };
-
-    draw_c2 () {
-        this.containerC2 = document.createElement('div');
-        this.containerC2.classList.add('products-create-container-c2');
-        this.r1.append(this.containerC2);
-
-        this.majorPriceContainer = document.createElement('div');
-        this.majorPriceContainer.classList.add('products-create-major-price-container');
-        this.containerC2.append(this.majorPriceContainer);
-
-        this.majorPriceTitle = document.createElement('span');
-        this.majorPriceTitle.classList.add('products-create-title');
-        this.majorPriceTitle.textContent = 'Establecer precio mayorista.';
-        this.majorPriceContainer.append(this.majorPriceTitle);
-
-        this.majorPrice = document.createElement('input');
-        this.majorPrice.classList.add('products-create-input-text');
-        this.majorPrice.type = 'number';
-        this.majorPrice.placeholder = 'Precio Mayorista';
-        this.majorPrice.min = 0;
-        this.majorPriceContainer.append(this.majorPrice);
-
-        this.minorPriceContainer = document.createElement('div');
-        this.minorPriceContainer.classList.add('products-create-minor-price-container');
-        this.containerC2.append(this.minorPriceContainer);
-
-        this.minorPriceTitle = document.createElement('span');
-        this.minorPriceTitle.classList.add('products-create-title');
-        this.minorPriceTitle.textContent = 'Establecer precios minoristas.';
-        this.minorPriceContainer.append(this.minorPriceTitle);
-
-        this.baseMinorPrice = document.createElement('input');
-        this.baseMinorPrice.classList.add('products-create-input-text');
-        this.baseMinorPrice.type = 'number';
-        this.baseMinorPrice.placeholder = 'Precio Minorista Base';
-        this.baseMinorPrice.min = 0;
-        this.minorPriceContainer.append(this.baseMinorPrice);
-
-        this.buttonAddMinorPrice = document.createElement('button');
-        this.buttonAddMinorPrice.textContent = 'Agregar Precio Minorista';
-        this.buttonAddMinorPrice.classList.add('products-create-button');
-        this.minorPriceContainer.append(this.buttonAddMinorPrice);
-
-        this.minorPricesContainer = document.createElement('div');
-        this.minorPricesContainer.classList.add('products-create-minor-prices-container');
-        this.minorPriceContainer.append(this.minorPricesContainer);
-
-        this.buttonAddMinorPrice.addEventListener('click', (event) => {
-            event.preventDefault();
-
-            const inputContainer = document.createElement('div');
-            inputContainer.classList.add('products-create-minor-price-updated-container');
-            this.minorPricesContainer.append(inputContainer);
-
-            const inputCondition = document.createElement('input');
-            inputCondition.classList.add('products-create-minor-price-updated-input');
-            inputCondition.type = 'number';
-            inputCondition.min = 0;
-            inputCondition.placeholder = 'Condición';
-            inputContainer.append(inputCondition);
-
-            const inputMinorPrice = document.createElement('input');
-            inputMinorPrice.classList.add('products-create-minor-price-updated-input');
-            inputMinorPrice.type = 'number';
-            inputMinorPrice.min = 0;
-            inputMinorPrice.placeholder = 'Precio Nuevo';
-            inputContainer.append(inputMinorPrice);
-
-            const buttonDeleteMinorPrice = document.createElement('button');
-            buttonDeleteMinorPrice.textContent = 'Eliminar';
-            buttonDeleteMinorPrice.type = 'button';
-            inputContainer.append(buttonDeleteMinorPrice);
-
-            const date = Date.now();
-            this.minor_prices.push({
-                id: date,
-                input_cond: inputCondition,
-                input_value: inputMinorPrice
-            });
-
-            buttonDeleteMinorPrice.addEventListener('click', (event) => {
-                event.preventDefault();
-                inputContainer.remove();
-                this.minor_prices = this.minor_prices.filter((e) => e.id !== date);
-            });
-        });
-    };
-
-    draw_c3 () {
-        this.containerC3 = document.createElement('div');
-        this.containerC3.classList.add('products-create-container-c3');
-        this.r1.append(this.containerC3);
-
-        this.containerC3.innerHTML = `
-            <div class="products-create-provider-container">
-                <span class="products-create-title">Establecer proveedor.</span>
-                <select id="products-create-provider-select">
-                    <option value="none">SIN ASIGNAR</option>
-                </select>
-            </div>
-
-            <div class="products-create-provider-create-container">
-                <input 
-                    type="text" 
-                    placeholder="Nombre" 
-                    class="products-create-input-text products-create-provider-input"
-                    id="products-create-provider-input" 
-                />
-
-                <button
-                    type="button"
-                    id="products-create-button-create-provider"
-                    class="products-create-button"
-                >Crear</button>
-            </div>
-        `;
-
-        this.containerC3.addEventListener('click', async (event) => {
-            if (event.target.matches('#products-create-button-create-provider')) {
+            if (event.target.matches('#products-create-button-provider')) {
                 try {
+                    const name = document.querySelector('#products-create-input-provider').value;
+                    if (!name || !name.trim()) return;
+
                     const request = await fetch('/api/providers', {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                            name: document.querySelector('#products-create-provider-input').value
+                            name: name
                         })
                     });
                     const response = await request.json();
                     if (!request.ok) throw new Error(response.error.message);
-                    document.querySelector('#products-create-provider-input').value = '';
-
+                    
                     const providers = await this.fetch_providers();
-                    providers.sort((a, b) => a.name.localeCompare(b.name));
                     this.draw_providers(providers);
-
-                    this.show_message("Proveedor creado correctamente.", false);
+                    document.querySelector('#products-create-input-provider').value = '';
+                    alertsManager.createAlert('Proveedor creado correctamente.', false);
                 } catch (error) {
                     console.error(error);
-                    this.show_message(error.message, true);
+                    alertsManager.createAlert(error.message, true);
+                };
+            };
+
+            if (event.target.matches('#products-create-button-submit')) {
+                this.submit();
+            };
+        });
+
+        this.container.addEventListener('keypress', (event) => {
+            if (event.target.matches('#products-create-input-barcode')) {
+                if (event.key === 'Enter') {
+                    document.querySelector('#products-create-input-name').focus();
                 };
             };
         });
@@ -300,35 +164,79 @@ export default class ProductsCreateView extends GenericView {
         this.app.innerHTML = '';
         this.app.append(this.view);
 
-        this.barcode.focus();
+        if (!localStorage.getItem('new-product')) {
+            this.reset_storage();
+        };
 
         const providers = await this.fetch_providers();
-        providers.sort((a, b) => a.name.localeCompare(b.name));
+        providers.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
         this.draw_providers(providers);
+        this.draw();
     };
 
-    show_message (message, error = false) {
-        this.message.textContent = message;
+    reset_storage () {
+        localStorage.setItem('new-product', JSON.stringify({
+            barcode: null,
+            name: null,
+            major_price: null,
+            minor_price: null,
+            stock: null,
+            provider_id: "",
+            cost: null,
 
-        if (error) {
-            this.message.classList.remove('products-create-message-success');
-            this.message.classList.add('products-create-message-error');
-        } else {
-            this.message.classList.remove('products-create-message-error');
-            this.message.classList.add('products-create-message-success');
-        };
+            minor_price_condition_1: null,
+            minor_price_condition_2: null,
+            minor_price_condition_3: null,
+            minor_price_condition_4: null,
 
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        };
+            minor_price_value_1: null,
+            minor_price_value_2: null,
+            minor_price_value_3: null,
+            minor_price_value_4: null
+        }));
 
-        this.timeout = setTimeout(() => {
-            this.message.textContent = 'Nada que reportar.';
-            this.message.classList.remove('products-create-message-success');
-            this.message.classList.remove('products-create-message-error');
-            this.timeout = null;
-        }, 8000);
+        document.querySelector('#products-create-input-image').value = null;
+        document.querySelector('#products-create-button-image').textContent = 'Seleccionar Imagen';
+    };
+
+    draw () {
+        const storage = JSON.parse(localStorage.getItem('new-product'));
+
+        const barcode = document.querySelector('#products-create-input-barcode');
+        const name = document.querySelector('#products-create-input-name');
+        const majorPrice = document.querySelector('#products-create-input-majorprice');
+        const minorPrice = document.querySelector('#products-create-input-minorprice');
+        const stock = document.querySelector('#products-create-input-stock');
+        // const cost = document.querySelector('#products-create-input-cost');
+        const provider = document.querySelector('#products-create-select-provider');
+
+        const minorPriceCondition1 = document.querySelector('#products-create-input-condition-1');
+        const minorPriceCondition2 = document.querySelector('#products-create-input-condition-2');
+        const minorPriceCondition3 = document.querySelector('#products-create-input-condition-3');
+        const minorPriceCondition4 = document.querySelector('#products-create-input-condition-4');
+
+        const minorPriceValue1 = document.querySelector('#products-create-input-minorprice-1');
+        const minorPriceValue2 = document.querySelector('#products-create-input-minorprice-2');
+        const minorPriceValue3 = document.querySelector('#products-create-input-minorprice-3');
+        const minorPriceValue4 = document.querySelector('#products-create-input-minorprice-4');
+
+        barcode.value = storage.barcode;
+        name.value = storage.name;
+        majorPrice.value = storage.major_price;
+        minorPrice.value = storage.minor_price;
+        stock.value = storage.stock;
+        // cost.value = storage.cost;
+        provider.value = storage.provider_id;
+
+        minorPriceCondition1.value = storage.minor_price_condition_1;
+        minorPriceCondition2.value = storage.minor_price_condition_2;
+        minorPriceCondition3.value = storage.minor_price_condition_3;
+        minorPriceCondition4.value = storage.minor_price_condition_4;
+
+        minorPriceValue1.value = storage.minor_price_value_1;
+        minorPriceValue2.value = storage.minor_price_value_2;
+        minorPriceValue3.value = storage.minor_price_value_3;
+        minorPriceValue4.value = storage.minor_price_value_4;
     };
 
     async fetch_providers () {
@@ -339,15 +247,16 @@ export default class ProductsCreateView extends GenericView {
             return response.data;
         } catch (error) {
             console.error(error);
-            this.show_message(error.message, true);
+            alertsManager.createAlert('Ocurrió un error al cargar los proveedores.', true);
+            return [];
         };
     };
 
     draw_providers (providers) {
-        const selector = document.querySelector('#products-create-provider-select');
+        const selector = document.querySelector('#products-create-select-provider');
 
         selector.innerHTML = `
-            <option value="none">SIN ASIGNAR</option>
+            <option value="">SIN ASIGNAR</option>
         `;
 
         for (const provider of providers) {
@@ -357,46 +266,12 @@ export default class ProductsCreateView extends GenericView {
         };
     };
 
-    async fetch_new_barcode () {
-        try {
-            const request = await fetch('/api/barcodes/new', { method: "GET" });
-            const response = await request.json();
-            if (!request.ok) throw new Error(response.error.message);
-            return response.data;
-        } catch (error) {
-            console.error(error);
-            this.show_message(error.message, true);
-            return '';
-        };
-    };
-
     async submit () {
         try {
-            const providerSelector = document.querySelector('#products-create-provider-select');
+            const image = document.querySelector('#products-create-input-image').files[0];
 
-            const barcode = this.barcode.value;
-            const name = this.name.value;
-            const stock = this.stock.value;
-            const provider_id = providerSelector.value;
-            const price_major = this.majorPrice.value;
-            const price_minor = this.baseMinorPrice.value;
-            const image = this.image.files[0];
-
-            const minor_prices = this.minor_prices.map((element) => ({
-                condition: element.input_cond.value,
-                price: element.input_value.value
-            }));
-            
             const data = new FormData();
-            data.append('data', JSON.stringify({
-                barcode,
-                name,
-                stock,
-                provider_id,
-                price_major,
-                price_minor,
-                minor_prices
-            }));
+            data.append('data', localStorage.getItem('new-product'));
             data.append('image', image);
 
             const request = await fetch('/api/products', {
@@ -406,28 +281,13 @@ export default class ProductsCreateView extends GenericView {
             const response = await request.json();
             if (!request.ok) throw new Error(response.error.message);
 
-            this.show_message('Producto creado correctamente.', false);
-            this.barcode.focus();
-            this.reset();
+            alertsManager.createAlert('Producto creado correctamente.', false);
+            document.querySelector('#products-create-input-barcode').focus();
+            this.reset_storage();
+            this.draw();
         } catch (error) {
             console.error(error);
-            this.show_message(error.message, true);  
+            alertsManager.createAlert(error.message, true);
         };
-    };
-
-    reset () {
-        const providerSelector = document.querySelector('#products-create-provider-select');
-        providerSelector.value = 'none';
-
-        this.barcode.value = '';
-        this.name.value = '';
-        this.stock.value = null;
-
-        this.majorPrice.value = null;
-        this.baseMinorPrice.value = null;
-        this.image.value = null;
-        this.imageName.textContent = 'Ninguna imagen seleccionada.';
-        this.minor_prices = [];
-        this.minorPricesContainer.innerHTML = '';
     };
 };

@@ -1,9 +1,4 @@
-const paymentsMap = {
-    'cash': 'EFECTIVO',
-    'transfer': 'TRANSFERENCIA',
-    'card': 'TARJETA',
-    'current_account': 'CUENTA CORRIENTE'
-};
+const payments = require("../static/payments");
 
 module.exports = ReceiptTemplate = (order) => {
     let rows;
@@ -207,7 +202,7 @@ module.exports = ReceiptTemplate = (order) => {
                     <span class="text-bold">${order.customer ? order.customer.name || 'N/D' : 'N/D'}</span>
                     <span>CUIL/CUIT: ${order.customer ? order.customer.cuil || 'N/D' : 'N/D'}</span>
                     <span>EMAIL: ${order.customer ? order.customer.email || 'N/D' : 'N/D'}</span>
-                    <span>MÉTODO DE PAGO: <b>${order.payment_method ? paymentsMap[order.payment_method] : 'SIN ASIGNAR'}</b></span>
+                    <span>MÉTODO DE PAGO: <b>${order.payment_method ? payments[order.payment_method] : 'SIN ASIGNAR'}</b></span>
                 </div>
             
                 <table>

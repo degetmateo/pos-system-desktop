@@ -1,5 +1,5 @@
-import Alert from "../components/alert.js";
 import Navigation from "../components/navigation/navigation.js";
+import alertsManager from "../modules/alerts.manager.js";
 import GenericView from "./GenericView.js";
 
 export default class ListsView extends GenericView {
@@ -91,10 +91,10 @@ export default class ListsView extends GenericView {
                     });
                     const response = await request.json();
                     if (!request.ok) throw new Error(response.error.message);
-                    new Alert({ message: "Datos procesados correctamente", error: false, timeout: 4000 }).render();
+                    alertsManager.createAlert('Datos procesados correctamente.', false);
                 } catch (error) {
                     console.error(error);
-                    new Alert({ message: error.message, error: true, timeout: 4000 }).render();
+                    alertsManager.createAlert(error.message, true);
                 };
             };
         });

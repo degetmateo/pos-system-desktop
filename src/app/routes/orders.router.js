@@ -1,12 +1,9 @@
 const { Router } = require('express');
-const uuid = require('uuid');
 const { database } = require('../database/database.js');
 const { ResponseError, ResponseOk } = require('../helpers/controllerResponse.js');
 const responses = require('../static/responses.js');
 const InvalidArgumentError = require('../errors/invalidArgumentError.js');
 const NotFoundError = require('../errors/notFoundError.js');
-const GenericError = require('../errors/genericError.js');
-const PDFCreator = require('../helpers/pdf.creator.js');
 const ReceiptTemplate = require('../templates/receipt.template.js');
 const { BrowserWindow } = require('electron');
 const { ordersRepository } = require('../repositories/orders.repository.js');

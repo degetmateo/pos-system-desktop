@@ -1,6 +1,5 @@
 import Navigation from "../components/navigation/navigation.js";
 import PopupConfirm from "../components/popup-confirm/popup-confirm.js";
-import ProductCard from "../components/product.card.js";
 import router from "../router.js";
 import GenericView from "./GenericView.js";
 

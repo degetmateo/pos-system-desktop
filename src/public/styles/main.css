@@ -37,3 +37,48 @@ th, td {
     padding: 10px;
     text-align: left;
 }
+
+.app-input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0 10px;
+    height: 40px;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    border: 1px solid #000;
+}
+
+.app-input:focus {
+    outline: 2px solid red;
+}
+
+.app-button {
+    border: none;
+    outline: none;
+    cursor: pointer;
+
+    border: 1px solid #000;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.app-button:hover {
+    background-color: gray;
+}
+
+.app-button:focus {
+    outline: 2px solid red;
+}
+
+.app-select {
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0 10px;
+    height: 40px;
+}
+
+.app-select:focus {
+    outline: 2px solid red;
+}
