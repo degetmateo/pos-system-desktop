@@ -4,6 +4,7 @@ const { database } = require('../database/database');
 const responses = require('../static/responses');
 const InvalidArgumentError = require('../errors/invalidArgumentError');
 const { ResponseOk, ResponseError } = require('../controllers/response.controller');
+const customersRepositoryUpdate = require('../repositories/customers.repository.update');
 
 const router = Router();
 
@@ -83,6 +84,27 @@ router.get('/', (req, res) => {
     } catch (error) {
         console.error(error);
         ResponseError(res, error);  
+    };
+});
+
+router.put('/:id', async (req, res) => {
+    try {
+        const customerId = req.params.id;
+        req.body.id = customerId;
+        let { name, type } = req.body;
+
+        if (!name) throw new InvalidArgumentError("Se requiere nombre.");
+        if (type) {
+            if (!['major', 'minor'].includes(type)) throw new InvalidArgumentError("Tipo incorrecto.");
+        };
+
+        req.body.name = name.toUpperCase();
+
+        const response = await customersRepositoryUpdate(req.body);
+        ResponseOk(res, responses.OK, response);
+    } catch (error) {
+        console.error(error);
+        ResponseError(res, error);
     };
 });
 

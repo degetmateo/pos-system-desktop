@@ -35,10 +35,11 @@ export default class CustomersView extends GenericView {
                 >
                     <thead class="customers-view-table-head">
                         <tr class="customers-view-table-head-row">
-                            <th>Nombre</th>
+                            <th>NOMBRE</th>
                             <th>CUIL/CUIT</th>
-                            <th>Correo Electrónico</th>
-                            <th>Número</th>
+                            <th>CORREO ELECTRÓNICO</th>
+                            <th>TELÉFONO</th>
+                            <th>TIPO</th>
                         </tr>
                     </thead>
                     <tbody
@@ -103,8 +104,11 @@ export default class CustomersView extends GenericView {
                             router.navigateTo('/new-order?customer_id='+customer_id);
                             return;
                     };
+                } else {
+                    router.navigateTo('/customers/'+customer_id);
+                    return;
                 };
-            }
+            };
         });
 
         this.container.addEventListener('keypress', async (event) => {
@@ -151,14 +155,23 @@ export default class CustomersView extends GenericView {
         document.querySelector('#customers-view-table-body').innerHTML = '';
 
         for (const customer of customers) {
+            let type = customer.default_order_type;
+
+            if (type) {
+                type === 'major' ? type = 'MAYORISTA' : type = 'MINORISTA';
+            } else {
+                type = 'SIN ASIGNAR';
+            };
+
             document.querySelector('#customers-view-table-body').innerHTML += `
                 <tr 
                     class="customers-view-table-row"
                 >
-                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.name}</td>
-                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.cuil}</td>
-                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.email}</td>
-                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.phone}</td>
+                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.name || ''}</td>
+                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.cuil||''}</td>
+                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.email||''}</td>
+                    <td id="${customer.id}" class="customers-view-table-row-td">${customer.phone||''}</td>
+                    <td id="${customer.id}" class="customers-view-table-row-td">${type}</td>
                 </tr>
             `;
         };

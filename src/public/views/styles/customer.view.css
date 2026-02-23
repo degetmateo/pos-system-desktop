@@ -1,0 +1,30 @@
+.customer-view-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-view-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    width: 500px;
+}
+
+.customer-view-data-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.customer-view-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.customer-view-data-text {
+    font-size: 18px;
+    font-weight: bold;
+}
