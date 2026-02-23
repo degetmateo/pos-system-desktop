@@ -171,6 +171,12 @@ module.exports = ReceiptTemplate = (order) => {
                         border: none !important;
                     }
 
+                    .payment-data-container {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+                    }
+
                     @page {
                         margin: 0;
                         opacity: 0;
@@ -235,9 +241,21 @@ module.exports = ReceiptTemplate = (order) => {
 
                 ${order.discounts.length > 0 ? `<p>* Esta orden incluye descuentos aplicados.</p>` : ''}
 
+                <div class="payment-data-container">
+                    <span>DATOS DE PAGO</span>
+                    <span>TIPO DE CUENTA: Cuenta Corriente</span>
+                    <span>RAZÓN SOCIAL: <b>RUBEN DARIO DEGET Y SERGIO EZEQUIEL DEGET SH</b></span>
+                    <span>CUIT: <b>30714624411</b> (Responsable Inscripto)</span>
+                    <span>ALIAS: <b>OGRO.CASO.RUINA</b></span>
+                    <span>CBU: <b>1910197455019700872596</b></span>
+                    <span>DIRECCIÓN: MONTEVIDEO 1879, GRAL PACHECO</span>
+                    <span>BANCO CREDICOOP</span>
+                </div>
+
                 <p class="text-center"><b>Documento no válido como factura.</b> Cotización válida por 5 días. Precios sujetos a cambios según disponibilidad de stock al momento de concretar la operación.</p>
 
                 <p class="text-center">En caso de solicitar factura A o B, enviar requisitos necesarios según reglamentación vigente ARCA.</p>
+
             </body>
         </html>
     `;
