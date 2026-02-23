@@ -1,0 +1,11 @@
+.options-view-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.options-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}

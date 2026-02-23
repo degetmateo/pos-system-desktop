@@ -53,6 +53,12 @@ export default class Navigation extends HTMLElement {
                 href="/lists"
                 class="navigation-button"
             >LISTAS</button>
+
+            <button
+                type="button"
+                href="/options"
+                class="navigation-button"
+            >OPCIONES</button>
         `;
 
         this.addEventListener('click', (event) => {
