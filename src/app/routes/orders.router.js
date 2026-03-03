@@ -24,13 +24,16 @@ router.get('/', (req, res) => {
 
         database.transaction(() => {
             orders = database.prepare(`
-                SELECT * FROM orders o
+                SELECT o.* FROM orders o
+
+                LEFT JOIN customers c ON o.customer_id = c.id
 
                 WHERE 
                     (:id IS NULL OR o.id = :id) AND
                     (:customer_id IS NULL OR o.customer_id = :customer_id) AND
                     (:type IS NULL OR o.type = :type) AND
-                    (:status IS NULL OR o.status = :status)
+                    (:status IS NULL OR o.status = :status) AND
+                    (:customerName IS NULL OR c.name LIKE :customerName)
 
                 GROUP BY 
                     o.id
@@ -44,6 +47,7 @@ router.get('/', (req, res) => {
             `).all({
                 id,
                 customer_id,
+                customerName,
                 type,
                 status,
                 limit,
