@@ -3,6 +3,7 @@ const ConflictError = require('../errors/conflictError.js');
 const InvalidArgumentError = require('../errors/invalidArgumentError.js');
 const NotFoundError = require('../errors/notFoundError.js');
 const uuid = require('uuid');
+const productsRepositoryUpdate = require('./products.repository.update.js');
 
 const insert = (data) => {
     let {
@@ -13,7 +14,6 @@ const insert = (data) => {
         minor_price, 
         stock, 
         provider_id,
-        cost,
         minor_price_condition_1, 
         minor_price_condition_2, 
         minor_price_condition_3, 
@@ -21,8 +21,7 @@ const insert = (data) => {
         minor_price_value_1, 
         minor_price_value_2, 
         minor_price_value_3, 
-        minor_price_value_4,
-        image_filename
+        minor_price_value_4
     } = data;
 
     const date = new Date().toISOString();
@@ -68,9 +67,9 @@ const insert = (data) => {
         };
 
         database.prepare(`
-            INSERT INTO products (id, barcode, name, stock, provider_id, image_name, price_major, price_minor, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(id, barcode, name, Number(stock), provider_id, image_filename, Number(major_price)*100, Number(minor_price)*100, date, date);
+            INSERT INTO products (id, barcode, name, stock, provider_id, price_major, price_minor, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(id, barcode, name, Number(stock), provider_id, Number(major_price)*100, Number(minor_price)*100, date, date);
 
         const preparedQuery = database.prepare(`
             INSERT INTO minor_prices (id, product_id, condition, condition_value, price_value, created_at, updated_at)
@@ -96,5 +95,6 @@ const insert = (data) => {
 };
 
 module.exports.productsRepository = {
-    insert
+    insert,
+    update: productsRepositoryUpdate
 };

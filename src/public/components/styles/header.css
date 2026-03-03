@@ -1,0 +1,43 @@
+.app-header {
+    box-sizing: border-box;
+    height: 50px;
+
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto;
+    align-items: center;
+
+    gap: 15px;
+
+    border-bottom: 1px solid #000;
+}
+
+.app-header-button {
+    cursor: pointer;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 50px;
+    width: 50px;
+}
+
+.app-header-button:hover {
+    background-color: gray;
+}
+
+.app-header-button-text {
+    font-size: 20px;
+    font-weight: bolder;
+}
+
+.app-header-title-container {
+    display: flex;
+    align-items: center;
+}
+
+.app-header-title {
+    font-size: 20px;
+    font-weight: bolder;
+}

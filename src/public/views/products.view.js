@@ -43,7 +43,6 @@ export default class ProductsView extends GenericView {
                         <tr>
                             <th>Código</th>
                             <th>Nombre</th>
-                            <th>Stock</th>
                             <th>Precio Mayorista</th>
                             <th>Precio Minorista</th>
                             <th>Fecha</th>
@@ -189,7 +188,6 @@ export default class ProductsView extends GenericView {
                 <tr class="product-view-table-row">
                     <td id="${product.id}" class="products-view-table-row-data">${product.barcode}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${product.name}</td>
-                    <td id="${product.id}" class="products-view-table-row-data">${product.stock}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${product.price_major / 100}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${product.price_minor / 100}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${new Date(product.created_at).toLocaleDateString()}</td>

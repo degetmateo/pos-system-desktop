@@ -1,12 +1,15 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import PopupConfirm from "../components/popup-confirm/popup-confirm.js";
+import alertsManager from "../modules/alerts.manager.js";
 import router from "../router.js";
 import GenericView from "./GenericView.js";
+import productViewTemplate from "./templates/product.view.template.js";
 
 export default class ProductView extends GenericView {
     constructor () {
         super();
-
+        this.meta = null;
         this.timeout = null;
 
         this.view = document.createElement('div');
@@ -15,146 +18,19 @@ export default class ProductView extends GenericView {
         this.container = document.createElement('div');
         this.container.classList.add('product-view-container');
         this.view.append(this.container);
-
-        this.container.innerHTML = `
-            <div class="product-view-info-container">
-                <img id="product-view-image" class="product-view-image" />
-
-                <div class="product-view-detail-container product-view-barcode-container">
-                    <span class="product-view-detail-title product-view-barcode-title">Código de Barras</span>
-                    <input 
-                        type="text" 
-                        id="product-view-barcode-input" 
-                        class="product-view-input product-view-barcode-input"
-                        placeholder="Código de Barras"
-                    />
-                </div>
-                <div class="product-view-detail-container product-view-name-container">
-                    <span class="product-view-detail-title product-view-name-title">Nombre del Producto</span>
-                    <input 
-                        type="text" 
-                        id="product-view-name-input" 
-                        class="product-view-input product-view-name-input"
-                        placeholder="Nombre del Producto"
-                    />
-                </div>
-                <div class="product-view-detail-container product-view-stock-container">
-                    <span class="product-view-detail-title product-view-stock-title">Stock</span>
-                    <input 
-                        type="number"
-                        min="0" 
-                        id="product-view-stock-input" 
-                        class="product-view-input product-view-stock-input"
-                        placeholder="Stock"
-                    />
-                </div>
-                <div class="product-view-detail-container">
-                    <button
-                        type="button"
-                        id="product-view-button-save"
-                        class="product-view-button"
-                    >Guardar Cambios</button>
-
-                    <button
-                        type="button"
-                        id="product-view-button-delete"
-                        class="product-view-button product-view-button-delete"
-                    >Eliminar</button>
-                </div>
-            </div>
-
-            <div class="product-view-extra-container">
-                <div class="product-view-prices-container">
-                    <div class="product-view-detail-container product-view-price-major-container">
-                        <span class="product-view-detail-title product-view-price-major-title">Precio Mayorista</span>
-                        <input 
-                            type="number"
-                            min="0" 
-                            id="product-view-price-major-input" 
-                            class="product-view-input product-view-price-major-input"
-                            placeholder="Precio Mayorista"
-                        />
-                    </div>
-                    <div class="product-view-detail-container product-view-price-minor-container">
-                        <span class="product-view-detail-title product-view-price-minor-title">Precio Minorista</span>
-                        <input 
-                            type="number"
-                            min="0" 
-                            id="product-view-price-minor-input" 
-                            class="product-view-input product-view-price-minor-input"
-                            placeholder="Precio Minorista"
-                        />
-                    </div>
-                </div>
-
-                <div class="product-view-minor-prices-container">
-                    <button 
-                        type="button" 
-                        id="product-view-minor-prices-button-create"
-                        class="product-view-button product-view-minor-prices-button product-view-minor-prices-button-create"
-                    >Agregar Precio Minorista</button>
-
-                    <span class="product-view-minor-prices-title">Condición / Precio Nuevo</span>
-
-                    <div id="product-view-minor-prices" class="product-view-minor-prices"></div>
-                </div>
-
-                <div class="product-view-provider-container">
-                    <span class="product-view-detail-title">Seleccionar Proveedor</span>
-                    <select id="product-view-provider">
-                        <option value="none">SIN ASIGNAR</option>
-                    </select>
-                </div>
-
-                <input
-                    type="file"
-                    accept="image/*"
-                    id="product-view-image-input"
-                    class="product-view-input product-view-image-input"
-                />
-            </div>
-
-            <div id="product-view-message-container" class="product-view-message-container"></div>
-        `;
+        this.header = new AppHeader();
+        this.container.append(this.header);
+        this.content = document.createElement('div');
+        this.content.classList.add('content', 'product-view-content');
+        this.content.innerHTML = productViewTemplate;
+        this.container.append(this.content);
 
         this.container.addEventListener('click', async (event) => {
-            const storage = JSON.parse(localStorage.getItem('product'));
-
-            if (event.target.matches('#product-view-image-button')) {
-                document.querySelector('#product-view-image-input').click();
-            };
-
-            if (event.target.matches('#product-view-minor-prices-button-create')) {
-                try {
-                    const request = await fetch('/api/info/uuid', { method: "GET" });
-                    const response = await request.json();
-                    const id = response.data;
-
-                    storage.minor_prices.push({
-                        id: id,
-                        condition_value: 0,
-                        price_value: 0
-                    });
-                    localStorage.setItem('product', JSON.stringify(storage));
-                    this.draw();
-                } catch (error) {
-                    console.error(error);
-                    this.show_message(error.message, true);
-                };
-            };
-
-            if (event.target.matches('.product-view-minor-price-button-delete')) {
-                const id = event.target.getAttribute('id');
-                storage.minor_prices = storage.minor_prices.filter((price) => price.id !== id);
-                localStorage.setItem('product', JSON.stringify(storage));
-                this.draw();
-            };
-
-            if (event.target.matches('#product-view-button-save')) {
+            if (event.target.matches('#product-view-basic-info-button-update')) {
                 this.submit();
             };
 
-            if (event.target.matches('#product-view-button-delete')) {
+            if (event.target.matches('#product-view-basic-info-button-delete')) {
                 const storage = JSON.parse(localStorage.getItem('product'));
 
                 new PopupConfirm({
@@ -167,8 +43,9 @@ export default class ProductView extends GenericView {
                             router.goBack();
                         } catch (error) {
                             console.error(error);  
+                            alertsManager.createAlert(error.message, true);
                         };
-                    },
+                    },  
                     onCancel: () => {
                         console.log('CANCELADO');
                     }
@@ -176,80 +53,127 @@ export default class ProductView extends GenericView {
             };
         });
 
+        this.storageName = 'product';
+
         this.container.addEventListener('change', (event) => {
-            const storage = JSON.parse(localStorage.getItem('product'));
+            const storage = this.getStorage();
             
-            if (event.target.matches('#product-view-provider')) {
-                storage.provider_id = event.target.value;
-                localStorage.setItem('product', JSON.stringify(storage));
-                this.draw();
-            };
-
-            if (event.target.matches('#product-view-barcode-input')) {
+            if (event.target.matches('#product-view-basic-info-input-barcode')) {
                 storage.barcode = event.target.value;
-                localStorage.setItem('product', JSON.stringify(storage));
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('#product-view-name-input')) {
+            if (event.target.matches('#product-view-basic-info-input-name')) {
                 storage.name = event.target.value;
-                localStorage.setItem('product', JSON.stringify(storage));
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('#product-view-stock-input')) {
-                storage.stock = Number(event.target.value);
-                localStorage.setItem('product', JSON.stringify(storage));
+            if (event.target.matches('#product-view-basic-info-input-majorprice')) {
+                storage.majorprice = Number(event.target.value) * 100;
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('#product-view-price-major-input')) {
-                storage.price_major = Number(event.target.value * 100);
-                localStorage.setItem('product', JSON.stringify(storage));
+            if (event.target.matches('#product-view-basic-info-input-minorprice')) {
+                storage.minorprice = Number(event.target.value) * 100;
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('#product-view-price-minor-input')) {
-                storage.price_minor = Number(event.target.value * 100);
-                localStorage.setItem('product', JSON.stringify(storage));
+            if (event.target.matches('#product-view-basic-info-input-provider')) {
+                storage.provider_id = event.target.value;
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('.product-view-minor-price-condition-input')) {
-                const id = event.target.getAttribute('id');
-                for (let i = 0; i < storage.minor_prices.length; i++) {
-                    if (storage.minor_prices[i].id === id) {
-                        storage.minor_prices[i].condition_value = Number(event.target.value);
+            if (event.target.matches('.input-minorprice-condition')) {
+                for (let i = 1; i <= 4; i++) {
+                    const inputCondition = document.querySelector(`#products-create-input-condition-${i}`);
+                    const inputPrice = document.querySelector(`#products-create-input-minorprice-${i}`);
+                    
+                    let conditionValue = 0;
+                    let priceValue = 0;
+
+                    if (!inputCondition.value || inputCondition.value <= 0) {
+                        inputCondition.value = '';
+                    } else {
+                        conditionValue = Number(inputCondition.value);
                     };
+                    if (!inputPrice.value || inputPrice.value <= 0) {
+                        inputPrice.value = '';
+                    } else {
+                        priceValue = Number(inputPrice.value);
+                    };
+
+                    storage[`minor_price_condition_${i}`] = conditionValue;
+                    storage[`minor_price_value_${i}`] = priceValue * 100; 
                 };
-                localStorage.setItem('product', JSON.stringify(storage));
+
+                this.setStorage(storage);
                 this.draw();
             };
 
-            if (event.target.matches('.product-view-minor-price-price-input')) {
-                const id = event.target.getAttribute('id');
-                for (let i = 0; i < storage.minor_prices.length; i++) {
-                    if (storage.minor_prices[i].id === id) {
-                        storage.minor_prices[i].price_value = Number(event.target.value * 100);
+            if (event.target.matches('.input-minorprice-value')) {
+                for (let i = 1; i <= 4; i++) {
+                    const inputCondition = document.querySelector(`#products-create-input-condition-${i}`);
+                    const inputPrice = document.querySelector(`#products-create-input-minorprice-${i}`);
+                    
+                    let conditionValue = 0;
+                    let priceValue = 0;
+
+                    if (!inputCondition.value || inputCondition.value <= 0) {
+                        inputCondition.value = '';
+                    } else {
+                        conditionValue = Number(inputCondition.value);
                     };
+                    if (!inputPrice.value || inputPrice.value <= 0) {
+                        inputPrice.value = '';
+                    } else {
+                        priceValue = Number(inputPrice.value);
+                    };
+
+                    storage[`minor_price_condition_${i}`] = conditionValue;
+                    storage[`minor_price_value_${i}`] = priceValue * 100; 
                 };
-                localStorage.setItem('product', JSON.stringify(storage));
+                
+                this.setStorage(storage);
                 this.draw();
             };
         });
     };
 
-    async init (url) {
+    getStorage () {
+        return JSON.parse(localStorage.getItem(this.storageName));
+    };
+
+    setStorage (data) {
+        localStorage.setItem(this.storageName, JSON.stringify(data));
+    };
+
+    async init (meta) {
+        this.meta = meta;
         this.app.innerHTML = '';
         this.app.append(this.view);
 
-        document.querySelector('#product-view-image-input').value = null;
-
         const providers = await this.fetch_providers();
-        providers.sort((a, b) => a.name.localeCompare(b.name));
+        providers.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
         this.draw_providers(providers);
 
-        const product = await this.fetch_product(url.data.id);
+        const product = await this.fetch_product(this.meta.data.id);
+        this.header.setTitle(product.name);
+
+        if (!product.minor_prices) product.minor_prices = [];
+        product.minor_prices = product.minor_prices.sort((a, b) => a.condition_value - b.condition_value);
+
+        for (let i = 0; i < product.minor_prices.length; i++) {
+            if (product.minor_prices[i]) {
+                product[`minor_price_condition_${i + 1}`] = product.minor_prices[i].condition_value;
+                product[`minor_price_value_${i + 1}`] = product.minor_prices[i].price_value;
+            };
+        };
+
         localStorage.setItem('product', JSON.stringify(product));
         this.draw();
     };
@@ -262,7 +186,7 @@ export default class ProductView extends GenericView {
             return response.data[0];
         } catch (error) {
             console.error(error);
-            this.show_message(error.message, true);
+            alertsManager.createAlert(error.message, true);
             return null;  
         };
     };
@@ -280,10 +204,10 @@ export default class ProductView extends GenericView {
     };
 
     draw_providers (providers) {
-        const select = document.querySelector('#product-view-provider');
+        const select = document.querySelector('#product-view-basic-info-input-provider');
         select.innerHTML = '';
         select.innerHTML = `
-            <option value="none">SIN ASIGNAR</option>
+            <option value="">SIN ASIGNAR</option>
         `;
         for (const provider of providers) {
             select.innerHTML += `
@@ -292,88 +216,68 @@ export default class ProductView extends GenericView {
         };
     };
 
+    setBarcode (barcode) {
+        document.querySelector('#product-view-basic-info-input-barcode').value = barcode || '';
+    };
+
+    setName (name) {
+        document.querySelector('#product-view-basic-info-input-name').value = name || '';
+    };
+
+    setMajorPrice (majorprice) {
+        document.querySelector('#product-view-basic-info-input-majorprice').value = majorprice / 100;
+    };
+
+    setMinorPrice (minorprice) {
+        document.querySelector('#product-view-basic-info-input-minorprice').value = minorprice / 100;
+    };
+
+    setProvider (providerId) {
+        document.querySelector('#product-view-basic-info-input-provider').value = providerId || '';
+    };
+
+    setDiscountPrice (number, condition, price) {
+        if (number < 1) return;
+        if (number > 4) return;
+        document.querySelector(`#products-create-input-condition-${number}`).value = condition;
+        document.querySelector(`#products-create-input-minorprice-${number}`).value = price;
+    };
+
     draw () {
         const storage = JSON.parse(localStorage.getItem('product'));
         if (!storage) return;
-        document.querySelector('#product-view-image').src = '/api/products/image/'+storage.id+`?t=${new Date().getTime()}`;
-        document.querySelector('#product-view-image').addEventListener('error', () => {
-            document.querySelector('#product-view-image').src = '/public/assets/interrogation_mark.png';
-        });
-        document.querySelector('#product-view-barcode-input').value = storage.barcode;
-        document.querySelector('#product-view-name-input').value = storage.name;
-        document.querySelector('#product-view-stock-input').value = storage.stock;
-        document.querySelector('#product-view-price-major-input').value = storage.price_major / 100;
-        document.querySelector('#product-view-price-minor-input').value = storage.price_minor / 100;
 
-        document.querySelector('#product-view-provider').value = storage.provider_id || 'none';
+        this.setBarcode(storage.barcode);
+        this.setName(storage.name);
+        this.setMajorPrice(storage.price_major);
+        this.setMinorPrice(storage.price_minor);
+        this.setProvider(storage.provider_id || '');
 
-        document.querySelector('#product-view-minor-prices').innerHTML = '';
-        for (const minor_price of storage.minor_prices) {
-            document.querySelector('#product-view-minor-prices').innerHTML += `
-                <div class="product-view-minor-price-container">
-                    <input 
-                        type="number"
-                        min="0"
-                        id="${minor_price.id}" 
-                        class="product-view-minor-price-input product-view-minor-price-condition-input"
-                        placeholder="Condición"
-                        value="${minor_price.condition_value}"
-                    />
-                    <input 
-                        type="number"
-                        min="0"
-                        id="${minor_price.id}" 
-                        class="product-view-minor-price-input product-view-minor-price-price-input"
-                        placeholder="Nuevo Precio"
-                        value="${minor_price.price_value / 100}"
-                    />
-                    <button
-                        type="button"
-                        id="${minor_price.id}"
-                        class="product-view-minor-price-button-delete"
-                    >Eliminar</button>
-                </div>
-            `;
+        for (let i = 1; i <= 4; i++) {
+            const cond = storage[`minor_price_condition_${i}`];
+            const price = storage[`minor_price_value_${i}`];
+
+            cond ?
+                this.setDiscountPrice(i, cond, price / 100) :
+                this.setDiscountPrice(i, '', '');
         };
-    };
-
-    show_message (message, error = false) {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        };
-
-        document.querySelector('#product-view-message-container').innerHTML = `
-            <span 
-                class="product-view-message ${error ? "product-view-message-error" : "product-view-message-success"}"
-            >${message}</span>
-        `;
-
-        this.timeout = setTimeout(() => {
-            document.querySelector('#product-view-message-container').innerHTML = '';
-            this.timeout = null;
-        }, 6000);
     };
 
     async submit () {
         try {
-            const storage = JSON.parse(localStorage.getItem('product'));
-
-            const data = new FormData();
-            data.append('data', JSON.stringify(storage));
-            data.append('image', document.querySelector('#product-view-image-input').files[0]);
-
-            const request = await fetch('/api/products/update/'+storage.id, {
+            const request = await fetch('/api/products/update/'+this.meta.data.id, {
                 method: "POST",
-                body: data
+                headers: { "Content-Type": "application/json" },
+                body: localStorage.getItem('product')
             });
             const response = await request.json();
             if (!request.ok) throw new Error(response.error.message);
-            this.show_message("Producto actualizado correctamente.", false);
+            alertsManager.createAlert("Producto actualizado.", false);
+            this.setStorage(response.data);
             this.draw();
         } catch (error) {
             console.error(error);
-            this.show_message(error.message, true);  
+            alertsManager.createAlert(error.message, true);
         };
     };
 };

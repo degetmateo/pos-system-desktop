@@ -4,7 +4,7 @@ export default `
             <span class="product-view-basic-info-title">Código de Barras</span>
             <input
                 class="input app-input"
-                id="products-create-input-barcode"
+                id="product-view-basic-info-input-barcode"
                 type="text"
                 placeholder="Código de Barras"
             />
@@ -14,7 +14,7 @@ export default `
             <span class="product-view-basic-info-title">Nombre del Producto</span>
             <input
                 class="input app-input"
-                id="products-create-input-name"
+                id="product-view-basic-info-input-name"
                 type="text"
                 placeholder="Nombre del Producto"
             />
@@ -24,7 +24,7 @@ export default `
             <span class="product-view-basic-info-title">Precio Mayorista</span>
             <input
                 class="input app-input"
-                id="products-create-input-majorprice"
+                id="product-view-basic-info-input-majorprice"
                 type="number"
                 placeholder="Precio Mayorista"
                 min="0"
@@ -35,7 +35,7 @@ export default `
             <span class="product-view-basic-info-title">Precio Minorista</span>
             <input
                 class="input app-input"
-                id="products-create-input-minorprice"
+                id="product-view-basic-info-input-minorprice"
                 type="number"
                 placeholder="Precio Minorista"
                 min="0"
@@ -44,42 +44,21 @@ export default `
 
         <div class="product-view-basic-info-container">
             <span class="product-view-basic-info-title">Proveedor</span>
-            <select class="app-select" id="products-create-input-provider"></select>
+            <select class="app-select" id="product-view-basic-info-input-provider"></select>
         </div>
 
         <div class="product-view-basic-info-container">
             <button
                 class="button app-button"
-                id="products-create-button-create"
+                id="product-view-basic-info-button-update"
                 type="button"
-            >Crear Producto</button>
+            >Actualizar Producto</button>
 
             <button
                 class="button app-button"
-                id="products-create-button-reset"
+                id="product-view-basic-info-button-delete"
                 type="button"
-            >Reiniciar Producto</button>
-
-            <button
-                class="button app-button"
-                id="products-create-button-internal-barcode"
-                type="button"
-            >Generar Código Interno</button>
-        </div>
-
-        <div class="product-view-basic-info-container">
-            <input
-                type="text"
-                id="products-create-input-new-provider"
-                class="input app-input"
-                placeholder="Nombre del Proveedor"
-            />
-
-            <button
-                type="button"
-                class="button app-button"
-                id="products-create-button-new-provider"
-            >Crear</button>
+            >Eliminar Producto</button>
         </div>
     </div>
 

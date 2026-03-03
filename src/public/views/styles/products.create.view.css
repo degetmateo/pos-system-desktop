@@ -1,9 +1,14 @@
 .products-create-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.products-create-content {
     box-sizing: border-box;
-    padding: 5px;
+    padding: 10px;
 
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
     gap: 10px;
 }

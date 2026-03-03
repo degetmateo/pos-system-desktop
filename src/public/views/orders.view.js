@@ -1,7 +1,9 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import router from "../router.js";
 import payments from "../static/payments.js";
 import GenericView from "./GenericView.js";
+import ordersViewTemplate from "./templates/orders.view.template.js";
 
 export default class OrdersView extends GenericView {
     constructor () {
@@ -9,54 +11,22 @@ export default class OrdersView extends GenericView {
 
         this.view = document.createElement('div');
         this.view.classList.add('view');
+        
         this.view.append(new Navigation());
 
         this.container = document.createElement('div');
         this.container.classList.add('container', 'orders-view-container');
         this.view.append(this.container);
 
-        this.container.innerHTML = `
-            <div 
-                class="orders-view-table-container"
-                style="
-                    flex: 1;
-                    width: 100%;
-                    overflow-y: scroll;
-                    height: calc(100vh - 80px);
-                "
-            >
-                <table class="orders-view-table">
-                    <thead>
-                        <tr class="orders-view-table-head-row">
-                            <th>N°</th>
-                            <th>CLIENTE</th>
-                            <th>TIPO</th>
-                            <th>MONTO</th>
-                            <th>SEÑA</th>
-                            <th>PAGO</th>
-                            <th>FECHA</th>
-                            <th>FACTURA</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orders-view-table-body"></tbody>
-                </table>
-            </div>
+        this.header = new AppHeader('ÓRDENES');
+        this.container.append(this.header);
 
-            <div class="orders-view-buttons-container">
-                <button
-                    type="button"
-                    id="orders-view-button-previous"
-                    class="orders-view-button"
-                >Anterior</button>
-                <button
-                    type="button"
-                    id="orders-view-button-next"
-                    class="orders-view-button"
-                >Siguiente</button>
-            </div>
-        `;
+        this.content = document.createElement('div');
+        this.content.classList.add('orders-view-content');
+        this.content.innerHTML = ordersViewTemplate;
+        this.container.append(this.content);
 
-        this.container.addEventListener('click', (event) => {
+        this.content.addEventListener('click', (event) => {
             if (event.target.matches('.order-view-table-row-td')) {
                 const id = event.target.getAttribute('id');
                 router.navigateTo(`/orders/${id}`);
@@ -104,11 +74,34 @@ export default class OrdersView extends GenericView {
             };
         });
 
+        this.content.addEventListener('change', async (event) => {
+            if (event.target.matches('#orders-view-input-filter-type')) {
+                const value = event.target.value;
+                this.orderType = value;
+                this.offset = 0;
+                this.draw_orders(await this.fetch_orders());
+            };
+
+            if (event.target.matches('#orders-view-input-filter-name')) {
+                const value = event.target.value;
+                this.customerName = value;
+                this.offset = 0;
+                this.draw_orders(await this.fetch_orders());
+            };
+        });
+
+        this.meta = {
+            data: null,
+            params: null
+        };
         this.offset = 0;
+        this.orderType = '';
+        this.customerName = '';
         this.continue = true;
     };
 
-    async init () {
+    async init (meta) {
+        this.meta = meta;
         this.app.innerHTML = '';
         this.app.append(this.view);
         this.draw_orders(await this.fetch_orders());
@@ -116,7 +109,15 @@ export default class OrdersView extends GenericView {
 
     async fetch_orders () {
         try {
-            const request = await fetch('/api/orders?offset='+this.offset, { method: "GET" });
+            const query = [
+                `offset=${this.offset}`,
+                `type=${this.orderType}`,
+                `customer_name=${this.customerName}`
+            ];
+
+            const url = '/api/orders?' + query.join('&');
+
+            const request = await fetch(url, { method: "GET" });
             const response = await request.json();
             if (!request.ok) throw new Error(response.error.message);
             return response.data;

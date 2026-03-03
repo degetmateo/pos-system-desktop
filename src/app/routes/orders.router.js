@@ -17,6 +17,7 @@ router.get('/', (req, res) => {
         const type = req.query.type ? req.query.type : null;
         const status = req.query.status ? req.query.status : null;
         const offset = req.query.offset ? req.query.offset : 0;
+        const customerName = req.query.customer_name ? `%${req.query.customer_name}%` : null;
         const limit = 20;
 
         let orders;
@@ -24,13 +25,17 @@ router.get('/', (req, res) => {
         database.transaction(() => {
             orders = database.prepare(`
                 SELECT * FROM orders o
+                
+                LEFT JOIN customers c ON o.customer_id = c.id
 
                 WHERE 
                     (:id IS NULL OR o.id = :id) AND
                     (:customer_id IS NULL OR o.customer_id = :customer_id) AND
                     (:type IS NULL OR o.type = :type) AND
-                    (:status IS NULL OR o.status = :status)
-                
+                    (:status IS NULL OR o.status = :status) AND
+
+                    (:customerName IS NULL OR c.name LIKE :customerName)
+
                 GROUP BY 
                     o.id
                 ORDER BY 
@@ -43,6 +48,7 @@ router.get('/', (req, res) => {
             `).all({
                 id,
                 customer_id,
+                customerName,
                 type,
                 status,
                 limit,

@@ -50,7 +50,7 @@ class Router {
             .on('/products/:id', (data) => this.views.product.init(data))
             .on('/new-customer', () => this.views.customers_create.init())
             .on('/new-order', (data) => this.views.orders_create.init(data))
-            .on('/orders', () => this.views.orders.init())
+            .on('/orders', (meta) => this.views.orders.init(meta))
             .on('/orders/:id', ({ data }) => this.views.order.init(data))
             .on('/customers', (data) => this.views.customers.init(data))
             .on('/customers/:id', (data) => this.views.customer.init(data))
