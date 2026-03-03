@@ -71,13 +71,13 @@ export default class ProductView extends GenericView {
             };
 
             if (event.target.matches('#product-view-basic-info-input-majorprice')) {
-                storage.majorprice = Number(event.target.value) * 100;
+                storage.price_major = Number(event.target.value) * 100;
                 this.setStorage(storage);
                 this.draw();
             };
 
             if (event.target.matches('#product-view-basic-info-input-minorprice')) {
-                storage.minorprice = Number(event.target.value) * 100;
+                storage.price_minor = Number(event.target.value) * 100;
                 this.setStorage(storage);
                 this.draw();
             };

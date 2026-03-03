@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
 router.post('/update/:id', async (req, res) => {
     try {
         const id = req.params.id;
-
+        console.log(req.body)
         let {
             name,
             minor_prices
