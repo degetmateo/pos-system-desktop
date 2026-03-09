@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import payments from "../static/payments.js";
 import GenericView from "./GenericView.js";
@@ -12,7 +13,14 @@ export default class OrderView extends GenericView {
         this.container.classList.add('container', 'order-view-container');
         this.view.append(this.container);
 
-        this.container.innerHTML = `
+        this.header = new AppHeader('');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('order-view-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = `
             <div class="order-view-details-container">
                 <div class="order-view-info-container">
                     <span id="order-view-number"></span>
@@ -77,6 +85,8 @@ export default class OrderView extends GenericView {
         const orderAdvancement = document.querySelector('#order-view-advancement');
         const orderFinalAmount = document.querySelector('#order-view-final-amount');
         const orderPayment = document.querySelector('#order-view-payment');
+
+        this.header.setTitle(`ÓRDEN N° ${Number(order.number)}`)
 
         orderNumber.innerHTML = `ÓRDEN <b>N° ${Number(order.number)}</b>`;
         orderType.innerHTML = `TIPO: <b>${order.type === 'major' ? 'MAYORISTA' : 'MINORISTA'}</b>`;

@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import audioManager from "../modules/audio.manager.js";
 import router from "../router.js";
@@ -16,7 +17,14 @@ export default class OrdersCreateView extends GenericView {
         this.container.classList.add('container', 'orders-create-container');
         this.view.append(this.container);
 
-        this.container.innerHTML = `
+        this.header = new AppHeader('NUEVA ÓRDEN');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('orders-create-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = `
             <div class="order-create-container-r1">
                 <div class="order-create-container-c1">
                     <div class="order-create-info-container">

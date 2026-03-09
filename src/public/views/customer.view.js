@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import alertsManager from "../modules/alerts.manager.js";
 import GenericView from "./GenericView.js";
@@ -13,7 +14,15 @@ export default class CustomerView extends GenericView {
         this.container = document.createElement('div');
         this.container.classList.add('container','customer-view-container');
         this.view.append(this.container);
-        this.container.innerHTML = customerTemplate;
+
+        this.header = new AppHeader('');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('customer-view-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = customerTemplate;
 
         this.container.addEventListener('click', (event) => {
             if (event.target.matches('#customer-update-button')) {
@@ -54,6 +63,7 @@ export default class CustomerView extends GenericView {
             });
             const response = await request.json();
             if (!request.ok) throw new Error(response.error.message);
+            this.header.setTitle(this.nameInput.value);
             alertsManager.createAlert("Cliente actualizado correctamente.", false);
         } catch (error) {
             console.error(error);
@@ -75,6 +85,7 @@ export default class CustomerView extends GenericView {
     };
 
     drawCustomer (customer) {
+        this.header.setTitle(customer.name);
         this.setName(customer.name);
         this.setCUIL(customer.cuil);
         this.setEmail(customer.email);

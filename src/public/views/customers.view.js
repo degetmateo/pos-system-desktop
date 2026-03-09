@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import router from "../router.js";
 import GenericView from "./GenericView.js";
@@ -14,7 +15,14 @@ export default class CustomersView extends GenericView {
         this.container.classList.add('container', 'customers-view-container');
         this.view.append(this.container);
 
-        this.container.innerHTML = `
+        this.header = new AppHeader('CLIENTES');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('customers-view-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = `
             <div 
                 class="customers-view-filters-container"
             >

@@ -8,6 +8,12 @@
     width: 100%;
 }
 
+.customers-view-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 50px);
+}
+
 .customers-view-filters-container {
     display: flex;
     align-items: center;
@@ -28,7 +34,7 @@
     flex: 1;
     width: 100%;
     overflow-y: scroll;
-    height: calc(100vh - 80px - 80px);
+    height: calc(100vh - 80px - 80px - 50px);
 }
 
 .customers-view-table {

@@ -1,4 +1,9 @@
 .order-view-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-view-content {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 10px;
@@ -45,7 +50,7 @@
 
 .order-view-table-container {
     overflow-y: scroll;
-    height: calc(100vh - 10px);
+    height: calc(100vh - 10px - 50px);
 }
 
 .order-view-table {

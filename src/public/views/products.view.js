@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import audioManager from "../modules/audio.manager.js";
 import router from "../router.js";
@@ -15,7 +16,14 @@ export default class ProductsView extends GenericView {
         this.container.classList.add('products-view-container');
         this.view.append(this.container);
 
-        this.container.innerHTML = `
+        this.header = new AppHeader('PRODUCTOS');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('products-view-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = `
             <div class="products-view-filters-container">
                 <input 
                     type="text" 

@@ -1,5 +1,11 @@
 .customer-view-container {
     display: flex;
+    flex-direction: column;
+}
+
+.customer-view-content {
+    height: calc(100vh - 50px);
+    display: flex;
     align-items: center;
     justify-content: center;
 }

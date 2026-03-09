@@ -6,6 +6,12 @@
     width: 100%;
 }
 
+.orders-create-content {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 50px);
+}
+
 .order-create-container-r1 {
     display:flex;
     flex-direction: row;
@@ -144,7 +150,7 @@
 .order-create-container-c2 {
     flex: 1;
     overflow-y: scroll;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 100px - 50px);
 }
 
 .order-create-table {

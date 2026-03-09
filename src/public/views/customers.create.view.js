@@ -1,3 +1,4 @@
+import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import alertsManager from "../modules/alerts.manager.js";
 import GenericView from "./GenericView.js";
@@ -12,7 +13,15 @@ export default class extends GenericView {
         this.container = document.createElement('div');
         this.container.classList.add('container', 'customers-create-container');
         this.view.append(this.container);
-        this.container.innerHTML = customersCreateTemplate;
+
+        this.header = new AppHeader('NUEVO CLIENTE');
+        this.container.append(this.header);
+
+        this.content = document.createElement('div');
+        this.content.classList.add('customers-create-view-content');
+        this.container.append(this.content);
+
+        this.content.innerHTML = customersCreateTemplate;
 
         this.container.addEventListener('change', (event) => {
             const storage = this.loadStorage();
