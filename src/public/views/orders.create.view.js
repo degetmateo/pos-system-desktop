@@ -1,5 +1,6 @@
 import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
+import alertsManager from "../modules/alerts.manager.js";
 import audioManager from "../modules/audio.manager.js";
 import router from "../router.js";
 import GenericView from "./GenericView.js";
@@ -7,6 +8,8 @@ import GenericView from "./GenericView.js";
 export default class OrdersCreateView extends GenericView {
     constructor () {
         super();
+
+        this.creating = false;
 
         this.view = document.createElement('div');
         this.view.classList.add('view');
@@ -201,6 +204,11 @@ export default class OrdersCreateView extends GenericView {
             };
 
             if (event.target.matches('#order-create-button-create')) {
+                if (this.creating) {
+                    alertsManager.createAlert('Se está creando la orden...', false);
+                    return;
+                };
+                this.creating = true;
                 try {
                     const request = await fetch('/api/orders', {
                         method: "POST",
@@ -214,9 +222,11 @@ export default class OrdersCreateView extends GenericView {
 
                     this.reset();
                     this.show_message("Orden creada correctamente.", false);
+                    this.creating = false;
                 } catch (error) {
                     console.error(error);
                     this.show_message(error.message, true);
+                    this.creating = false;
                 };
             };
 

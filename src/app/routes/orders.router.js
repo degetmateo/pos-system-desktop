@@ -227,4 +227,35 @@ router.get('/receipt/:id', async (req, res) => {
     };
 });
 
+router.get('/report', async (req, res) => {
+    try {
+        const dateStart = req.query.start ? req.query.start : null;
+        const dateEnd = req.query.end ? req.query.end : null;
+
+        const query = `
+            SELECT 
+                date(created_at) as date, 
+                SUM(total_price) as total 
+            FROM orders 
+            WHERE
+                (:dateStart IS NULL OR created_at >= :dateStart) AND
+                (:dateEnd IS NULL OR created_at <= :dateEnd)
+            GROUP BY date 
+            ORDER BY date ASC
+        `;
+    
+        const rows = database.prepare(query).all({ dateStart, dateEnd });
+
+        const data = {
+            labels: rows.map(row => row.date),
+            values: rows.map(row => Number(row.total) / 100)
+        };
+
+        ResponseOk(res, responses.OK, data);
+    } catch (error) {
+        console.error(error);
+        ResponseError(res, error);  
+    };
+});
+
 module.exports = router;

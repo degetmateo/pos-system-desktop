@@ -12,9 +12,9 @@ import OrdersView from "./views/orders.view.js";
 import OrderView from "./views/order.view.js";
 import ProductsCreateView from "./views/products.create.view.js";
 import CustomersView from "./views/customers.view.js";
-import ListsView from "./views/lists.view.js";
 import CustomerView from "./views/customer.view.js";
 import OptionsView from "./views/options.view.js";
+import ReportsView from "./views/reports.view.js";
 
 class Router {
     constructor () {
@@ -34,10 +34,10 @@ class Router {
             orders: new OrdersView(),
             order: new OrderView(),
             customers: new CustomersView(),
-            lists: new ListsView(),
             error: new ErrorView(),
             customer: new CustomerView(),
-            options: new OptionsView()
+            options: new OptionsView(),
+            reports: new ReportsView()
         };
 
         this.router
@@ -54,8 +54,8 @@ class Router {
             .on('/orders/:id', ({ data }) => this.views.order.init(data))
             .on('/customers', (data) => this.views.customers.init(data))
             .on('/customers/:id', (data) => this.views.customer.init(data))
-            .on('/lists', (data) => this.views.lists.init(data))
             .on('/options', (data) => this.views.options.init(data))
+            .on('/reports', (meta) => this.views.reports.init(meta))
             .notFound(() => this.views.error.init());
     }
 

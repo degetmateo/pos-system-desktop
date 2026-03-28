@@ -50,9 +50,9 @@ export default class Navigation extends HTMLElement {
 
             <button
                 type="button"
-                href="/lists"
+                href="/reports"
                 class="navigation-button"
-            >LISTAS</button>
+            >Reportes</button>
 
             <button
                 type="button"
