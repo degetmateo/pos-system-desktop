@@ -18,7 +18,7 @@ module.exports = {
             db.prepare(`
                 INSERT INTO metadata (id, key, value_int, created_at)
                 VALUES (?, ?, ?, ?);
-            `).run(uuid.v4(), 'orders-count', 0, new Date().toISOString());
+            `).run(uuid.v7(), 'orders-count', 0, new Date().toISOString());
 
             db.prepare(`
                 CREATE TABLE IF NOT EXISTS products (

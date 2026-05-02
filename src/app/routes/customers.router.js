@@ -19,7 +19,7 @@ router.post('/', (req, res) => {
             type
         } = req.body;
 
-        const id = uuid.v4();
+        const id = uuid.v7();
         const date = new Date().toISOString();
 
         if (!name || !name.trim()) throw new InvalidArgumentError();

@@ -15,7 +15,7 @@ router.get('/', (_, res) => {
 
 router.get('/uuid', (_, res) => {
     try {
-        ResponseOk(res, responses.OK, uuid.v4());
+        ResponseOk(res, responses.OK, uuid.v7());
     } catch (error) {
         console.error(error);
         ResponseError(res, error);

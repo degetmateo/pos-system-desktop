@@ -38,7 +38,7 @@ module.exports = {
 
                 if (provider) continue;
 
-                const id = uuid.v4();
+                const id = uuid.v7();
                 const date = new Date().toISOString();
 
                 db.prepare(`
@@ -50,7 +50,7 @@ module.exports = {
             db.prepare(`
                 INSERT INTO metadata (id, key, value_int, created_at)
                 VALUES (?, ?, ?, ?);
-            `).run(uuid.v4(), 'barcode', 0, new Date().toISOString());
+            `).run(uuid.v7(), 'barcode', 0, new Date().toISOString());
 
             db.prepare(`
                 CREATE TABLE IF NOT EXISTS minor_prices (

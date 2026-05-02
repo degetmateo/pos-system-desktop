@@ -42,7 +42,7 @@ router.post('/', (req, res) => {
             database.prepare(`
                 INSERT INTO providers (id, name, created_at, updated_at)
                 VALUES (?, ?, ?, ?);
-            `).run(uuid.v4(), name, date, date);
+            `).run(uuid.v7(), name, date, date);
         })();
 
         ResponseOk(res, responses.CREATED, null);

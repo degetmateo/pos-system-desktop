@@ -67,7 +67,7 @@ const update = (data) => {
             delete_minor_prices.run({ product_id: product.id });
 
             if (product.discount_cond_1 && product.discount_cond_1 > 0) {
-                const id = uuid.v4();
+                const id = uuid.v7();
                 create_minor_price.run(
                     id, 
                     product.id, 
@@ -80,7 +80,7 @@ const update = (data) => {
             };
 
             if (product.discount_cond_2 && product.discount_cond_2 > 0) {
-                const id = uuid.v4();
+                const id = uuid.v7();
                 create_minor_price.run(
                     id, 
                     product.id, 
@@ -93,7 +93,7 @@ const update = (data) => {
             };
 
             if (product.discount_cond_3 && product.discount_cond_3 > 0) {
-                const id = uuid.v4();
+                const id = uuid.v7();
                 create_minor_price.run(
                     id, 
                     product.id, 
@@ -106,7 +106,7 @@ const update = (data) => {
             };
 
             if (product.discount_cond_4 && product.discount_cond_4 > 0) {
-                const id = uuid.v4();
+                const id = uuid.v7();
                 create_minor_price.run(
                     id, 
                     product.id, 

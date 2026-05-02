@@ -49,7 +49,7 @@ module.exports = (data) => {
         const createMinorPrice = (condition, price) => {
             if (condition && condition > 0) {
                 if (price && price > 0) {
-                    const minorPriceId = uuid.v4();
+                    const minorPriceId = uuid.v7();
                     preparedQuery.run(minorPriceId, id, 'discount', Number(condition), Number(price), date, date);
                 } else {
                     throw new InvalidArgumentError('Existe un descuento con precio cero.');

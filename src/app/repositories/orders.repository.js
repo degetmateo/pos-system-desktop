@@ -71,7 +71,7 @@ const insert = (data) => {
         advancement
     } = data;
 
-    const orderId = uuid.v4();
+    const orderId = uuid.v7();
     const date = new Date().toISOString();
 
     database.transaction(() => {
@@ -94,7 +94,7 @@ const insert = (data) => {
 
                 amount += product.price_major * item.quantity;
 
-                const orderItemId = uuid.v4();
+                const orderItemId = uuid.v7();
 
                 qInsertOrderItem.run(
                     orderItemId, 
@@ -132,7 +132,7 @@ const insert = (data) => {
                 };
 
                 if (minorPriceId) {
-                    const discount_id = uuid.v4();
+                    const discount_id = uuid.v7();
                     qInsertDiscounts.run(
                         discount_id, 
                         minorPriceId, 
@@ -145,7 +145,7 @@ const insert = (data) => {
 
                 amount += minorPrice * quantity;
 
-                const orderItemId = uuid.v4();
+                const orderItemId = uuid.v7();
 
                 qInsertOrderItem.run(
                     orderItemId, 
