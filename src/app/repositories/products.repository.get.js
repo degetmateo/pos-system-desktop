@@ -33,7 +33,8 @@ module.exports = (data = {
                 p.updated_at
             FROM products p
 
-            WHERE 
+            WHERE
+                deleted = 0 AND
                 (:name IS NULL OR p.name LIKE :name COLLATE NOCASE) AND
                 (:id IS NULL OR p.id = :id) AND
                 (:barcode IS NULL or p.barcode = :barcode)

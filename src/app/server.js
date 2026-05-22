@@ -10,6 +10,7 @@ const providersRouter = require('./routes/providers.router.js');
 const listsRouter = require('./routes/lists.router.js');
 const optionsRouter = require('./routes/options.router.js');
 const authenticationRouter = require('./routes/authentication.router.js');
+const pageRouter = require('./routes/page.products.router.js');
 
 const PUBLIC_PATH = path.join(__dirname, '../public');
 const HTML_PATH = path.join(PUBLIC_PATH, 'index.html');
@@ -28,7 +29,8 @@ module.exports = class Server {
             providers: '/api/providers',
             lists: '/api/lists',
             options: '/api/options',
-            authentication: '/api/authentication'
+            authentication: '/api/authentication',
+            page: '/api/page'
         };
     };
 
@@ -54,6 +56,7 @@ module.exports = class Server {
         this.app.use(this.paths.lists, listsRouter);
         this.app.use(this.paths.options, optionsRouter);
         this.app.use(this.paths.authentication, authenticationRouter);
+        this.app.use(this.paths.page, pageRouter);
 
         this.app.use((_, res) => {
             res.sendFile(HTML_PATH);

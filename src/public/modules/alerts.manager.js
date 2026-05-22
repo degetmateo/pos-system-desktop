@@ -8,13 +8,13 @@ class AlertManager {
         this.alerts = [];
     };
 
-    async createAlert (message, error = false) {
-        if (this.alerts.length <= 0) document.querySelector('#app').append(this.container);
+    async createAlert (message, error = false, remove = true) {
+        if (this.alerts.length <= 0) document.body.append(this.container);
 
         const request = await fetch('/api/info/uuid', { method: "GET" });
         const response = await request.json();
 
-        const alert = new Alert(message, error, 4000, () => {
+        const alert = new Alert(message, error, 4000, remove, () => {
             this.alerts = this.alerts.filter((a) => a.id !== response.data);
             if (this.alerts.length <= 0) this.container.remove();
         });

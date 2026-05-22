@@ -16,6 +16,7 @@ import CustomerView from "./views/customer.view.js";
 import OptionsView from "./views/options.view.js";
 import ReportsView from "./views/reports.view.js";
 import PageView from "./views/page.view.js";
+import PageDashboard from "./views/page.dashboard.view.js";
 
 class Router {
     constructor () {
@@ -39,7 +40,8 @@ class Router {
             customer: new CustomerView(),
             options: new OptionsView(),
             reports: new ReportsView(),
-            page: new PageView()
+            page: new PageView(),
+            pageDashboard: new PageDashboard()
         };
 
         this.router
@@ -59,6 +61,7 @@ class Router {
             .on('/options', (data) => this.views.options.init(data))
             .on('/reports', (meta) => this.views.reports.init(meta))
             .on('/page', (meta) => this.views.page.init(meta))
+            .on('/page/dashboard', (meta) => this.views.pageDashboard.init(meta))
             .notFound(() => this.views.error.init());
     }
 

@@ -31,7 +31,8 @@ module.exports = (data) => {
                 name = :name,
                 price_major = :price_major,
                 price_minor = :price_minor,
-                provider_id = :provider_id
+                provider_id = :provider_id,
+                synchronized = 0
             WHERE
                 id = :id;
         `).run({ id, barcode, name, price_major, price_minor, provider_id });

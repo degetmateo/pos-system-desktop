@@ -3,6 +3,7 @@ const { app, net } = require('electron');
 const InvalidArgumentError = require('../errors/invalidArgumentError');
 const { ResponseOk, ResponseError } = require('../controllers/response.controller');
 const responses = require('../static/responses');
+const UnauthorizedError = require('../errors/unauthorizedError');
 
 const router = Router();
 
@@ -21,9 +22,9 @@ router.post('/', async (req, res) => {
             body: JSON.stringify({ email, password })
         });
         const serverRes = await serverReq.json();
-        if (!serverReq.ok) throw new Error(serverRes.error.message);
+        if (!serverReq.ok) throw new UnauthorizedError(serverRes.error.message);
 
-        ResponseOk(res, responses.OK, serverRes);
+        ResponseOk(res, responses.OK, serverRes.data);
     } catch (error) {
         console.error(error);
         ResponseError(res, error);

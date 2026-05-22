@@ -1,5 +1,5 @@
 export default class Alert {
-    constructor (message, error, timeout, onRemove) {
+    constructor (message, error, timeout, remove = true, onRemove) {
         this.onRemove = onRemove;
 
         this.container = document.createElement('div');
@@ -15,9 +15,11 @@ export default class Alert {
             this.remove();
         });
 
-        setTimeout(() => {
-            this.remove();
-        }, timeout || 4000);
+        if (remove) {
+            setTimeout(() => {
+                this.remove();
+            }, timeout || 4000);
+        };
     };
 
     render () {

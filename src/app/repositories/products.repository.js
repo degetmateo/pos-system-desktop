@@ -68,9 +68,9 @@ const insert = (data) => {
         };
 
         database.prepare(`
-            INSERT INTO products (id, barcode, name, stock, provider_id, price_major, price_minor, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(id, barcode, name, Number(stock), provider_id, Number(major_price)*100, Number(minor_price)*100, date, date);
+            INSERT INTO products (id, barcode, name, stock, provider_id, price_major, price_minor, created_at, updated_at, synchronized, deleted)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(id, barcode, name, Number(stock), provider_id, Number(major_price)*100, Number(minor_price)*100, date, date, 0, 0);
 
         const preparedQuery = database.prepare(`
             INSERT INTO minor_prices (id, product_id, condition, condition_value, price_value, created_at, updated_at)

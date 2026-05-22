@@ -109,12 +109,14 @@ router.delete('/:id', (req, res) => {
 
         database.transaction(() => {
             database.prepare(`
-                DELETE FROM products WHERE id = :id;
+                UPDATE products
+                SET deleted = 1
+                WHERE id = :id;
             `).run({ id });
 
-            database.prepare(`
-                DELETE FROM minor_prices WHERE product_id = :id;
-            `).run({ id });
+            // database.prepare(`
+            //     DELETE FROM minor_prices WHERE product_id = :id;
+            // `).run({ id });
         })();
 
         ResponseOk(res, responses.OK, null);

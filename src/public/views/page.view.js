@@ -15,7 +15,7 @@ export default class PageView extends GenericView {
         this.container = document.createElement('div');
         this.container.classList.add('container', 'page-view-container');
         this.view.append(this.container);
-        this.header = new AppHeader('PÁGINA');
+        this.header = new AppHeader('Acceder');
         this.container.append(this.header);
         this.content = document.createElement('div');
         this.content.classList.add('page-view-content');
@@ -41,6 +41,8 @@ export default class PageView extends GenericView {
             const password = this.getInputPassword().value;
             if (!email || !password) throw new Error('Tenés que completar los campos.');
 
+            alertsManager.createAlert('Espere...', false);
+
             const req = await fetch('/api/authentication', {
                 method: "POST",
                 headers: { "content-type": "application/json" },
@@ -51,7 +53,9 @@ export default class PageView extends GenericView {
             });
             const res = await req.json();
             if (!req.ok) throw new Error(res.error.message);
+            alertsManager.createAlert('Sesión iniciada.', false);
             localStorage.setItem('token', res.data);
+            router.navigateTo('/page/dashboard');
         } catch (error) {
             console.error(error);
             alertsManager.createAlert(error.message, true);   
@@ -71,15 +75,8 @@ export default class PageView extends GenericView {
     };
 
     async init (meta) {
-        if (this.isLogged()) return router.navigateTo('/page/manage');
-
         this.meta = meta;
         this.app.innerHTML = '';
         this.app.append(this.view); 
-    };
-
-    isLogged () {
-        const token = localStorage.getItem('token');
-        return token ? true : false;
     };
 };
