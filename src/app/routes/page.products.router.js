@@ -35,14 +35,18 @@ router.post('/products/synchronize', async (req, res) => {
             });
             const serverRes = await serverReq.json();
 
-            if (req.ok) {
-                for (const product of chunk) {
-                    database.prepare(`
-                        UPDATE products
-                        SET synchronized = 1
-                        WHERE id = :id;
-                    `).run({ id: product.id });
-                };
+            if (serverReq.ok) {
+                const update = database.prepare(`
+                    UPDATE products
+                    SET synchronized = 1
+                    WHERE id = :id;
+                `);
+
+                database.transaction(() => {
+                    for (const product of chunk) {
+                        update.run({ id: product.id });
+                    };
+                })();
             };
 
             await new Promise((resolve, _) => {
