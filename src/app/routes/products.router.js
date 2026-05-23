@@ -110,7 +110,9 @@ router.delete('/:id', (req, res) => {
         database.transaction(() => {
             database.prepare(`
                 UPDATE products
-                SET deleted = 1
+                SET 
+                    deleted = 1,
+                    synchronized = 0
                 WHERE id = :id;
             `).run({ id });
 
