@@ -1,4 +1,5 @@
 const payments = require("../static/payments");
+const receiptStyle = require("./styles/receipt.style");
 
 module.exports = ReceiptTemplate = (order) => {
     let rows;
@@ -51,146 +52,7 @@ module.exports = ReceiptTemplate = (order) => {
         <!DOCTYPE html>
         <html>
             <head>
-                <style>
-                    body {
-                        margin: 1.5cm;
-
-                        font-family: sans-serif; 
-                        box-sizing: border-box;
-
-                        display: flex;
-                        flex-direction: column;
-                        gap: 20px;
-                    }
-
-                    .header { 
-                        display: flex; 
-                        justify-content: space-between; 
-                        border-bottom: 1px solid #ddd;
-
-                        padding-bottom: 20px;
-                    }
-                    
-                    table {
-                        width: 100%;
-                        page-break-inside: auto;
-                        break-inside: auto;
-                        border-collapse: collapse;
-                    }
-
-                    tr {
-                        page-break-inside: avoid;
-                        break-inside: avoid;
-                        page-break-after: auto;
-                    }
-
-                    thead {
-                        display: table-header-group;
-                    }
-                    
-                    thead::before {
-                        content: "";
-                        display: block;
-                        height: 1.5cm; 
-                    }
-
-                    th, td { 
-                        border-bottom: 1px solid #ddd; 
-                        padding: 8px;
-                    }
-                    
-                    .text-left {
-                        text-align: left;
-                    }
-                    
-                    .text-right {
-                        text-align: right;
-                    }
-                    
-                    .text-center {
-                        text-align: center;
-                    }
-                    
-                    .total {
-                        font-size: 20px; 
-                        font-weight: bold;
-
-                        display: flex;
-                        flex-direction: column;
-                        gap: 5px;
-                    }
-
-                    .table-head {
-                        border-bottom: 2px solid #000;
-                    }
-                    
-                    .table-head-cell {
-                        text-align: right;
-                    }
-
-                    .table-head-cell-name {
-                        text-align: left;
-                    }
-
-                    .text-bold {
-                        font-weight: bold;
-                    }
-
-                    .customer {
-                        display: flex;
-                        flex-direction:column;
-                    }
-
-                    .text-secondary {
-                        font-size: 14px;
-                        color: #b5b5b5;
-                    }
-
-                    .header-title {
-                        font-size: 30px;
-                        font-weight: bold;
-                    }
-                    
-                    .detail-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 5px;
-
-                        align-items: flex-end;
-                        justify-content: flex-start;
-
-                        font-size: 20px;
-                    }
-
-                    tfoot {
-                        display: table-footer-group;
-                    }
-
-                    .footer {
-                        height: 1.5cm;
-                        border: none !important;
-                    }
-
-                    .payment-data-container {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 5px;
-                    }
-
-                    @page {
-                        margin: 0;
-                        opacity: 0;
-                        size: A4;
-                    }
-
-                    @media print {
-                        body { 
-                            print-color-adjust: exact;
-                            -webkit-print-color-adjust: exact;
-                        }
-                    }
-                </style>
-
+                ${receiptStyle()}
                 <title>check_${order.id}</title>
             </head>
 
@@ -203,12 +65,22 @@ module.exports = ReceiptTemplate = (order) => {
                     </div>
                 </div>
 
-                <div class="customer">
-                    <span class="text-secondary">CLIENTE</span>
-                    <span class="text-bold">${order.customer ? order.customer.name || 'N/D' : 'N/D'}</span>
-                    <span>CUIL/CUIT: ${order.customer ? order.customer.cuil || 'N/D' : 'N/D'}</span>
-                    <span>EMAIL: ${order.customer ? order.customer.email || 'N/D' : 'N/D'}</span>
-                    <span>MÉTODO DE PAGO: <b>${order.payment_method ? payments[order.payment_method] : 'SIN ASIGNAR'}</b></span>
+                <div class="header-details-container">
+                    <div class="customer">
+                        <span class="text-secondary">CLIENTE</span>
+                        <span class="text-bold">${order.customer ? order.customer.name || 'N/D' : 'N/D'}</span>
+                        <span>CUIL/CUIT: ${order.customer ? order.customer.cuil || 'N/D' : 'N/D'}</span>
+                        <span>EMAIL: ${order.customer ? order.customer.email || 'N/D' : 'N/D'}</span>
+                        <span>MÉTODO DE PAGO: <b>${order.payment_method ? payments[order.payment_method] : 'SIN ASIGNAR'}</b></span>
+                    </div>
+
+                    <div class="payment-data-container">
+                        <span class="text-secondary">DATOS DE PAGO</span>
+                        <span><b>RUBEN DARIO DEGET Y SERGIO EZEQUIEL DEGET SH</b></span>
+                        <span><b>30714624411</b> (Responsable Inscripto)</span>
+                        <span><b>OGRO.CASO.RUINA</b></span>
+                        <span><b>1910197455019700872596</b></span>
+                    </div>
                 </div>
             
                 <table>
@@ -233,28 +105,17 @@ module.exports = ReceiptTemplate = (order) => {
                         
                 </table>
                 
-                <div class="total">
-                    <span>TOTAL: $${(order.total_price / 100).toLocaleString()}</span>
-                    <span>ADELANTO: $${(order.advancement / 100).toLocaleString()}</span>
-                    <span>MONTO FINAL: $${((order.total_price - order.advancement) / 100).toLocaleString()}</span>
+                <div class="total-container">
+                    <div class="total">
+                        <span>TOTAL: $${(order.total_price / 100).toLocaleString()}</span>
+                        <span>ADELANTO: $${(order.advancement / 100).toLocaleString()}</span>
+                        <span>PAGO FINAL: $${((order.total_price - order.advancement) / 100).toLocaleString()}</span>
+                    </div>
+                    ${order.discounts.length > 0 ? `<p>Esta orden incluye descuentos aplicados.</p>` : ''}
                 </div>
 
-                ${order.discounts.length > 0 ? `<p>* Esta orden incluye descuentos aplicados.</p>` : ''}
 
-                <div class="payment-data-container">
-                    <span>DATOS DE PAGO</span>
-                    <span>TIPO DE CUENTA: Cuenta Corriente</span>
-                    <span>RAZÓN SOCIAL: <b>RUBEN DARIO DEGET Y SERGIO EZEQUIEL DEGET SH</b></span>
-                    <span>CUIT: <b>30714624411</b> (Responsable Inscripto)</span>
-                    <span>ALIAS: <b>OGRO.CASO.RUINA</b></span>
-                    <span>CBU: <b>1910197455019700872596</b></span>
-                    <span>DIRECCIÓN: MONTEVIDEO 1879, GRAL PACHECO</span>
-                    <span>BANCO CREDICOOP</span>
-                </div>
-
-                <p class="text-center"><b>Documento no válido como factura.</b> Cotización válida por 5 días. Precios sujetos a cambios según disponibilidad de stock al momento de concretar la operación.</p>
-
-                <p class="text-center">En caso de solicitar factura A o B, enviar requisitos necesarios según reglamentación vigente ARCA.</p>
+                <p class="text-center disclaimer"><b>Documento no válido como factura.</b> Cotización válida por 5 días. Precios sujetos a cambios según disponibilidad de stock al momento de concretar la operación. En caso de solicitar factura A o B, enviar requisitos necesarios según reglamentación vigente ARCA.</p>
 
             </body>
         </html>
