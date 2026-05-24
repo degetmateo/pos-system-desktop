@@ -16,6 +16,25 @@ module.exports = (data = {
         orderByClause = "p.name COLLATE NOCASE ASC" :
         orderByClause = "p.created_at ASC";
 
+    const queryParams = {
+        id: data.idFilter,
+        barcode: data.barcodeFilter,
+        limit: LIMIT,
+        offset: data.offset
+    };
+
+    let nameWhereClause = '1 = 1';
+    if (data.nameFilter) {
+        const words = data.nameFilter.trim().split(' ');
+        const wordConditions = words.map((_, i) => `p.name LIKE :word${i} COLLATE NOCASE`);
+
+        nameWhereClause = wordConditions.join(' AND ');
+
+        words.forEach((word, i) => {
+            queryParams[`word${i}`] = `%${word}%`;
+        });
+    };
+
     let products = [];
     
     database.transaction(() => {
@@ -35,7 +54,7 @@ module.exports = (data = {
 
             WHERE
                 deleted = 0 AND
-                (:name IS NULL OR p.name LIKE :name COLLATE NOCASE) AND
+                (${nameWhereClause}) AND
                 (:id IS NULL OR p.id = :id) AND
                 (:barcode IS NULL or p.barcode = :barcode)
             
@@ -43,13 +62,7 @@ module.exports = (data = {
             ORDER BY ${orderByClause}
             LIMIT :limit 
             OFFSET :offset;    
-        `).all({
-            name: data.nameFilter,
-            id: data.idFilter,
-            barcode: data.barcodeFilter,
-            limit: LIMIT,
-            offset: data.offset
-        });
+        `).all(queryParams);
 
         for (let i = 0; i < products.length; i++) {
             const prices = database.prepare(`

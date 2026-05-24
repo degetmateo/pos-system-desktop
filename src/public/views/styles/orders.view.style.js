@@ -1,0 +1,84 @@
+export default () => {
+    return `
+        <style>
+            .orders-view-container {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .orders-view-content {
+                display: flex;
+                flex-direction: column;
+
+                height: calc(100vh - 50px);
+                width: 100%;
+            };
+
+            .orders-view-inputs {
+
+            }
+
+            .orders-view-table-container {
+                flex: 1;
+                width: 100%;
+                overflow-y: scroll;
+                height: calc(100vh - 80px - 50px - 50px);
+            }
+
+            .orders-view-table {
+                width: 100%;
+            }
+
+            .orders-view-table-head-row {
+                background-color: #FFF;
+                position: sticky;
+                top: 0;
+                left: 0;
+            }
+            .order-view-table-row {
+                cursor: pointer;
+            }
+
+            .order-view-table-row:hover {
+                background-color: gray;
+            }
+
+            .orders-view-buttons-container {
+                height: 80px;
+                border-top: 1px solid #000;
+
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+            }
+
+            .orders-view-button {
+                font-size: 18px;
+                padding: 10px;
+                cursor: pointer;
+                border: none;
+                outline: none;
+                border: 1px solid #000;
+                border-radius: 5px;
+            }
+
+            .orders-view-button:hover {
+                background-color: gray;
+            }
+
+            .order-view-table-row-td-actions {
+                display: flex;
+                flex-direction: row;
+                gap: 10px;
+
+                align-items: center;
+                justify-content: space-around;
+            }
+
+            .order-view-pdf-link {
+                font-size: 18px;
+            }
+        </style>
+    `;
+};

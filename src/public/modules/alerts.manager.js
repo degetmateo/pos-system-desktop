@@ -25,6 +25,8 @@ class AlertManager {
         });
 
         this.container.append(alert.render());
+
+        return alert;
     };
 };
 

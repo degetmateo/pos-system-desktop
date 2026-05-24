@@ -1,8 +1,10 @@
 import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
+import alertsManager from "../modules/alerts.manager.js";
 import router from "../router.js";
 import payments from "../static/payments.js";
 import GenericView from "./GenericView.js";
+import ordersViewStyle from "./styles/orders.view.style.js";
 import ordersViewTemplate from "./templates/orders.view.template.js";
 
 export default class OrdersView extends GenericView {
@@ -23,7 +25,7 @@ export default class OrdersView extends GenericView {
 
         this.content = document.createElement('div');
         this.content.classList.add('orders-view-content');
-        this.content.innerHTML = ordersViewTemplate;
+        this.content.innerHTML = ordersViewTemplate()+ordersViewStyle();
         this.container.append(this.content);
 
         this.content.addEventListener('click', (event) => {
@@ -88,6 +90,12 @@ export default class OrdersView extends GenericView {
                 this.offset = 0;
                 this.draw_orders(await this.fetch_orders());
             };
+
+            if (event.target.matches('#order-number')) {
+                const orderNumber = Number(event.target.value);
+                this.fetchOrderWithNumber(orderNumber);
+                event.target.value = '';
+            };
         });
 
         this.meta = {
@@ -105,6 +113,22 @@ export default class OrdersView extends GenericView {
         this.app.innerHTML = '';
         this.app.append(this.view);
         this.draw_orders(await this.fetch_orders());
+    };
+
+    async fetchOrderWithNumber (orderNumber) {
+        try {
+            const alert = alertsManager.createAlert('Buscando...', false);
+            const url = '/api/orders?number=' + orderNumber;
+            const req = await fetch(url, { method: "GET" });
+            const res = await req.json();
+            if (!req.ok) throw new Error(res.error.message);
+            if (!res.data[0]) throw new Error('No se encontró la orden solicitada.');
+            router.navigateTo('/orders/' + res.data[0].id);
+            (await alert).remove();
+        } catch (error) {
+            console.error(error);
+            alertsManager.createAlert(error.message, true);
+        };
     };
 
     async fetch_orders () {

@@ -81,7 +81,7 @@ router.get('/image/:id', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const sorting = req.query.sorting ? req.query.sorting : null;
-        const nameFilter = req.query.name ? `%${req.query.name}%` : null;
+        const nameFilter = req.query.name ? req.query.name : null;
         const idFilter = req.query.id ? req.query.id : null;
         const barcodeFilter = req.query.barcode ? req.query.barcode : null;
         const offset = req.query.offset ? parseInt(req.query.offset) : 0;

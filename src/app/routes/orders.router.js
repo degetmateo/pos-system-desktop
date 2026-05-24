@@ -18,6 +18,8 @@ router.get('/', (req, res) => {
         const status = req.query.status ? req.query.status : null;
         const offset = req.query.offset ? req.query.offset : 0;
         const customerName = req.query.customer_name ? `%${req.query.customer_name}%` : null;
+        const orderNumber = req.query.number ? Number(req.query.number) : null;
+
         const limit = 20;
 
         let orders;
@@ -33,7 +35,8 @@ router.get('/', (req, res) => {
                     (:customer_id IS NULL OR o.customer_id = :customer_id) AND
                     (:type IS NULL OR o.type = :type) AND
                     (:status IS NULL OR o.status = :status) AND
-                    (:customerName IS NULL OR c.name LIKE :customerName)
+                    (:customerName IS NULL OR c.name LIKE :customerName) AND
+                    (:orderNumber IS NULL OR o.number = :orderNumber)
 
                 GROUP BY 
                     o.id
@@ -51,7 +54,8 @@ router.get('/', (req, res) => {
                 type,
                 status,
                 limit,
-                offset
+                offset,
+                orderNumber
             });
 
             for (let i = 0; i < orders.length; i++) {
