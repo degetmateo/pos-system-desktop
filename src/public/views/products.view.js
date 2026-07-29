@@ -2,7 +2,11 @@ import AppHeader from "../components/header.js";
 import Navigation from "../components/navigation/navigation.js";
 import audioManager from "../modules/audio.manager.js";
 import router from "../router.js";
+import productsViewStyles from "../styles/views/products.view.styles.js";
+import productsViewTemplate from "../templates/views/products.view.template.js";
 import GenericView from "./GenericView.js";
+
+window.styles.innerHTML += productsViewStyles();
 
 export default class ProductsView extends GenericView {
     constructor () {
@@ -23,61 +27,7 @@ export default class ProductsView extends GenericView {
         this.content.classList.add('products-view-content');
         this.container.append(this.content);
 
-        this.content.innerHTML = `
-            <div class="products-view-filters-container">
-                <input 
-                    type="text" 
-                    placeholder="Filtrar por Nombre" 
-                    id="products-view-name-input"
-                    class="products-view-input products-view-name-input"
-                />
-
-                <input
-                    type="text"
-                    placeholder="Código de Barras"
-                    id="products-view-barcode-input"
-                    class="products-view-input products-view-barcode-input"
-                />
-
-                <select id="products-view-select" class="products-view-select">
-                    <option value=null>NO ORDENAR</option>
-                    <option value="abc">ORDENAR ALFABÉTICAMENTE</option>
-                </select>
-            </div>
-
-            <div class="products-view-table-container">
-                <table class="products-view-table">
-                    <thead>
-                        <tr>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Precio Mayorista</th>
-                            <th>Precio Minorista</th>
-                            <th>Fecha</th>
-                        </tr>
-                    </thead>
-                    <tbody id="products-view-table-body">
-                    
-                    </tbody>
-                </table>
-            </div>
-
-            <div
-                class="products-view-buttons-container"
-            >
-                <button
-                    type="button"
-                    id="products-view-button-previous"
-                    class="products-view-button"
-                >Anterior</button>
-
-                <button
-                    type="button"
-                    id="products-view-button-next"
-                    class="products-view-button"
-                >Siguiente</button>
-            </div>
-        `;
+        this.content.innerHTML = productsViewTemplate();
 
         this.container.addEventListener('click', (event) => {
             if (event.target.matches('#products-view-button-previous')) {
@@ -198,7 +148,7 @@ export default class ProductsView extends GenericView {
                     <td id="${product.id}" class="products-view-table-row-data">${product.name}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${product.price_major / 100}</td>
                     <td id="${product.id}" class="products-view-table-row-data">${product.price_minor / 100}</td>
-                    <td id="${product.id}" class="products-view-table-row-data">${new Date(product.created_at).toLocaleDateString()}</td>
+                    <td id="${product.id}" class="products-view-table-row-data">${new Date(product.updated_at).toLocaleDateString()}</td>
                 </tr>
             `;
         };

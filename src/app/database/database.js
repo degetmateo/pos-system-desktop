@@ -24,6 +24,18 @@ class Database {
         this.db = new SQLite(this.database_dir);
     };
 
+    async defragment () {
+        try {
+            console.log('Iniciando desfragmentación...');
+        
+            await this.db.exec('VACUUM');
+        
+            console.log('Base de datos desfragmentada con éxito.');
+        } catch (error) {
+            console.error('Error al desfragmentar:', error);
+        };
+    };
+
     async init () {
         return new Promise((resolve, reject) => {
             this.db.exec(`

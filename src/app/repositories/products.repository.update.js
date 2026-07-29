@@ -32,10 +32,19 @@ module.exports = (data) => {
                 price_major = :price_major,
                 price_minor = :price_minor,
                 provider_id = :provider_id,
+                updated_at = :updated_at,
                 synchronized = 0
             WHERE
                 id = :id;
-        `).run({ id, barcode, name, price_major, price_minor, provider_id });
+        `).run({
+            id, 
+            barcode, 
+            name, 
+            price_major, 
+            price_minor, 
+            provider_id,
+            updated_at: date 
+        });
 
         database.prepare(`
             DELETE FROM minor_prices 

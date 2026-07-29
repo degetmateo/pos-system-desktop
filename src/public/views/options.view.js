@@ -60,6 +60,18 @@ export default class OptionsView extends GenericView {
             if (event.target.matches('#options-view-export-db-button')) {
                 document.getElementById('options-view-export-db-a').click();
             };
+
+            if (event.target.matches('#options-view-defragment-button')) {
+                try {
+                    const req = await fetch('/api/options/defragment', { method: "GET" });
+                    const res = await req.json();
+                    if (!req.ok) throw new Error(res.error.message);
+                    alertsManager.createAlert('done', false);
+                } catch (error) {
+                    console.error(error);
+                    alertsManager.createAlert(error.message, true);
+                };
+            };
         });
 
         this.container.addEventListener('change', async (event) => {

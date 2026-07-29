@@ -12,9 +12,13 @@ module.exports = (data = {
 }) => {
     let orderByClause;
 
-    data.sorting === 'abc' ?
-        orderByClause = "p.name COLLATE NOCASE ASC" :
+    if (data.sorting === 'abc') {
+        orderByClause = "p.name COLLATE NOCASE ASC";
+    } else if (data.sorting === 'updated_at') {
+        orderByClause = "p.updated_at DESC";
+    } else {
         orderByClause = "p.created_at ASC";
+    };
 
     const queryParams = {
         id: data.idFilter,

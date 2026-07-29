@@ -26,5 +26,11 @@ export default `
             class="app-button"
             type="button"
         >EXPORTAR BASE DE DATOS</button>
+
+        <button
+            id="options-view-defragment-button"
+            class="app-button"
+            type="button"
+        >DESFRAGMENTAR</button>
     </div>
 `;
