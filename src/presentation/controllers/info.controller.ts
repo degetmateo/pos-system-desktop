@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import os from 'node:os';
+import { FirewallService } from '../../infrastructure/system/firewall.service';
 
 export interface NetworkInterfaceDto {
   name: string;
@@ -16,6 +17,12 @@ export class InfoController {
   constructor(port: number = 4000) {
     this.port = port;
     this.router.get('/', this.getInfo.bind(this));
+    this.router.post('/firewall', this.configureFirewall.bind(this));
+  }
+
+  private async configureFirewall(_req: Request, res: Response): Promise<void> {
+    const result = await FirewallService.allowPort(this.port);
+    res.status(result.success ? 200 : 500).json(result);
   }
 
   private getInfo(_req: Request, res: Response): void {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Wifi, ShoppingCart, Package, Users, FileText, Database, ExternalLink, Copy, Check, Network } from 'lucide-react';
+import { Wifi, ShoppingCart, Package, Users, FileText, Database, ExternalLink, Copy, Check, Network, ShieldAlert } from 'lucide-react';
 import { ApiClient } from '../services/api.client';
 import { AppInfo, NetworkInterfaceInfo } from '../types/api.types';
 import { ToastService } from '../services/toast.service';
@@ -14,6 +14,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const [selectedIp, setSelectedIp] = useState<string>('localhost:4000');
   const [copied, setCopied] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [enablingFirewall, setEnablingFirewall] = useState<boolean>(false);
+
+  const handleOpenFirewall = async () => {
+    setEnablingFirewall(true);
+    try {
+      const res = await ApiClient.openFirewallPort();
+      ToastService.success(res.message || 'Puerto 4000 habilitado en Windows Firewall.');
+    } catch (err: any) {
+      ToastService.error(err.message || 'No se pudo configurar el firewall.');
+    } finally {
+      setEnablingFirewall(false);
+    }
+  };
 
   useEffect(() => {
     ApiClient.getInfo()
@@ -95,6 +108,22 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '12px' }}>
             * Recuerde que su teléfono o dispositivo móvil debe estar conectado a la <strong>misma red Wi-Fi</strong> que esta computadora.
           </p>
+
+          <div style={{ marginTop: '14px', padding: '10px 14px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ fontSize: '0.82rem', color: '#475569' }}>
+              <ShieldAlert size={15} style={{ verticalAlign: 'middle', marginRight: '6px', color: '#f59e0b' }} />
+              ¿No carga en el celular? Windows Firewall puede bloquear la versión de producción:
+            </div>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              style={{ fontSize: '0.78rem', padding: '4px 10px', background: '#fff' }}
+              onClick={handleOpenFirewall}
+              disabled={enablingFirewall}
+            >
+              {enablingFirewall ? 'Habilitando...' : 'Habilitar acceso en Firewall'}
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', background: '#fff', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>

@@ -86,6 +86,14 @@ describe('Advanced Filters, Sorting and LAN IP Detection', () => {
       expect(defaultIface.ip).not.toMatch(/^26\./);
       expect(defaultIface.ip).not.toMatch(/^192\.168\.56\./);
     });
+
+    it('handles firewall configuration endpoint', async () => {
+      const res = await request(expressApp.app).post('/api/info/firewall');
+      expect([200, 500]).toContain(res.status);
+      expect(res.body).toHaveProperty('success');
+      expect(typeof res.body.success).toBe('boolean');
+      expect(res.body).toHaveProperty('message');
+    });
   });
 
   describe('Product Advanced Filters & Sorting', () => {

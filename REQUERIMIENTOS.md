@@ -363,6 +363,9 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
     * Configurado con el repositorio `degetmateo/pos-system-desktop` en `electron.main.ts`.
     * Consulta automáticamente el servicio público y gratuito de Electron (`update.electronjs.org`) vinculado a los releases públicos de GitHub.
     * `"private": true` configurado en `package.json` para prevenir intentos accidentales de publicación al registro público npmjs.org.
+  * **Conectividad LAN y Firewall de Windows (`FirewallService`):**
+    * En producción, Squirrel instala cada versión en carpetas versionadas (`app-0.0.x\rd.exe`), lo que invalidaba las reglas de firewall por ejecutable de versiones anteriores.
+    * Se incorporó `FirewallService` y el endpoint `POST /api/info/firewall` que permite registrar una regla por puerto (`TCP 4000`, `Profile: Any`) con elevación UAC nativa, garantizando conectividad permanente para teléfonos y tablets a través de todas las actualizaciones de versión.
 
 
 

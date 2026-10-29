@@ -44,8 +44,15 @@ export class ExpressApp {
     this.app.get('/logo.png', (_req, res) => res.sendFile(fs.existsSync(logoPng) ? logoPng : path.resolve(process.cwd(), 'assets/logo.png')));
     this.app.get('/logo.ico', (_req, res) => res.sendFile(fs.existsSync(logoIco) ? logoIco : path.resolve(process.cwd(), 'assets/logo.ico')));
     this.app.use((_req, res, next) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
+      if (_req.method === 'OPTIONS') {
+        res.sendStatus(200);
+        return;
+      }
       next();
     });
   }
@@ -68,11 +75,12 @@ export class ExpressApp {
   }
 
   public listen(port: number = 4000): Promise<void> {
-    return new Promise((resolve) => {
-      this.app.listen(port, '0.0.0.0', () => {
+    return new Promise((resolve, reject) => {
+      const server = this.app.listen(port, '0.0.0.0', () => {
         console.log(`Server listening on http://0.0.0.0:${port}`);
         resolve();
       });
+      server.on('error', (err) => reject(err));
     });
   }
 }

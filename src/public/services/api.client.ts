@@ -74,4 +74,7 @@ export class ApiClient {
     ApiClient.request('/api/options/backups/restore', { method: 'POST', body: JSON.stringify({ filename }) });
 
   public static defragment = () => ApiClient.request('/api/options/defragment');
+
+  public static openFirewallPort = () =>
+    ApiClient.request<{ success: boolean; message: string }>('/api/info/firewall', { method: 'POST' });
 }

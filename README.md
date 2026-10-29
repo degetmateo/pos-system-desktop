@@ -110,7 +110,7 @@ El proyecto se encuentra en un proceso planificado de refactorización integral 
 | **Arquitectura Frontend** | Migrado | **React 19** + **TypeScript** + **Vite** + **QR LAN** |
 | **Arquitectura Backend** | Migrado | **Capas y Clases** (PEAA + GoF + SOLID) |
 | **Límite de Clases/Archivos**| Cumplido | **~100 líneas máximo** por clase/archivo (SRP) |
-| **Testing** | 100% Pasando | **Vitest** (41 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS, Historial de Precios, Filtros, Express) |
+| **Testing** | 100% Pasando | **Vitest** (42 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS, Historial de Precios, Filtros, Express, Firewall) |
 | **Retrocompatibilidad** | Garantizada | **SchemaMigrationRunner** con migraciones atómicas y defensivas |
 
 Para detalles exhaustivos sobre los patrones de diseño (Repository, Service Layer, Domain Model, Value Objects, Factory, Adapter, Strategy), requerimientos y decisiones técnicas, consultar el archivo [`REQUERIMIENTOS.md`](./REQUERIMIENTOS.md).
@@ -145,6 +145,17 @@ pnpm start
 * `pnpm run start:prod`: Empaqueta la aplicación y lanza de inmediato el binario empaquetado `out\rd-win32-x64\rd.exe` para probar la aplicación exactamente como se comportará en producción.
 * `pnpm run make`: Genera los instaladores oficiales y distribuibles de producción (instalador Squirrel Windows: `rd-0.0.22 Setup.exe`, `.nupkg` y `RELEASES` en `out/make/squirrel.windows/x64/`).
 * `pnpm run publish` (o `pnpm release`): Compila, recompila módulos nativos y publica la release en GitHub Releases con los instaladores (`@electron-forge/publisher-github`). *Nota*: usar siempre `pnpm run publish` o `pnpm release` en lugar de `pnpm publish` a secas (ya que este último es un comando reservado de PNPM que intenta subir librerías a npmjs.org).
+
+### 🛡️ Acceso Móvil (LAN) y Firewall de Windows en Producción
+En modo desarrollo (`pnpm start`), el binario que atiende las conexiones es `electron.exe`. Al compilar e instalar en producción (`Squirrel.Windows`), cada versión se aloja en un directorio dinámico (`AppData\Local\rd\app-<version>\rd.exe`), lo que provoca que Windows Defender Firewall bloquee por defecto las conexiones entrantes desde celulares si no existe una regla por puerto.
+
+Para habilitar permanentemente el acceso desde cualquier dispositivo celular o tablet sin importar las actualizaciones de versión:
+* **Desde la aplicación**: En la pantalla de inicio, hacer clic en el botón **"Habilitar acceso en Firewall"** (solicitará confirmación de administrador de Windows).
+* **O mediante PowerShell (como Administrador)**:
+  ```powershell
+  New-NetFirewallRule -DisplayName "RD POS System (Puerto 4000)" -Direction Inbound -LocalPort 4000 -Protocol TCP -Action Allow -Profile Any
+  ```
+  *(O con netsh: `netsh advfirewall firewall add rule name="RD POS System (Puerto 4000)" dir=in action=allow protocol=TCP localport=4000 profile=any`)*
 
 ---
 
