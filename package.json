@@ -7,7 +7,7 @@
     "url": "https://github.com/degetmateo/pos-system-desktop"
   },
   "main": "dist/desktop/electron.main.js",
-  "private": true,
+  "private": false,
   "scripts": {
     "postinstall": "pnpm run rebuild:electron",
     "dev": "pnpm run build && pnpm run rebuild:electron && electron-forge start",
