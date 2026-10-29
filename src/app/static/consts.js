@@ -1,1 +1,0 @@
-module.exports.SERVICE = 'rd-pos-system';

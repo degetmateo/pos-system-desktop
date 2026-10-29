@@ -1,62 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self' blob: http://localhost:4000/;
-        connect-src 'self' blob: http://localhost:4000/;
-        script-src 'self';
-        style-src 'self' 'unsafe-inline';
-        img-src 'self' data:;
-        media-src 'self';
-      "
-    >
-
-    <title>Ruben Dario</title>
-
-    <link rel="stylesheet" href="/public/styles/normalize.css" />
-    <link rel="stylesheet" href="/public/styles/main.css" />
-
-    <link rel="stylesheet" href="/public/components/navigation/navigation.css" />
-    <link rel="stylesheet" href="/public/components/price-list-item/price-list-item.css" />
-    <link rel="stylesheet" href="/public/components/popup-confirm/popup-confirm.css">
-
-    <link rel="stylesheet" href="/public/views/home/home-view.css" />
-    <link rel="stylesheet" href="/public/views/scanner/scanner-view.css" />
-    <link rel="stylesheet" href="/public/views/database/database-view.css">
-    <link rel="stylesheet" href="/public/views/price-lists/price-lists-view.css">
-
-    <link rel="stylesheet" href="/public/components/styles/product.item.css" />
-    <link rel="stylesheet" href="/public/components/styles/header.css" />
-
-    <link rel="stylesheet" href="/public/views/styles/product.view.css" />
-    <link rel="stylesheet" href="/public/components/styles/product.card.css" />
-
-    <link rel="stylesheet" href="/public/views/styles/customers.create.view.css">
-    <link rel="stylesheet" href="/public/views/styles/orders.create.view.css" />
-    <link rel="stylesheet" href="/public/views/styles/order.view.css" />
-    <link rel="stylesheet" href="/public/views/styles/products.create.view.css" />
-    <link rel="stylesheet" href="/public/views/styles/customers.view.css" />
-    <link rel="stylesheet" href="/public/views/styles/customer.view.css" />
-    <link rel="stylesheet" href="/public/views/styles/options.view.css" />
-
-    <link rel="stylesheet" href="/public/components/styles/alert.css" />
-
-    <script src="/public/lib/navigo.min.js"></script>
-    <script src="/public/lib/zxing.min.js"></script>
-    <script src="/public/lib/gridjs.umd.js"></script>
-    <script src="/public/lib/print.min.js"></script>
-    <script src="/public/lib/chart.umd.min.js"></script>
-
-    <link rel="stylesheet" href="/public/lib/styles/mermaid.min.css" />
-    <link rel="stylesheet" href="/public/lib/styles/print.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./logo.png" />
+    <title>Rubén Darío POS</title>
   </head>
-  <body id="body">
-    <div class="app" id="app"></div>
-    <style id="styles"></style>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
   </body>
-  <script type="module" src="/public/index.js"></script>
 </html>

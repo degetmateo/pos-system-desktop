@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/domain/**/*",
+    "src/application/**/*",
+    "src/infrastructure/**/*",
+    "src/presentation/**/*",
+    "src/desktop/**/*",
+    "src/shared/**/*"
+  ],
+  "exclude": ["src/public/**/*", "src/app/**/*", "node_modules", "dist", "tests"]
+}
