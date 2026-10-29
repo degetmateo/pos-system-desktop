@@ -9,7 +9,7 @@ if (!process.env.GITHUB_TOKEN) {
     const envContent = fs.readFileSync(envPath, 'utf-8');
     const match = envContent.match(/^GITHUB_TOKEN=(.+)$/m);
     if (match) {
-      process.env.GITHUB_TOKEN = match[1].trim();
+      process.env.GITHUB_TOKEN = match[1].trim().replace(/^["']|["']$/g, '');
     }
   }
 }

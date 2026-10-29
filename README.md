@@ -144,7 +144,7 @@ pnpm start
 * `pnpm run package`: Empaqueta la aplicación completa en binarios ejecutables locales para Windows en `out/rd-win32-x64/rd.exe`.
 * `pnpm run start:prod`: Empaqueta la aplicación y lanza de inmediato el binario empaquetado `out\rd-win32-x64\rd.exe` para probar la aplicación exactamente como se comportará en producción.
 * `pnpm run make`: Genera los instaladores oficiales y distribuibles de producción (instalador Squirrel Windows: `rd-0.0.22 Setup.exe`, `.nupkg` y `RELEASES` en `out/make/squirrel.windows/x64/`).
-* `pnpm run publish`: Compila, recompila módulos nativos y publica la release en GitHub Releases con los binarios de instalación.
+* `pnpm run publish` (o `pnpm release`): Compila, recompila módulos nativos y publica la release en GitHub Releases con los instaladores (`@electron-forge/publisher-github`). *Nota*: usar siempre `pnpm run publish` o `pnpm release` en lugar de `pnpm publish` a secas (ya que este último es un comando reservado de PNPM que intenta subir librerías a npmjs.org).
 
 ---
 

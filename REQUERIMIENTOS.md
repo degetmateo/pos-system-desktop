@@ -356,8 +356,13 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
 * **Scripts de Ciclo de Vida Automatizados (`package.json`):**
   * `pnpm run package`: Compila servidor (`tsc`), bundle de interfaz (`vite build`), recompila el módulo nativo `better-sqlite3` para la ABI de Electron (`NODE_MODULE_VERSION 140`), y genera la versión empaquetada lista para probar en `out/rd-win32-x64/rd.exe`.
   * `pnpm run make`: Ejecuta el flujo completo de empaquetado y genera el instalador oficial de Windows Squirrel (`Setup.exe` y `.nupkg`) en `out/make/squirrel.windows/x64/`.
+  * `pnpm run publish` / `pnpm release`: Compila, empaqueta y publica automáticamente los artefactos distribuibles en **GitHub Releases** mediante `@electron-forge/publisher-github` (`degetmateo/pos-system-desktop`).
   * `pnpm run start:prod`: Empaqueta la aplicación y ejecuta directamente el binario compilado de producción (`out\rd-win32-x64\rd.exe`) para pruebas fieles al entorno final.
   * `node-linker=hoisted` configurado en `.npmrc` para compatibilidad total de dependencias nativas en Electron Forge con PNPM.
+  * **Sistema de Actualización Gratuito Oficial (`update-electron-app`):**
+    * Configurado con el repositorio `degetmateo/pos-system-desktop` en `electron.main.ts`.
+    * Consulta automáticamente el servicio público y gratuito de Electron (`update.electronjs.org`) vinculado a los releases públicos de GitHub.
+    * `"private": true` configurado en `package.json` para prevenir intentos accidentales de publicación al registro público npmjs.org.
 
 
 

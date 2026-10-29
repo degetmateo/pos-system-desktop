@@ -30,7 +30,7 @@ import { ExpressApp } from '../presentation/server/express.app';
 import { WindowFactory } from './window.factory';
 
 if (require('electron-squirrel-startup')) app.quit();
-updateElectronApp();
+updateElectronApp({ repo: 'degetmateo/pos-system-desktop' });
 
 let mainWindow: BrowserWindow | null = null;
 
