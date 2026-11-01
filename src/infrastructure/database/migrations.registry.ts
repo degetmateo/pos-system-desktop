@@ -103,5 +103,16 @@ export const MIGRATIONS_REGISTRY: IMigration[] = [
       `);
     },
   },
+  {
+    version: 5,
+    name: '005_remove_stock_column',
+    up: (db: DatabaseInstance) => {
+      db.exec('DROP INDEX IF EXISTS idx_products_stock;');
+      const tableInfo = db.prepare('PRAGMA table_info(products)').all() as Array<{ name: string }>;
+      if (tableInfo.some((col) => col.name === 'stock')) {
+        db.exec('ALTER TABLE products DROP COLUMN stock;');
+      }
+    },
+  },
 ];
 

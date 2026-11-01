@@ -62,6 +62,7 @@ flowchart TD
 
 ### 1. Punto de Venta (POS) y Órdenes de Venta
 * Creación de órdenes en mostrador con selección ágil de cliente y tipo de venta (Mayorista o Minorista).
+* **Modalidad V2 en Planilla Rápida (Hoja de Cálculo / Excel):** Carga continua de artículos en tabla dinámica con autocompletado flotante de productos sobre el nombre, navegación con teclado (flechas y `Enter` para saltar de fila o generar nuevas filas automáticamente) y alta/actualización directa en base de datos.
 * **Experiencia Móvil Nativa (Responsive POS):** Interfaz adaptativa optimizada para teléfonos celulares y tablets en red LAN con tarjetas táctiles de carrito, botones de cantidad ergonómicos y prevención de zoom automático.
 * Escaneo de códigos de barra mediante pistola lectora o cámara web con decodificación en vivo.
 * **Cálculo de Descuentos por Volumen:** En ventas minoristas, evalúa dinámicamente las cantidades de cada producto y aplica los precios de escala definidos.
@@ -110,7 +111,7 @@ El proyecto se encuentra en un proceso planificado de refactorización integral 
 | **Arquitectura Frontend** | Migrado | **React 19** + **TypeScript** + **Vite** + **QR LAN** |
 | **Arquitectura Backend** | Migrado | **Capas y Clases** (PEAA + GoF + SOLID) |
 | **Límite de Clases/Archivos**| Cumplido | **~100 líneas máximo** por clase/archivo (SRP) |
-| **Testing** | 100% Pasando | **Vitest** (42 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS, Historial de Precios, Filtros, Express, Firewall) |
+| **Testing** | 100% Pasando | **Vitest** (54 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS V1/V2, Persistencia de Borradores/Filtros, Historial de Precios, Express, Firewall) |
 | **Retrocompatibilidad** | Garantizada | **SchemaMigrationRunner** con migraciones atómicas y defensivas |
 
 Para detalles exhaustivos sobre los patrones de diseño (Repository, Service Layer, Domain Model, Value Objects, Factory, Adapter, Strategy), requerimientos y decisiones técnicas, consultar el archivo [`REQUERIMIENTOS.md`](./REQUERIMIENTOS.md).

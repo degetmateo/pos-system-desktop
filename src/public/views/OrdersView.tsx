@@ -3,22 +3,28 @@ import { Search, RotateCcw, X, Calendar, DollarSign } from 'lucide-react';
 import { OrderDto } from '../types/api.types';
 import { ApiClient } from '../services/api.client';
 import { ToastService } from '../services/toast.service';
+import { ViewPreferenceStorage } from '../services/view-preference.storage';
 import { OrdersTable } from './orders/OrdersTable';
 import { OrderDetailModal } from './orders/OrderDetailModal';
 import { Pagination } from '../components/Pagination';
 
 export const OrdersView: React.FC = () => {
   const [orders, setOrders] = useState<OrderDto[]>([]);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [paymentFilter, setPaymentFilter] = useState('');
-  const [datePeriod, setDatePeriod] = useState('');
-  const [sortKey, setSortKey] = useState('created_at_desc');
+  const initialPrefs = ViewPreferenceStorage.getOrders();
+  const [search, setSearch] = useState(initialPrefs.search);
+  const [typeFilter, setTypeFilter] = useState(initialPrefs.typeFilter);
+  const [paymentFilter, setPaymentFilter] = useState(initialPrefs.paymentFilter);
+  const [datePeriod, setDatePeriod] = useState(initialPrefs.datePeriod);
+  const [sortKey, setSortKey] = useState(initialPrefs.sortKey || 'created_at_desc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderDto | null>(null);
+
+  useEffect(() => {
+    ViewPreferenceStorage.saveOrders({ search, typeFilter, paymentFilter, datePeriod, sortKey });
+  }, [search, typeFilter, paymentFilter, datePeriod, sortKey]);
 
   const getDateRange = (period: string): { startDate?: string; endDate?: string } => {
     if (!period) return {};

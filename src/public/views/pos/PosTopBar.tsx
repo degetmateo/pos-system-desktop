@@ -8,7 +8,7 @@ interface PosTopBarProps {
   barcodeInputRef: React.RefObject<HTMLInputElement | null>;
   onBarcodeChange: (val: string) => void;
   onBarcodeSubmit: (e: React.FormEvent) => void;
-  onOpenSearch: () => void;
+  onOpenSearch?: () => void;
   orderType: 'minor' | 'major';
   onOrderTypeChange: (type: 'minor' | 'major') => void;
   customerId: string;
@@ -39,9 +39,11 @@ export const PosTopBar: React.FC<PosTopBarProps> = ({
             onChange={(e) => onBarcodeChange(e.target.value)}
           />
         </div>
-        <button type="button" className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={onOpenSearch}>
-          <Search size={16} /> Buscar
-        </button>
+        {onOpenSearch && (
+          <button type="button" className="btn btn-secondary" style={{ flexShrink: 0 }} onClick={onOpenSearch}>
+            <Search size={16} /> Buscar
+          </button>
+        )}
       </form>
 
       <div className="pos-actions-bar" style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>

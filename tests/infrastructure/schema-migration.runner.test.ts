@@ -17,6 +17,10 @@ describe('SchemaMigrationRunner (Database Migrations)', () => {
     expect(migrations[0].name).toBe('001_initial_schema');
     expect(migrations[1].version).toBe(2);
     expect(migrations[1].name).toBe('002_performance_indexes_and_resilience');
+    expect(migrations.some((m) => m.version === 5 && m.name === '005_remove_stock_column')).toBe(true);
+
+    const prodCols = db.prepare('PRAGMA table_info(products)').all() as any[];
+    expect(prodCols.some((c) => c.name === 'stock')).toBe(false);
 
     // Running again is idempotent (does not fail or duplicate)
     runner.run();

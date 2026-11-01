@@ -1,6 +1,10 @@
 export interface CreateOrderItemDto {
-  product_id: string;
+  product_id?: string | null;
+  name?: string | null;
   quantity: number;
+  unit_price?: number; // in decimal ($)
+  save_to_db?: boolean;
+  update_price_in_db?: boolean;
 }
 
 export interface CreateOrderDto {
@@ -10,4 +14,3 @@ export interface CreateOrderDto {
   advancement?: number; // in decimal
   products: CreateOrderItemDto[];
 }
-

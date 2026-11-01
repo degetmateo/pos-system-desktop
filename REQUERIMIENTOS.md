@@ -367,6 +367,54 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
     * En producción, Squirrel instala cada versión en carpetas versionadas (`app-0.0.x\rd.exe`), lo que invalidaba las reglas de firewall por ejecutable de versiones anteriores.
     * Se incorporó `FirewallService` y el endpoint `POST /api/info/firewall` que permite registrar una regla por puerto (`TCP 4000`, `Profile: Any`) con elevación UAC nativa, garantizando conectividad permanente para teléfonos y tablets a través de todas las actualizaciones de versión.
 
+### 9.9. Persistencia de Filtros, Ordenamientos y Borradores de Órdenes
+* **Persistencia de Filtros y Ordenamiento (`ViewPreferenceStorage`):**
+  * Se almacena automáticamente la selección del usuario en `localStorage` por cada vista:
+    * **Productos:** búsqueda, filtro por proveedor, criterio de ordenamiento (`name_asc`, `price_desc`, `price_updated_at_desc`, etc.).
+    * **Clientes:** término de búsqueda, tipo de cliente, filtro de documentación (con/sin CUIL, con teléfono, con email), ordenamiento.
+    * **Órdenes:** búsqueda por número/cliente, tipo de orden, medio de pago, período temporal, ordenamiento por fecha/total.
+  * Al cerrar y reabrir la aplicación o recargar la página, las selecciones se restauran exactamente en el estado en que quedaron.
+* **Persistencia de Borradores de Venta (`OrderDraftStorage`):**
+  * Soporte tanto para V1 como para V2: los ítems cargados, cliente seleccionado, tipo de orden (minorista/mayorista), medio de pago y adelanto se guardan de forma reactiva e instantánea.
+  * Si el usuario cambia de vista o la aplicación se cierra inesperadamente por factores externos, al regresar a la vista de orden se recuperan todos los datos.
+  * El borrador se purga automáticamente al confirmar la venta con éxito o al pulsar el botón de reinicio.
+
+### 9.10. Ocultamiento y Desactivación de Stock de Productos
+* **Migración de Base de Datos `v5 (005_remove_stock_column)`:**
+  * Se eliminó el índice `idx_products_stock` y la columna `stock` de la tabla `products` en SQLite.
+* **Depuración de la Interfaz:**
+  * Se removieron todos los campos de entrada de stock en `ProductModal.tsx`.
+  * Se eliminó la columna e insignias de stock en `ProductsTable.tsx`.
+  * Se removieron los filtros de estado de stock (`in_stock`, `low_stock`, `out_of_stock`) y opciones de ordenamiento por stock en `ProductsView.tsx`.
+  * Se eliminó la etiqueta de stock en el modal de búsqueda `PosProductSearchModal.tsx`.
+
+### 9.11. Vista de Creación de Órdenes V2 (Hoja de Cálculo / Excel)
+* **Convivencia y Alternancia V1 y V2:**
+  * Coexisten en paralelo la vista clásica de Punto de Venta (V1) y la nueva vista optimizada estilo planilla (V2), accesibles desde el menú lateral y mediante botones de alternancia en la parte superior de cada vista.
+* **Flujo de Planilla Ágil (`PosV2View`, `PosV2Grid`, `PosV2Row`, `PosV2ProductCell`):**
+  * La tabla inicia con una fila vacía para carga inmediata.
+  * **Barra Superior Optimizada:** En V2 se retira el botón de búsqueda manual accesorio junto al lector de códigos de barras, ya que la búsqueda y autocompletado ocurren directamente en las celdas de la tabla. El escáner de códigos de barras se mantiene 100% operativo.
+  * **Columna 1 (Producto / Nombre):** Con autocompletado en vivo flotante (`PosV2ProductAutocomplete` y `PosV2ProductCell`) con índice z elevado (`z-index: 1000`) y stacking context aislado que flota por encima de los componentes subsiguientes sin ser recortado ni ocultado.
+    * **Comportamiento y Navegación de Menú:**
+      * Al ingresar caracteres con coincidencias, el menú se despliega sin ningún ítem preseleccionado (`selectedIndex = -1`).
+      * Al presionar la flecha hacia abajo (`ArrowDown`), se selecciona el primer ítem y el usuario puede alternar opciones con `ArrowDown` / `ArrowUp`.
+      * Presionar `Enter` o `Tab` con un ítem seleccionado vincula el producto y carga sus datos y precio según el tipo de orden (minorista o mayorista).
+      * **Auto-Scroll Inteligente:** El contenedor del menú realiza scroll de forma automática (`PosV2GridNavigator.calculateScrollTop`) a medida que el usuario desciende o asciende con las flechas del teclado, manteniendo siempre el ítem seleccionado 100% visible sin necesidad de utilizar el mouse ni generar saltos indeseados en la pantalla principal.
+      * Presionar `Escape` cierra el selector.
+  * **Columna 2 (Cantidad):** Cantidad del producto (navegable con tecla `Tab`).
+  * **Columna 3 (Precio Unitario):** Precargado desde la base de datos o libremente editable. Si se modifica respecto al precio registrado, se activa la opción `[ ] Actualizar en BD` para sobreescribir el catálogo, o mantenerse desmarcado para aplicar un precio especial sólo en esta orden.
+    * **Fin de Secuencia de Tab por Fila:** El input de precio unitario se definió como el último elemento enfocable de la fila. Los checkboxes de BD y el botón de eliminar fila poseen `tabIndex={-1}`, evitando que el foco escape fuera de la tabla a elementos externos.
+    * **Navegación con `Tab` entre Filas:** Al presionar `Tab` en la celda de precio unitario, si existe una fila debajo, el cursor salta automáticamente a la primera celda (nombre de producto) de dicha fila; si es la última fila, retiene el foco para no perder la posición de escritura.
+  * **Creación Automática de Productos Nuevos:** Si se ingresa un producto no existente en la base de datos, la opción `[✓] Crear en BD` permite que, al confirmar la orden, el producto se dé de alta automáticamente en el catálogo con el precio unitario asignado.
+  * **Columna 4 (Subtotal):** Cálculo en tiempo real del subtotal de línea (`cantidad * precio unitario`).
+  * **Navegación por Teclado Estilo Excel (`PosV2GridNavigator`):**
+    * Al presionar `Enter` en cualquier celda (Nombre, Cantidad o Precio Unitario):
+      * **Última Fila:** Se agrega automáticamente una nueva fila a la tabla y se traslada el foco de inmediato al campo de nombre del producto de dicha fila.
+      * **Filas Intermedias:** El foco salta a la celda homóloga de la fila siguiente.
+* **Arquitectura Desacoplada y SOLID:**
+  * Orquestación de creación de ítems encapsulada en `OrderItemFactory.ts`, navegación en `PosV2GridNavigator.ts` y componentes segmentados en archivos de ~100 líneas útiles.
+  * Suite de pruebas ampliada a **67 tests automatizados** cubriendo todas las capas del sistema.
+
 
 
 

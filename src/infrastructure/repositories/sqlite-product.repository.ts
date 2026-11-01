@@ -49,16 +49,6 @@ export class SqliteProductRepository implements IProductRepository {
       }
     }
 
-    if (filters?.stockStatus) {
-      if (filters.stockStatus === 'in_stock') {
-        whereClause += ' AND stock > 0';
-      } else if (filters.stockStatus === 'out_of_stock') {
-        whereClause += ' AND stock <= 0';
-      } else if (filters.stockStatus === 'low_stock') {
-        whereClause += ' AND stock > 0 AND stock <= 5';
-      }
-    }
-
     if (filters?.minPrice !== undefined && filters?.minPrice !== null) {
       whereClause += ' AND price_minor >= ?';
       params.push(filters.minPrice);
@@ -87,10 +77,6 @@ export class SqliteProductRepository implements IProductRepository {
         return 'ORDER BY price_major ASC';
       case 'price_major_desc':
         return 'ORDER BY price_major DESC';
-      case 'stock_asc':
-        return 'ORDER BY stock ASC';
-      case 'stock_desc':
-        return 'ORDER BY stock DESC';
       case 'created_at_desc':
         return 'ORDER BY created_at DESC';
       case 'created_at_asc':
@@ -134,17 +120,17 @@ export class SqliteProductRepository implements IProductRepository {
   public async save(product: Product): Promise<void> {
     this.db.transaction(() => {
       this.db.prepare(`
-        INSERT INTO products (id, barcode, name, description, stock, provider_id, image_name, price_major, price_minor, synchronized, deleted, created_at, updated_at, price_updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO products (id, barcode, name, description, provider_id, image_name, price_major, price_minor, synchronized, deleted, created_at, updated_at, price_updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           barcode=excluded.barcode, name=excluded.name, description=excluded.description,
-          stock=excluded.stock, provider_id=excluded.provider_id, image_name=excluded.image_name,
+          provider_id=excluded.provider_id, image_name=excluded.image_name,
           price_major=excluded.price_major, price_minor=excluded.price_minor,
           synchronized=excluded.synchronized, deleted=excluded.deleted, updated_at=excluded.updated_at,
           price_updated_at=excluded.price_updated_at
       `).run(
         product.id, product.barcode?.getValue() || null, product.name, product.description,
-        product.stock, product.providerId, product.imageName, product.priceMajor.getCents(),
+        product.providerId, product.imageName, product.priceMajor.getCents(),
         product.priceMinor.getCents(), product.synchronized ? 1 : 0, product.deleted ? 1 : 0,
         product.createdAt.toISOString(), product.updatedAt.toISOString(),
         product.priceUpdatedAt.toISOString()

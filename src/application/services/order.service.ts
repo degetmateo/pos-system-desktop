@@ -1,6 +1,5 @@
 import { v7 as uuidv7 } from 'uuid';
 import { Order } from '../../domain/models/order.entity';
-import { OrderItem } from '../../domain/models/order-item.entity';
 import { Money } from '../../domain/value-objects/money.vo';
 import { OrderType } from '../../domain/value-objects/order-type.vo';
 import { IOrderRepository, OrderFilters } from '../ports/order-repository.port';
@@ -12,6 +11,7 @@ import { MinorPricingStrategy } from '../../domain/strategies/minor-pricing-stra
 import { IPricingStrategy } from '../../domain/strategies/pricing-strategy.interface';
 import { NotFoundError } from '../../domain/errors/not-found.error';
 import { InvalidArgumentError } from '../../domain/errors/invalid-argument.error';
+import { OrderItemFactory } from './helpers/order-item.factory';
 
 export class OrderService {
   constructor(
@@ -65,35 +65,17 @@ export class OrderService {
     });
 
     for (const itemDto of dto.products) {
-      const product = await this.productRepo.findById(itemDto.product_id);
-      if (!product) {
-        throw new NotFoundError(`Producto no encontrado: ${itemDto.product_id}`);
-      }
-
-      const pricing = strategy.calculate(
-        product.priceMajor,
-        product.priceMinor,
-        itemDto.quantity,
-        product.minorPrices
-      );
-
-      const orderItem = new OrderItem({
-        id: uuidv7(),
+      const orderItem = await OrderItemFactory.resolveItem(
+        itemDto,
         orderId,
-        productId: product.id,
-        productName: product.name,
-        quantity: itemDto.quantity,
-        price: pricing.unitPrice,
-        discountPrice: pricing.discountPrice,
-      });
-
+        orderType,
+        strategy,
+        this.productRepo
+      );
       order.addItem(orderItem);
-      product.updateStock(-itemDto.quantity);
-      await this.productRepo.save(product);
     }
 
     await this.orderRepo.save(order);
     return order;
   }
 }
-

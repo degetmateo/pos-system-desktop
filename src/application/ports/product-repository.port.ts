@@ -8,8 +8,6 @@ export type ProductSorting =
   | 'price_desc'
   | 'price_major_asc'
   | 'price_major_desc'
-  | 'stock_asc'
-  | 'stock_desc'
   | 'created_at'
   | 'created_at_desc'
   | 'created_at_asc'
@@ -25,7 +23,6 @@ export interface ProductFilters {
   name?: string | null;
   search?: string | null;
   providerId?: string | null;
-  stockStatus?: 'all' | 'in_stock' | 'out_of_stock' | 'low_stock' | null;
   minPrice?: number | null; // cents
   maxPrice?: number | null; // cents
   sorting?: ProductSorting | string | null;

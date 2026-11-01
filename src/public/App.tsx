@@ -5,6 +5,7 @@ import { ToastContainer } from './components/ToastContainer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { HomeView } from './views/HomeView';
 import { PosView } from './views/pos/PosView';
+import { PosV2View } from './views/pos/PosV2View';
 import { ProductsView } from './views/ProductsView';
 import { CustomersView } from './views/CustomersView';
 import { OrdersView } from './views/OrdersView';
@@ -24,7 +25,8 @@ export const App: React.FC = () => {
 
   const renderView = () => {
     switch (currentView) {
-      case 'pos': return <PosView />;
+      case 'pos': return <PosView onSwitchToV2={() => setCurrentView('pos-v2')} />;
+      case 'pos-v2': return <PosV2View onSwitchToV1={() => setCurrentView('pos')} />;
       case 'products': return <ProductsView />;
       case 'customers': return <CustomersView />;
       case 'orders': return <OrdersView />;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { Wifi, ShoppingCart, Package, Users, FileText, Database, ExternalLink, Copy, Check, Network, ShieldAlert } from 'lucide-react';
+import { Wifi, ShoppingCart, Package, Users, FileText, Database, ExternalLink, Copy, Check, Network, ShieldAlert, FileSpreadsheet } from 'lucide-react';
 import { ApiClient } from '../services/api.client';
 import { AppInfo, NetworkInterfaceInfo } from '../types/api.types';
 import { ToastService } from '../services/toast.service';
@@ -141,7 +141,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
         {[
-          { id: 'pos', title: 'Punto de Venta', desc: 'Facturación rápida y códigos de barra', icon: <ShoppingCart size={24} color="#0284c7" /> },
+          { id: 'pos', title: 'Punto de Venta (V1)', desc: 'Facturación estándar por búsqueda o lector de barras', icon: <ShoppingCart size={24} color="#0284c7" /> },
+          { id: 'pos-v2', title: 'Nueva Orden V2 (Excel)', desc: 'Planilla rápida con autocompletado y edición de precios', icon: <FileSpreadsheet size={24} color="#059669" /> },
           { id: 'products', title: 'Productos', desc: 'Catálogo, precios y descuentos', icon: <Package size={24} color="#10b981" /> },
           { id: 'customers', title: 'Clientes', desc: 'Cuentas corrientes y datos de contacto', icon: <Users size={24} color="#8b5cf6" /> },
           { id: 'orders', title: 'Órdenes', desc: 'Historial de ventas y comprobantes', icon: <FileText size={24} color="#f59e0b" /> },

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, RotateCcw, X } from 'lucide-react';
+import { Search, Plus, RotateCcw, X } from 'lucide-react';
 import { ProductDto, ProviderDto } from '../types/api.types';
 import { ApiClient } from '../services/api.client';
 import { ToastService } from '../services/toast.service';
+import { ViewPreferenceStorage } from '../services/view-preference.storage';
 import { ProductsTable } from './products/ProductsTable';
 import { ProductModal } from './products/ProductModal';
 import { ProductPriceHistoryModal } from './products/ProductPriceHistoryModal';
@@ -11,10 +12,10 @@ import { Pagination } from '../components/Pagination';
 export const ProductsView: React.FC = () => {
   const [products, setProducts] = useState<ProductDto[]>([]);
   const [providers, setProviders] = useState<ProviderDto[]>([]);
-  const [search, setSearch] = useState('');
-  const [providerFilter, setProviderFilter] = useState('');
-  const [stockFilter, setStockFilter] = useState('');
-  const [sortKey, setSortKey] = useState('name_asc');
+  const initialPrefs = ViewPreferenceStorage.getProducts();
+  const [search, setSearch] = useState(initialPrefs.search);
+  const [providerFilter, setProviderFilter] = useState(initialPrefs.providerFilter);
+  const [sortKey, setSortKey] = useState(initialPrefs.sortKey || 'name_asc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -23,13 +24,11 @@ export const ProductsView: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<ProductDto | null>(null);
   const [historyProduct, setHistoryProduct] = useState<ProductDto | null>(null);
 
-  const loadData = async (
-    query = search,
-    prov = providerFilter,
-    stock = stockFilter,
-    sort = sortKey,
-    p = page
-  ) => {
+  useEffect(() => {
+    ViewPreferenceStorage.saveProducts({ search, providerFilter, sortKey });
+  }, [search, providerFilter, sortKey]);
+
+  const loadData = async (query = search, prov = providerFilter, sort = sortKey, p = page) => {
     setLoading(true);
     try {
       const params: Record<string, string | number> = {
@@ -39,7 +38,6 @@ export const ProductsView: React.FC = () => {
         sorting: sort,
       };
       if (prov) params.provider_id = prov;
-      if (stock) params.stock_status = stock;
 
       const [res, provs] = await Promise.all([
         ApiClient.getProductsPaginated(params),
@@ -59,27 +57,26 @@ export const ProductsView: React.FC = () => {
 
   useEffect(() => {
     const handler = setTimeout(() => {
-      loadData(search, providerFilter, stockFilter, sortKey, page);
+      loadData(search, providerFilter, sortKey, page);
     }, 250);
     return () => clearTimeout(handler);
-  }, [search, providerFilter, stockFilter, sortKey, page]);
+  }, [search, providerFilter, sortKey, page]);
 
   const handleResetFilters = () => {
     setSearch('');
     setProviderFilter('');
-    setStockFilter('');
     setSortKey('name_asc');
     setPage(1);
   };
 
-  const hasActiveFilters = Boolean(search || providerFilter || stockFilter || sortKey !== 'name_asc');
+  const hasActiveFilters = Boolean(search || providerFilter || sortKey !== 'name_asc');
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este producto?')) return;
     try {
       await ApiClient.deleteProduct(id);
       ToastService.success('Producto eliminado correctamente.');
-      loadData(search, providerFilter, stockFilter, sortKey, page);
+      loadData(search, providerFilter, sortKey, page);
     } catch (e: any) {
       ToastService.error(e.message);
     }
@@ -90,7 +87,7 @@ export const ProductsView: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Catálogo de Productos</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Gestiona artículos, precios, stock y escalas de descuento</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Gestiona artículos, precios y escalas de descuento</p>
         </div>
         <button className="btn btn-primary" onClick={() => { setSelectedProduct(null); setModalOpen(true); }}>
           <Plus size={18} /> Nuevo Producto
@@ -99,7 +96,6 @@ export const ProductsView: React.FC = () => {
 
       <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-          {/* Main search bar */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: '260px', background: '#f8fafc', padding: '6px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}>
             <Search size={18} color="var(--text-muted)" />
             <input
@@ -121,8 +117,7 @@ export const ProductsView: React.FC = () => {
             )}
           </div>
 
-          {/* Provider Filter */}
-          <div style={{ minWidth: '180px', flex: '0 1 200px' }}>
+          <div style={{ minWidth: '180px', flex: '0 1 220px' }}>
             <select
               className="select"
               value={providerFilter}
@@ -137,23 +132,7 @@ export const ProductsView: React.FC = () => {
             </select>
           </div>
 
-          {/* Stock Filter */}
-          <div style={{ minWidth: '160px', flex: '0 1 180px' }}>
-            <select
-              className="select"
-              value={stockFilter}
-              onChange={(e) => { setStockFilter(e.target.value); setPage(1); }}
-              title="Filtrar por stock"
-            >
-              <option value="">Todo el stock</option>
-              <option value="in_stock">En stock (&gt; 0)</option>
-              <option value="low_stock">Stock bajo (≤ 5 u.)</option>
-              <option value="out_of_stock">Agotados (0 u.)</option>
-            </select>
-          </div>
-
-          {/* Sorting Dropdown */}
-          <div style={{ minWidth: '190px', flex: '0 1 210px' }}>
+          <div style={{ minWidth: '200px', flex: '0 1 240px' }}>
             <select
               className="select"
               value={sortKey}
@@ -168,15 +147,12 @@ export const ProductsView: React.FC = () => {
               <option value="price_major_desc">Precio May: Mayor a Menor</option>
               <option value="price_updated_at_desc">Precio: Modificado recientemente</option>
               <option value="price_updated_at_asc">Precio: Modificado antiguamente</option>
-              <option value="stock_desc">Stock: Mayor a Menor</option>
-              <option value="stock_asc">Stock: Menor a Mayor</option>
               <option value="created_at_desc">Más recientes primero</option>
               <option value="created_at_asc">Más antiguos primero</option>
               <option value="barcode_asc">Código: Menor a Mayor</option>
             </select>
           </div>
 
-          {/* Clear filters button */}
           {hasActiveFilters && (
             <button
               type="button"
@@ -190,7 +166,6 @@ export const ProductsView: React.FC = () => {
           )}
         </div>
 
-        {/* Counter and active status */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
           <div>
             <span>Total encontrados: <strong>{totalItems}</strong> productos</span>
@@ -198,33 +173,25 @@ export const ProductsView: React.FC = () => {
           </div>
           <div>Página {page} de {totalPages}</div>
         </div>
+
+        <ProductsTable
+          products={products}
+          loading={loading}
+          sortKey={sortKey}
+          onSortChange={(k) => { setSortKey(k); setPage(1); }}
+          onEdit={(p) => { setSelectedProduct(p); setModalOpen(true); }}
+          onDelete={handleDelete}
+          onViewPriceHistory={(p) => setHistoryProduct(p)}
+        />
+
+        <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
-
-      <ProductsTable
-        products={products}
-        loading={loading}
-        sortKey={sortKey}
-        onSortChange={(k) => { setSortKey(k); setPage(1); }}
-        onEdit={(p) => { setSelectedProduct(p); setModalOpen(true); }}
-        onDelete={handleDelete}
-        onViewPriceHistory={(p) => setHistoryProduct(p)}
-      />
-
-      <Pagination
-        page={page}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        onPageChange={(p) => setPage(p)}
-        disabled={loading}
-      />
 
       <ProductModal
         isOpen={modalOpen}
         product={selectedProduct}
-        providers={providers}
         onClose={() => setModalOpen(false)}
-        onSaved={() => loadData(search, providerFilter, stockFilter, sortKey, page)}
-        onProviderCreated={(newProv) => setProviders((prev) => [...prev, newProv])}
+        onSaved={() => loadData(search, providerFilter, sortKey, page)}
       />
 
       <ProductPriceHistoryModal

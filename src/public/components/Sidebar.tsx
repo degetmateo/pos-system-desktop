@@ -12,7 +12,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onClose }) => {
   const navItems = [
     { id: 'home', label: 'Inicio (Red LAN)', icon: <Home size={18} /> },
-    { id: 'pos', label: 'Punto de Venta', icon: <ShoppingCart size={18} /> },
+    { id: 'pos', label: 'Punto de Venta (V1)', icon: <ShoppingCart size={18} /> },
+    { id: 'pos-v2', label: 'Nueva Orden (V2 Excel)', icon: <FileSpreadsheet size={18} /> },
     { id: 'products', label: 'Productos', icon: <Package size={18} /> },
     { id: 'customers', label: 'Clientes', icon: <Users size={18} /> },
     { id: 'orders', label: 'Órdenes', icon: <FileText size={18} /> },
@@ -55,7 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpe
       </nav>
 
       <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', fontSize: '0.75rem', color: '#64748b' }}>
-        RD POS v0.0.22 Desktop & LAN
+        RD POS v0.0.24 Desktop & LAN
       </div>
     </aside>
   );

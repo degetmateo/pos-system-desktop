@@ -65,7 +65,7 @@ export const PosProductSearchModal: React.FC<PosProductSearchModalProps> = ({ is
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600, wordBreak: 'break-word' }}>{p.name}</div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    Min: ${(minor / 100).toFixed(2)} | May: ${(major / 100).toFixed(2)} | Stock: {p.stock}
+                    Min: ${(minor / 100).toFixed(2)} | May: ${(major / 100).toFixed(2)}
                   </div>
                 </div>
                 <button className="btn btn-primary" style={{ padding: '6px 12px', flexShrink: 0 }} onClick={() => { onSelectProduct(p); onClose(); }}>

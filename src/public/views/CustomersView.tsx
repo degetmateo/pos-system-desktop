@@ -3,22 +3,28 @@ import { Search, Plus, RotateCcw, X } from 'lucide-react';
 import { CustomerDto } from '../types/api.types';
 import { ApiClient } from '../services/api.client';
 import { ToastService } from '../services/toast.service';
+import { ViewPreferenceStorage } from '../services/view-preference.storage';
 import { CustomersTable } from './customers/CustomersTable';
 import { CustomerModal } from './customers/CustomerModal';
 import { Pagination } from '../components/Pagination';
 
 export const CustomersView: React.FC = () => {
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
-  const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
-  const [docFilter, setDocFilter] = useState('');
-  const [sortKey, setSortKey] = useState('name_asc');
+  const initialPrefs = ViewPreferenceStorage.getCustomers();
+  const [search, setSearch] = useState(initialPrefs.search);
+  const [typeFilter, setTypeFilter] = useState(initialPrefs.typeFilter);
+  const [docFilter, setDocFilter] = useState(initialPrefs.docFilter);
+  const [sortKey, setSortKey] = useState(initialPrefs.sortKey || 'name_asc');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [loading, setLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerDto | null>(null);
+
+  useEffect(() => {
+    ViewPreferenceStorage.saveCustomers({ search, typeFilter, docFilter, sortKey });
+  }, [search, typeFilter, docFilter, sortKey]);
 
   const loadData = async (
     query = search,

@@ -25,7 +25,6 @@ export class ProductController {
         name: (req.query.name || req.query.nameFilter) as string,
         search: (req.query.search || req.query.q || req.query.name || req.query.nameFilter) as string,
         providerId: (req.query.provider_id || req.query.providerId) as string,
-        stockStatus: (req.query.stock_status || req.query.stockStatus) as any,
         minPrice: req.query.min_price ? Math.round(Number(req.query.min_price) * 100) : undefined,
         maxPrice: req.query.max_price ? Math.round(Number(req.query.max_price) * 100) : undefined,
         sorting: req.query.sorting as any,

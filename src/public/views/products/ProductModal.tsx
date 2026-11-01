@@ -46,7 +46,7 @@ export const ProductModal: React.FC<Props> = ({ isOpen, product, providers, onCl
     e.preventDefault();
     setLoading(true);
     try {
-      const payload: any = { name: data.name, barcode: data.barcode || null, stock: Number(data.stock) || 0, provider_id: data.providerId || null, major_price: (data.priceMajor || 0) / 100, minor_price: (data.priceMinor || 0) / 100 };
+      const payload: any = { name: data.name, barcode: data.barcode || null, provider_id: data.providerId || null, major_price: (data.priceMajor || 0) / 100, minor_price: (data.priceMinor || 0) / 100 };
       (data.minorPrices || []).forEach((t, i) => { if (t.conditionValue > 0 && t.priceValue > 0) { payload[`minor_price_condition_${i + 1}`] = t.conditionValue; payload[`minor_price_value_${i + 1}`] = t.priceValue / 100; } });
       if (product?.id) await ApiClient.updateProduct(product.id, payload);
       else await ApiClient.createProduct(payload);
@@ -70,13 +70,11 @@ export const ProductModal: React.FC<Props> = ({ isOpen, product, providers, onCl
         </div>
         <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Nombre *</label>
           <input required type="text" className="input" value={data.name || ''} onChange={(e) => setData({ ...data, name: e.target.value })} /></div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>P. Minorista ($)</label>
             <input type="number" step="0.01" className="input" value={((data.priceMinor || 0) / 100).toString()} onChange={(e) => setData({ ...data, priceMinor: Math.round((parseFloat(e.target.value) || 0) * 100) })} /></div>
           <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>P. Mayorista ($)</label>
             <input type="number" step="0.01" className="input" value={((data.priceMajor || 0) / 100).toString()} onChange={(e) => setData({ ...data, priceMajor: Math.round((parseFloat(e.target.value) || 0) * 100) })} /></div>
-          <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Stock</label>
-            <input type="number" className="input" value={data.stock?.toString() || '0'} onChange={(e) => setData({ ...data, stock: parseInt(e.target.value) || 0 })} /></div>
         </div>
         <div><label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Proveedor</label>
           <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'space-between', padding: '8px 12px' }} onClick={() => setProvModalOpen(true)}>

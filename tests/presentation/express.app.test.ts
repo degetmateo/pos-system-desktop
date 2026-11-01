@@ -104,7 +104,8 @@ describe('Express API Endpoints (Integration)', () => {
     const listRes = await request(expressApp.app).get('/api/products');
     expect(listRes.status).toBe(200);
     expect(listRes.body.data.length).toBe(1);
-    expect(listRes.body.data[0].stock).toBe(15);
+    expect(listRes.body.data[0].name).toBe('TIJERA ESCOLAR');
+    expect(listRes.body.data[0].price_minor).toBe(35050);
   });
 
   it('creates customer and processes order', async () => {

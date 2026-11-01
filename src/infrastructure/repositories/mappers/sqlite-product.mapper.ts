@@ -7,7 +7,7 @@ export interface ProductRow {
   barcode: string | null;
   name: string;
   description: string | null;
-  stock: number;
+  stock?: number | null;
   provider_id: string | null;
   image_name: string | null;
   price_major: number;
@@ -36,7 +36,7 @@ export class SqliteProductMapper {
       name: row.name,
       barcode: row.barcode,
       description: row.description,
-      stock: row.stock,
+      stock: row.stock ?? 0,
       providerId: row.provider_id,
       imageName: row.image_name,
       priceMajor: Money.fromCents(row.price_major),

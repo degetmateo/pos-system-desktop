@@ -87,16 +87,6 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                 {renderSortIcon('price_major_asc', 'price_major_desc')}
               </div>
             </th>
-            <th
-              style={{ cursor: 'pointer', userSelect: 'none' }}
-              onClick={() => handleHeaderClick('stock_asc', 'stock_desc')}
-              title="Ordenar por Stock"
-            >
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span>Stock</span>
-                {renderSortIcon('stock_asc', 'stock_desc')}
-              </div>
-            </th>
             <th style={{ width: '90px' }}>Acciones</th>
           </tr>
         </thead>
@@ -106,20 +96,6 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
             const minor = typeof p.priceMinor === 'object' && p.priceMinor !== null ? (p.priceMinor as any).cents : (p.priceMinor || 0);
             const major = typeof p.priceMajor === 'object' && p.priceMajor !== null ? (p.priceMajor as any).cents : (p.priceMajor || 0);
 
-            let stockBadgeBg = '#dcfce7';
-            let stockBadgeColor = '#16a34a';
-            let stockText = `${p.stock} u.`;
-
-            if (p.stock <= 0) {
-              stockBadgeBg = '#fee2e2';
-              stockBadgeColor = '#dc2626';
-              stockText = '0 u. (Agotado)';
-            } else if (p.stock <= 5) {
-              stockBadgeBg = '#fef3c7';
-              stockBadgeColor = '#b45309';
-              stockText = `${p.stock} u. (Bajo)`;
-            }
-
             return (
               <tr key={p.id}>
                 <td>
@@ -128,11 +104,6 @@ export const ProductsTable: React.FC<ProductsTableProps> = ({
                 <td style={{ fontWeight: 600 }}>{p.name}</td>
                 <td style={{ fontWeight: 700, color: '#0369a1' }}>${(minor / 100).toFixed(2)}</td>
                 <td>${(major / 100).toFixed(2)}</td>
-                <td>
-                  <span style={{ padding: '3px 9px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700, background: stockBadgeBg, color: stockBadgeColor, display: 'inline-block' }}>
-                    {stockText}
-                  </span>
-                </td>
                 <td>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <button className="btn btn-secondary" style={{ padding: '5px' }} onClick={() => onViewPriceHistory(p)} title="Historial de Actualizaciones de Precios"><History size={15} color="#0284c7" /></button>

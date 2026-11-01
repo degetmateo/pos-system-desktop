@@ -79,7 +79,7 @@ export const PosSummaryPanel: React.FC<PosSummaryPanelProps> = ({
           disabled={loading || itemCount === 0}
           onClick={onSubmit}
         >
-          <CheckCircle2 size={18} /> {loading ? 'Emitiendo...' : 'Confirmar y Cobrar'}
+          <CheckCircle2 size={18} /> {loading ? 'Emitiendo...' : 'Confirmar'}
         </button>
         <button className="btn btn-secondary" style={{ width: '100%' }} disabled={loading || itemCount === 0} onClick={onReset}>
           <RotateCcw size={16} /> Limpiar Carrito

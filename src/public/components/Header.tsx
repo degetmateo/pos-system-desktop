@@ -16,7 +16,8 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, currentView }) 
 
   const titles: Record<string, string> = {
     home: 'Inicio y Conexión LAN',
-    pos: 'Punto de Venta',
+    pos: 'Punto de Venta (V1)',
+    'pos-v2': 'Nueva Orden (Modo Planilla V2)',
     products: 'Catálogo de Productos',
     customers: 'Gestión de Clientes',
     orders: 'Historial de Órdenes',

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ProductDto, CustomerDto } from '../../types/api.types';
 import { ApiClient } from '../../services/api.client';
 import { ToastService } from '../../services/toast.service';
+import { OrderDraftStorage } from '../../services/order-draft.storage';
 import { CartItem } from './pos.types';
 import { PosCartCalculator } from './PosCartCalculator';
 import { PosTopBar } from './PosTopBar';
@@ -10,13 +11,18 @@ import { PosSummaryPanel } from './PosSummaryPanel';
 import { PosProductSearchModal } from './PosProductSearchModal';
 import { PosReceiptModal } from './PosReceiptModal';
 
-export const PosView: React.FC = () => {
-  const [items, setItems] = useState<CartItem[]>([]);
-  const [orderType, setOrderType] = useState<'minor' | 'major'>('minor');
-  const [customerId, setCustomerId] = useState<string>('');
+interface PosViewProps {
+  onSwitchToV2?: () => void;
+}
+
+export const PosView: React.FC<PosViewProps> = ({ onSwitchToV2 }) => {
+  const initialDraft = OrderDraftStorage.getDraftV1();
+  const [items, setItems] = useState<CartItem[]>(initialDraft?.items || []);
+  const [orderType, setOrderType] = useState<'minor' | 'major'>(initialDraft?.orderType || 'minor');
+  const [customerId, setCustomerId] = useState<string>(initialDraft?.customerId || '');
   const [customers, setCustomers] = useState<CustomerDto[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<string>('cash');
-  const [advancement, setAdvancement] = useState<number>(0);
+  const [paymentMethod, setPaymentMethod] = useState<string>(initialDraft?.paymentMethod || 'cash');
+  const [advancement, setAdvancement] = useState<number>(initialDraft?.advancement || 0);
   const [barcodeInput, setBarcodeInput] = useState<string>('');
   const [searchOpen, setSearchOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -27,6 +33,10 @@ export const PosView: React.FC = () => {
     ApiClient.getCustomers().then(setCustomers).catch(() => {});
     barcodeInputRef.current?.focus();
   }, []);
+
+  useEffect(() => {
+    OrderDraftStorage.saveDraftV1({ items, orderType, customerId, paymentMethod, advancement });
+  }, [items, orderType, customerId, paymentMethod, advancement]);
 
   const handleAdd = (prod: ProductDto) => {
     setItems((prev) => {
@@ -56,6 +66,12 @@ export const PosView: React.FC = () => {
   const handleRemove = (id: string) => setItems((p) => PosCartCalculator.recalculateCart(p.filter((i) => i.product.id !== id), orderType));
   const handleType = (t: 'minor' | 'major') => { setOrderType(t); setItems((p) => PosCartCalculator.recalculateCart(p, t)); };
 
+  const handleReset = () => {
+    setItems([]);
+    setAdvancement(0);
+    OrderDraftStorage.clearDraftV1();
+  };
+
   const handleSubmit = async () => {
     if (items.length === 0) return;
     setLoading(true);
@@ -66,6 +82,7 @@ export const PosView: React.FC = () => {
       });
       setCreatedOrder({ id: order.id, number: order.number });
       setItems([]); setAdvancement(0);
+      OrderDraftStorage.clearDraftV1();
       ToastService.success('Venta registrada.');
     } catch (e: any) { ToastService.error(e.message); } finally { setLoading(false); }
   };
@@ -73,24 +90,37 @@ export const PosView: React.FC = () => {
   const { total, totalDiscount, itemCount } = PosCartCalculator.getTotals(items);
 
   return (
-    <div className="pos-layout">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0, width: '100%' }}>
-        <PosTopBar
-          barcodeInput={barcodeInput} barcodeInputRef={barcodeInputRef} onBarcodeChange={setBarcodeInput}
-          onBarcodeSubmit={handleBarcode} onOpenSearch={() => setSearchOpen(true)}
-          orderType={orderType} onOrderTypeChange={handleType} customerId={customerId} onCustomerChange={setCustomerId} customers={customers}
-        />
-        <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
-          <PosCartTable items={items} onUpdateQty={handleQty} onRemoveItem={handleRemove} />
-        </div>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div style={{ display: 'flex', gap: '8px' }}>
+        <button type="button" className="btn btn-primary" style={{ padding: '6px 14px', fontSize: '0.85rem' }}>
+          Vista Estándar (V1)
+        </button>
+        {onSwitchToV2 && (
+          <button type="button" className="btn btn-secondary" style={{ padding: '6px 14px', fontSize: '0.85rem' }} onClick={onSwitchToV2}>
+            Nueva Vista V2 (Hoja de Cálculo / Excel)
+          </button>
+        )}
       </div>
-      <PosSummaryPanel
-        total={total} totalDiscount={totalDiscount} advancement={advancement} paymentMethod={paymentMethod}
-        onAdvancementChange={setAdvancement} onPaymentMethodChange={setPaymentMethod}
-        onSubmit={handleSubmit} onReset={() => setItems([])} loading={loading} itemCount={itemCount}
-      />
-      <PosProductSearchModal isOpen={searchOpen} onClose={() => { setSearchOpen(false); barcodeInputRef.current?.focus(); }} onSelectProduct={handleAdd} />
-      <PosReceiptModal orderId={createdOrder?.id || null} orderNumber={createdOrder?.number || null} onClose={() => { setCreatedOrder(null); barcodeInputRef.current?.focus(); }} />
+
+      <div className="pos-layout">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0, width: '100%' }}>
+          <PosTopBar
+            barcodeInput={barcodeInput} barcodeInputRef={barcodeInputRef} onBarcodeChange={setBarcodeInput}
+            onBarcodeSubmit={handleBarcode} onOpenSearch={() => setSearchOpen(true)}
+            orderType={orderType} onOrderTypeChange={handleType} customerId={customerId} onCustomerChange={setCustomerId} customers={customers}
+          />
+          <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
+            <PosCartTable items={items} onUpdateQty={handleQty} onRemoveItem={handleRemove} />
+          </div>
+        </div>
+        <PosSummaryPanel
+          total={total} totalDiscount={totalDiscount} advancement={advancement} paymentMethod={paymentMethod}
+          onAdvancementChange={setAdvancement} onPaymentMethodChange={setPaymentMethod}
+          onSubmit={handleSubmit} onReset={handleReset} loading={loading} itemCount={itemCount}
+        />
+        <PosProductSearchModal isOpen={searchOpen} onClose={() => { setSearchOpen(false); barcodeInputRef.current?.focus(); }} onSelectProduct={handleAdd} />
+        <PosReceiptModal orderId={createdOrder?.id || null} orderNumber={createdOrder?.number || null} onClose={() => { setCreatedOrder(null); barcodeInputRef.current?.focus(); }} />
+      </div>
     </div>
   );
 };

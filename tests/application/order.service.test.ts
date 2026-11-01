@@ -57,7 +57,6 @@ describe('OrderService', () => {
     const product = new Product({
       id: 'prod-1',
       name: 'Lapicera Roller',
-      stock: 100,
       priceMajor: Money.fromDecimal(40),
       priceMinor: Money.fromDecimal(50),
       minorPrices: [
@@ -73,7 +72,7 @@ describe('OrderService', () => {
     fakeProducts.set('prod-1', product);
   });
 
-  it('creates an order with discount and decreases stock', async () => {
+  it('creates an order with discount on existing product', async () => {
     const order = await orderService.createOrder({
       type: 'minor',
       payment_method: 'cash',
@@ -87,10 +86,33 @@ describe('OrderService', () => {
     expect(item.discountPrice?.toDecimal()).toBe(45);
     // 6 * 45 = 270
     expect(order.getTotalPrice().toDecimal()).toBe(270);
+  });
 
-    // Check stock reduction
-    const updatedProduct = fakeProducts.get('prod-1');
-    expect(updatedProduct?.stock).toBe(94);
+  it('creates an order with custom price and updates price in DB when requested', async () => {
+    const order = await orderService.createOrder({
+      type: 'minor',
+      payment_method: 'cash',
+      products: [{ product_id: 'prod-1', quantity: 2, unit_price: 65, update_price_in_db: true }],
+    });
+
+    expect(order.getTotalPrice().toDecimal()).toBe(130);
+    const updatedProd = fakeProducts.get('prod-1');
+    expect(updatedProd?.priceMinor.toDecimal()).toBe(65);
+  });
+
+  it('creates an order with ad-hoc product and saves it to DB when save_to_db is true', async () => {
+    const order = await orderService.createOrder({
+      type: 'minor',
+      payment_method: 'transfer',
+      products: [{ name: 'Marcador Flúo', quantity: 4, unit_price: 300, save_to_db: true }],
+    });
+
+    expect(order.getItems().length).toBe(1);
+    expect(order.getItems()[0].productName).toBe('MARCADOR FLÚO');
+    expect(order.getTotalPrice().toDecimal()).toBe(1200);
+
+    const savedProd = Array.from(fakeProducts.values()).find((p) => p.name === 'MARCADOR FLÚO');
+    expect(savedProd).toBeDefined();
+    expect(savedProd?.priceMinor.toDecimal()).toBe(300);
   });
 });
-

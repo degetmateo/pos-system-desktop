@@ -119,16 +119,11 @@ describe('Advanced Filters, Sorting and LAN IP Detection', () => {
       });
     });
 
-    it('filters products by stockStatus: low_stock and out_of_stock', async () => {
-      const lowStockRes = await request(expressApp.app).get('/api/products?stock_status=low_stock');
-      expect(lowStockRes.status).toBe(200);
-      expect(lowStockRes.body.data.length).toBe(1);
-      expect(lowStockRes.body.data[0].name).toBe('LAPICERA AZUL');
-
-      const outOfStockRes = await request(expressApp.app).get('/api/products?stock_status=out_of_stock');
-      expect(outOfStockRes.status).toBe(200);
-      expect(outOfStockRes.body.data.length).toBe(1);
-      expect(outOfStockRes.body.data[0].name).toBe('REGLA 30CM');
+    it('filters products by search keyword', async () => {
+      const searchRes = await request(expressApp.app).get('/api/products?search=cuaderno');
+      expect(searchRes.status).toBe(200);
+      expect(searchRes.body.data.length).toBe(1);
+      expect(searchRes.body.data[0].name).toBe('CUADERNO A4');
     });
 
     it('sorts products by price ascending and descending', async () => {
