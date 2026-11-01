@@ -413,7 +413,25 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
       * **Filas Intermedias:** El foco salta a la celda homóloga de la fila siguiente.
 * **Arquitectura Desacoplada y SOLID:**
   * Orquestación de creación de ítems encapsulada en `OrderItemFactory.ts`, navegación en `PosV2GridNavigator.ts` y componentes segmentados en archivos de ~100 líneas útiles.
-  * Suite de pruebas ampliada a **67 tests automatizados** cubriendo todas las capas del sistema.
+  * Suite de pruebas ampliada a **75 tests automatizados** cubriendo todas las capas del sistema.
+
+### 9.12. Captura de Presupuesto en Imagen y Copia de PDF al Portapapeles
+* **Captura de Imagen Estilo Excel (`OrderCaptureCanvas`, `OrderCaptureService`):**
+  * Motor de dibujo en canvas 2D a doble resolución (scale 2x) que replica fielmente la plantilla de presupuesto que el cliente utiliza en Excel:
+    * **Cabecera Institucional:** Isotipo circular de Librería Rubén Darío, razón social, domicilio comercial (Montevideo 1879, General Pacheco), WhatsApp oficial, teléfono y correo electrónico.
+    * **Aviso de Señado:** Recuadro destacado con fondo amarillo de alerta (`PEDIDOS SE REALIZAN UNA VEZ SEÑADOS`), validez por 5 días y redes sociales.
+    * **Tabla y Datos de Pago:** Columnas estructuradas de `CANTIDAD`, `Producto`, `Precio unitario` y `PRECIO TOTAL`, incorporando la fila de transferencia bancaria con el `ALIAS : ogro.caso.ruina`.
+    * **Fila de Total y Seña:** Total general con el formato `$ XX.XXX,XX a cobrar`, y cálculo dinámico de seña recibida y saldo pendiente en caso de registrarse adelantos.
+    * **Pie Comercial:** Condiciones de venta, formas de pedido, entrega y validez del presupuesto.
+  * **Copia al Portapapeles:** Exporta la imagen generada directamente al portapapeles del sistema operativo (`navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])`), permitiendo que el usuario presione `Ctrl + V` en WhatsApp Web o Telegram para enviar el presupuesto instantáneamente como imagen.
+  * **Ubicación de Acceso:** Botón `<Camera /> Copiar Imagen` accesible tanto en la tabla de la vista de órdenes V2 (`PosV2Grid`) como en el diálogo posterior a la creación de la orden (`PosReceiptModal`).
+* **Copia de Archivo PDF al Portapapeles (`ClipboardFileHelper`):**
+  * Endpoint `POST /api/orders/receipt/:id/copy-pdf` en `OrderController`:
+    * Genera el archivo PDF formal del comprobante con `PdfMakeAdapter`.
+    * Guarda una copia en el directorio temporal del sistema (`%TEMP%/Orden_N.pdf`).
+    * Inyecta el archivo directamente en el portapapeles de Windows en formato nativo de lista de archivos (`CF_HDROP`) invocando PowerShell `Set-Clipboard -Path`.
+  * **Beneficio Operativo:** Permite que el usuario simplemente presione `Ctrl + V` en un chat de WhatsApp o correo electrónico para adjuntar el documento PDF al instante, sin tener que descargarlo en su carpeta de descargas ni tener que abrir el explorador de archivos.
+  * Incorporado como botón `<Copy /> Copiar PDF` en el modal de confirmación `PosReceiptModal`.
 
 
 

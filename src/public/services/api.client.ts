@@ -65,6 +65,15 @@ export class ApiClient {
   public static createOrder = (data: unknown) =>
     ApiClient.request<OrderDto>('/api/orders', { method: 'POST', body: JSON.stringify(data) });
 
+  public static getOrderById = (id: string) =>
+    ApiClient.request<OrderDto>(`/api/orders/${id}`);
+
+  public static copyOrderPdf = (id: string) =>
+    ApiClient.request<{ success: boolean; filePath?: string; orderNumber: number }>(
+      `/api/orders/receipt/${id}/copy-pdf`,
+      { method: 'POST' }
+    );
+
   public static getBackups = () => ApiClient.request<BackupDto[]>('/api/options/backups');
 
   public static createBackup = () =>

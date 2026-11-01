@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ApiClient } from '../../services/api.client';
 import { ToastService } from '../../services/toast.service';
+import { OrderCaptureService } from '../../services/order-capture.service';
 import { PosV2Calculator } from './PosV2Calculator';
 import { PosTopBar } from './PosTopBar';
 import { PosV2Grid } from './PosV2Grid';
@@ -37,6 +38,29 @@ export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
 
   const { total, itemCount } = PosV2Calculator.getTotals(rows);
 
+  const handleCopyCapture = () => {
+    const validRows = rows.filter((r) => r.productName.trim());
+    if (validRows.length === 0) {
+      ToastService.error('Ingresa al menos un producto con nombre para capturar.');
+      return;
+    }
+    const items = validRows.map((r) => ({
+      quantity: r.quantity,
+      name: r.productName,
+      unitPrice: r.unitPrice,
+      subtotal: PosV2Calculator.getRowSubtotal(r),
+    }));
+    const calculatedSum = items.reduce((acc, it) => acc + (it.subtotal || 0), 0);
+
+    OrderCaptureService.copyTableCapture({
+      items,
+      total: calculatedSum,
+      advancement: (advancement || 0) / 100,
+      paymentMethod,
+      customerName: customers.find((c) => c.id === customerId)?.name,
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <div style={{ display: 'flex', gap: '8px' }}>
@@ -66,6 +90,7 @@ export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
               onAddRow={handleAddRow}
               onEnterCell={handleCellEnter}
               onTabUnitPrice={handleTabUnitPrice}
+              onCopyCapture={handleCopyCapture}
             />
           </div>
         </div>
@@ -76,7 +101,12 @@ export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
           onSubmit={handleSubmit} onReset={handleReset} loading={loading} itemCount={itemCount}
         />
 
-        <PosReceiptModal orderId={createdOrder?.id || null} orderNumber={createdOrder?.number || null} onClose={() => setCreatedOrder(null)} />
+        <PosReceiptModal
+          orderId={createdOrder?.id || null}
+          orderNumber={createdOrder?.number || null}
+          orderData={createdOrder}
+          onClose={() => setCreatedOrder(null)}
+        />
       </div>
     </div>
   );

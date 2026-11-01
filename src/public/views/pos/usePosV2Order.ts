@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CustomerDto, ProductDto } from '../../types/api.types';
+import { CustomerDto, ProductDto, OrderDto } from '../../types/api.types';
 import { ApiClient } from '../../services/api.client';
 import { ToastService } from '../../services/toast.service';
 import { OrderDraftStorage } from '../../services/order-draft.storage';
@@ -18,7 +18,7 @@ export function usePosV2Order() {
   const [paymentMethod, setPaymentMethod] = useState<string>(initialDraft?.paymentMethod || 'cash');
   const [advancement, setAdvancement] = useState<number>(initialDraft?.advancement || 0);
   const [loading, setLoading] = useState<boolean>(false);
-  const [createdOrder, setCreatedOrder] = useState<{ id: string; number: number } | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<OrderDto | null>(null);
 
   useEffect(() => { ApiClient.getCustomers().then(setCustomers).catch(() => {}); }, []);
 
@@ -106,7 +106,7 @@ export function usePosV2Order() {
     setLoading(true);
     try {
       const order = await ApiClient.createOrder(dto);
-      setCreatedOrder({ id: order.id, number: order.number });
+      setCreatedOrder(order);
       setRows([PosV2Calculator.createEmptyRow()]);
       setAdvancement(0);
       OrderDraftStorage.clearDraftV2();

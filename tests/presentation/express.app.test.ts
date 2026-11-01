@@ -160,6 +160,14 @@ describe('Express API Endpoints (Integration)', () => {
     expect(pdfRes.headers['content-type']).toBe('application/pdf');
     expect(pdfRes.headers['content-disposition']).toContain('.pdf');
     expect(pdfRes.body.slice(0, 4).toString()).toBe('%PDF');
+
+    // 6. Test copy PDF endpoint
+    const copyRes = await request(expressApp.app).post(
+      `/api/orders/receipt/${orderRes.body.data.id}/copy-pdf`
+    );
+    expect(copyRes.status).toBe(200);
+    expect(copyRes.body.data.success).toBe(true);
+    expect(copyRes.body.data.filePath).toContain('.pdf');
   });
 });
 

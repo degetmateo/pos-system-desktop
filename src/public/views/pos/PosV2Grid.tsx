@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Camera } from 'lucide-react';
 import { PosV2RowItem } from './pos.types';
 import { PosV2Row } from './PosV2Row';
 
@@ -11,6 +11,7 @@ interface PosV2GridProps {
   onAddRow: () => void;
   onEnterCell: (rowIndex: number, colName: 'name' | 'quantity' | 'unitPrice') => void;
   onTabUnitPrice: (rowIndex: number) => void;
+  onCopyCapture: () => void;
 }
 
 export const PosV2Grid: React.FC<PosV2GridProps> = ({
@@ -21,6 +22,7 @@ export const PosV2Grid: React.FC<PosV2GridProps> = ({
   onAddRow,
   onEnterCell,
   onTabUnitPrice,
+  onCopyCapture,
 }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -53,7 +55,7 @@ export const PosV2Grid: React.FC<PosV2GridProps> = ({
         </table>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-start', padding: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px', flexWrap: 'wrap', gap: '8px' }}>
         <button
           type="button"
           tabIndex={-1}
@@ -62,6 +64,17 @@ export const PosV2Grid: React.FC<PosV2GridProps> = ({
           onClick={onAddRow}
         >
           <Plus size={15} /> Agregar Fila (o presiona Enter)
+        </button>
+
+        <button
+          type="button"
+          tabIndex={-1}
+          className="btn btn-secondary"
+          style={{ fontSize: '0.82rem', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#0369a1' }}
+          onClick={onCopyCapture}
+          title="Copiar imagen de la tabla como imagen al portapapeles"
+        >
+          <Camera size={15} /> Copiar Imagen
         </button>
       </div>
     </div>

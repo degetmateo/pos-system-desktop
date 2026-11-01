@@ -12,8 +12,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onClose }) => {
   const navItems = [
     { id: 'home', label: 'Inicio (Red LAN)', icon: <Home size={18} /> },
-    { id: 'pos', label: 'Punto de Venta (V1)', icon: <ShoppingCart size={18} /> },
-    { id: 'pos-v2', label: 'Nueva Orden (V2 Excel)', icon: <FileSpreadsheet size={18} /> },
+    { id: 'pos', label: 'Nueva Orden (V1)', icon: <ShoppingCart size={18} /> },
+    { id: 'pos-v2', label: 'Nueva Orden (V2)', icon: <ShoppingCart size={18} /> },
     { id: 'products', label: 'Productos', icon: <Package size={18} /> },
     { id: 'customers', label: 'Clientes', icon: <Users size={18} /> },
     { id: 'orders', label: 'Órdenes', icon: <FileText size={18} /> },

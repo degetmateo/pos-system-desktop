@@ -1,17 +1,73 @@
-import React from 'react';
-import { CheckCircle2, Printer, Download, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { CheckCircle2, Printer, Download, Camera, Copy, X } from 'lucide-react';
+import { ApiClient } from '../../services/api.client';
+import { OrderCaptureService } from '../../services/order-capture.service';
+import { OrderDto } from '../../types/api.types';
 
 interface PosReceiptModalProps {
   orderId: string | null;
   orderNumber: number | null;
+  orderData?: OrderDto | null;
   onClose: () => void;
 }
 
-export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({ orderId, orderNumber, onClose }) => {
+export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({ orderId, orderNumber, orderData, onClose }) => {
+  const [copyingImg, setCopyingImg] = useState(false);
+  const [copyingPdf, setCopyingPdf] = useState(false);
+
   if (!orderId) return null;
 
   const printUrl = `/api/orders/receipt/${orderId}?action=print`;
   const saveUrl = `/api/orders/receipt/${orderId}?action=save`;
+
+  const handleCopyCapture = async () => {
+    setCopyingImg(true);
+    try {
+      const order = orderData || await ApiClient.getOrderById(orderId);
+      const rawAdv = (order as any).advancement;
+      const advCents = typeof rawAdv === 'object' && rawAdv !== null ? rawAdv.cents : (rawAdv || 0);
+
+      const items = (order.items || []).map((it) => {
+        const rawP = (it as any).price ?? (it as any).unitPrice ?? (it as any).unit_price;
+        const p = typeof rawP === 'object' && rawP !== null ? rawP.cents : (rawP || 0);
+        const rawSub = (it as any).subtotal ?? (p * it.quantity);
+        const subCents = typeof rawSub === 'object' && rawSub !== null ? rawSub.cents : rawSub;
+        return {
+          quantity: it.quantity,
+          name: (it as any).product_name || (it as any).productName || 'Producto',
+          unitPrice: p / 100,
+          subtotal: subCents / 100,
+        };
+      });
+
+      const calculatedSum = items.reduce((acc, it) => acc + it.subtotal, 0);
+      const rawTotalVal = (order as any).totalPrice ?? (order as any).total_price ?? (order as any).total;
+      const totalCents = typeof rawTotalVal === 'object' && rawTotalVal !== null ? rawTotalVal.cents : (rawTotalVal || 0);
+      const totalAmount = totalCents > 0 ? totalCents / 100 : calculatedSum;
+
+      await OrderCaptureService.copyTableCapture({
+        orderNumber: order.number || orderNumber,
+        items,
+        total: totalAmount,
+        advancement: advCents / 100,
+        paymentMethod: (order as any).paymentMethod || (order as any).payment_method || 'Efectivo',
+        customerName: order.customer?.name,
+      });
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setCopyingImg(false);
+    }
+  };
+
+  const handleCopyPdf = async () => {
+    setCopyingPdf(true);
+    try {
+      await OrderCaptureService.copyOrderPdf(orderId, orderNumber);
+    } finally {
+      setCopyingPdf(false);
+    }
+  };
 
   return (
     <div className="modal-overlay">
@@ -33,13 +89,39 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({ orderId, order
           Comprobante <b>N° {orderNumber || ''}</b> generado correctamente.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <a href={printUrl} target="_blank" rel="noreferrer" className="btn btn-primary" style={{ padding: '12px', fontSize: '1rem' }}>
-            <Printer size={18} /> Imprimir Comprobante
-          </a>
-          <a href={saveUrl} download className="btn btn-secondary" style={{ padding: '12px', fontSize: '1rem' }}>
-            <Download size={18} /> Descargar PDF
-          </a>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: '10px', fontSize: '0.9rem', justifyContent: 'center' }}
+              disabled={copyingImg}
+              onClick={handleCopyCapture}
+              title="Copiar imagen de la tabla al portapapeles"
+            >
+              <Camera size={16} /> {copyingImg ? 'Copiando...' : 'Copiar Imagen'}
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: '10px', fontSize: '0.9rem', justifyContent: 'center', background: '#0284c7' }}
+              disabled={copyingPdf}
+              onClick={handleCopyPdf}
+              title="Copiar el archivo PDF al portapapeles para pegar con Ctrl + V"
+            >
+              <Copy size={16} /> {copyingPdf ? 'Copiando...' : 'Copiar PDF'}
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <a href={printUrl} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ padding: '10px', fontSize: '0.9rem', justifyContent: 'center' }}>
+              <Printer size={16} /> Imprimir
+            </a>
+            <a href={saveUrl} download className="btn btn-secondary" style={{ padding: '10px', fontSize: '0.9rem', justifyContent: 'center' }}>
+              <Download size={16} /> Descargar PDF
+            </a>
+          </div>
+
           <button className="btn btn-secondary" style={{ marginTop: '8px' }} onClick={onClose}>
             Nueva Venta
           </button>
@@ -48,4 +130,3 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({ orderId, order
     </div>
   );
 };
-

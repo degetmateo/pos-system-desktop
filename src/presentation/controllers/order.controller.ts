@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { OrderService } from '../../application/services/order.service';
 import { IPdfGeneratorPort } from '../../application/ports/pdf-generator.port';
+import { ClipboardFileHelper } from '../../infrastructure/adapters/clipboard-file.helper';
 import { HttpResponseHelper } from '../server/http-response.helper';
 
 export class OrderController {
@@ -13,6 +14,7 @@ export class OrderController {
     this.router.get('/', this.list.bind(this));
     this.router.get('/report', this.report.bind(this));
     this.router.get('/receipt/:id', this.receipt.bind(this));
+    this.router.post('/receipt/:id/copy-pdf', this.copyPdf.bind(this));
     this.router.get('/:id', this.getById.bind(this));
     this.router.post('/', this.create.bind(this));
   }
@@ -97,6 +99,18 @@ export class OrderController {
         res.setHeader('Content-Disposition', `attachment; filename="Orden_${order.number}.pdf"`);
         res.send(pdfBuffer);
       }
+    } catch (err) {
+      HttpResponseHelper.error(res, err);
+    }
+  }
+
+  private async copyPdf(req: Request, res: Response): Promise<void> {
+    try {
+      const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const order = await this.orderService.getOrderById(id);
+      const pdfBuffer = await this.pdfGenerator.generateReceiptPdf(order);
+      const filePath = await ClipboardFileHelper.copyPdfToClipboard(pdfBuffer, order.number);
+      HttpResponseHelper.ok(res, { success: true, filePath, orderNumber: order.number });
     } catch (err) {
       HttpResponseHelper.error(res, err);
     }
