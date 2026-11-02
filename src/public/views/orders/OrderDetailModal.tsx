@@ -1,6 +1,7 @@
-import React from 'react';
-import { X, Printer, Download, RotateCcw } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, Printer, Download, RotateCcw, Camera } from 'lucide-react';
 import { OrderDto } from '../../types/api.types';
+import { OrderCaptureService } from '../../services/order-capture.service';
 
 interface OrderDetailModalProps {
   order: OrderDto | null;
@@ -9,6 +10,7 @@ interface OrderDetailModalProps {
 }
 
 export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClose, onRemakeOrder }) => {
+  const [copyingImg, setCopyingImg] = useState(false);
   if (!order) return null;
 
   const printUrl = `/api/orders/receipt/${order.id}?action=print`;
@@ -19,6 +21,15 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClo
   const advancementCents = typeof order.advancement === 'object' && order.advancement !== null ? (order.advancement as any).cents : (order.advancement || 0);
   const balance = Math.max(0, totalCents - advancementCents);
   const items = Array.isArray(order.items) ? order.items : [];
+
+  const handleCopyCapture = async () => {
+    setCopyingImg(true);
+    try {
+      await OrderCaptureService.copyOrderCapture(order);
+    } finally {
+      setCopyingImg(false);
+    }
+  };
 
   return (
     <div className="modal-overlay">
@@ -36,36 +47,26 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClo
           <div><span style={{ color: 'var(--text-muted)' }}>Tipo:</span> <div style={{ fontWeight: 600 }}>{typeStr === 'major' ? 'MAYORISTA' : 'MINORISTA'}</div></div>
           <div><span style={{ color: 'var(--text-muted)' }}>Pago:</span> <div style={{ fontWeight: 600 }}>{paymentStr}</div></div>
           <div><span style={{ color: 'var(--text-muted)' }}>Total:</span> <div style={{ fontWeight: 800, color: 'var(--brand-dark)' }}>${(totalCents / 100).toFixed(2)}</div></div>
-          {advancementCents > 0 && (
-            <div><span style={{ color: 'var(--text-muted)' }}>Adelanto:</span> <div style={{ fontWeight: 700, color: '#0369a1' }}>${(advancementCents / 100).toFixed(2)}</div></div>
-          )}
-          {balance > 0 && advancementCents > 0 && (
-            <div><span style={{ color: 'var(--text-muted)' }}>Saldo:</span> <div style={{ fontWeight: 700, color: 'var(--danger)' }}>${(balance / 100).toFixed(2)}</div></div>
-          )}
+          {advancementCents > 0 && <div><span style={{ color: 'var(--text-muted)' }}>Adelanto:</span> <div style={{ fontWeight: 700, color: '#0369a1' }}>${(advancementCents / 100).toFixed(2)}</div></div>}
+          {balance > 0 && advancementCents > 0 && <div><span style={{ color: 'var(--text-muted)' }}>Saldo:</span> <div style={{ fontWeight: 700, color: 'var(--danger)' }}>${(balance / 100).toFixed(2)}</div></div>}
         </div>
 
         <div className="table-container" style={{ maxHeight: '250px', overflowY: 'auto', marginBottom: '16px' }}>
           <table className="table">
             <thead>
-              <tr>
-                <th>Producto</th>
-                <th>Cant.</th>
-                <th>Precio U.</th>
-                <th>Subtotal</th>
-              </tr>
+              <tr><th>Producto</th><th>Cant.</th><th>Precio U.</th><th>Subtotal</th></tr>
             </thead>
             <tbody>
               {items.map((it, idx) => {
-                const unitPrice = typeof it.unitPrice === 'number' ? it.unitPrice : (typeof (it as any).price === 'number' ? (it as any).price : 0);
-                const discountPrice = typeof it.discountPrice === 'number' ? it.discountPrice : (typeof (it as any).discountPrice?.cents === 'number' ? (it as any).discountPrice.cents : null);
-                const effectivePrice = discountPrice !== null ? discountPrice : unitPrice;
-                const sub = effectivePrice * it.quantity;
+                const uPrice = typeof it.unitPrice === 'number' ? it.unitPrice : (typeof (it as any).price === 'number' ? (it as any).price : 0);
+                const dPrice = typeof it.discountPrice === 'number' ? it.discountPrice : (typeof (it as any).discountPrice?.cents === 'number' ? (it as any).discountPrice.cents : null);
+                const effPrice = dPrice !== null ? dPrice : uPrice;
                 return (
                   <tr key={idx}>
                     <td style={{ fontWeight: 500 }}>{it.productName}</td>
                     <td>{it.quantity}</td>
-                    <td>${(effectivePrice / 100).toFixed(2)}</td>
-                    <td style={{ fontWeight: 700 }}>${(sub / 100).toFixed(2)}</td>
+                    <td>${(effPrice / 100).toFixed(2)}</td>
+                    <td style={{ fontWeight: 700 }}>${((effPrice * it.quantity) / 100).toFixed(2)}</td>
                   </tr>
                 );
               })}
@@ -73,26 +74,19 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClo
           </table>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', flexWrap: 'wrap' }}>
           {onRemakeOrder && (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => onRemakeOrder(order)}
-              title="Cargar todos los datos de esta orden en una nueva orden para rehacerla"
-            >
-              <RotateCcw size={16} color="var(--brand-celeste-hover)" /> Rehacer Orden
+            <button type="button" className="btn btn-secondary" onClick={() => onRemakeOrder(order)} title="Cargar datos en una nueva orden">
+              <RotateCcw size={15} color="var(--brand-celeste-hover)" /> Rehacer
             </button>
           )}
-          <a href={printUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
-            <Printer size={16} /> Imprimir Comprobante
-          </a>
-          <a href={saveUrl} download className="btn btn-secondary">
-            <Download size={16} /> Descargar PDF
-          </a>
+          <button type="button" className="btn btn-secondary" onClick={handleCopyCapture} disabled={copyingImg} title="Copiar imagen al portapapeles">
+            <Camera size={15} /> {copyingImg ? 'Copiando...' : 'Copiar Imagen'}
+          </button>
+          <a href={printUrl} target="_blank" rel="noreferrer" className="btn btn-primary"><Printer size={15} /> Imprimir</a>
+          <a href={saveUrl} download className="btn btn-secondary"><Download size={15} /> Descargar PDF</a>
         </div>
       </div>
     </div>
   );
 };
-

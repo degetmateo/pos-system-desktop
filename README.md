@@ -69,7 +69,7 @@ flowchart TD
 * **Cálculo de Descuentos por Volumen:** En ventas minoristas, evalúa dinámicamente las cantidades de cada producto y aplica los precios de escala definidos.
 * Registro de métodos de pago (Efectivo, Transferencia, Tarjeta, Cuenta Corriente) y pagos a cuenta / adelantos (`advancement`).
 * Emisión e impresión directa de comprobantes de venta (no válidos como factura) con detalle de importes, descuentos y datos bancarios para transferencia.
-* **Captura de Presupuesto en Imagen:** Generación automática de imagen idéntica al formato de cotización en Excel con logo, cabecera de contacto, datos de pago (`ALIAS : ogro.caso.ruina`) y total a cobrar copiada al portapapeles para pegar directamente en WhatsApp (`Ctrl + V`).
+* **Captura de Comprobante / Presupuesto en Imagen:** Generación automática de imagen idéntica al formato de cotización en Excel con logo, cabecera de contacto, número correlativo de comprobante (`ORDEN N° <N>`), datos de pago (`ALIAS : ogro.caso.ruina`) y total a cobrar copiada al portapapeles para pegar directamente en WhatsApp (`Ctrl + V`), accesible tanto al emitir una orden como en el modal de detalle del historial.
 * **Copia Rápida de PDF al Portapapeles:** Inyección del archivo PDF en el portapapeles de Windows para adjuntarlo sin descargas ni búsquedas en carpetas.
 * Descarga de recibos en formato PDF e impresión térmica/A4 directa.
 

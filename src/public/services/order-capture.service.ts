@@ -1,7 +1,9 @@
 import { ToastService } from './toast.service';
 import { ApiClient } from './api.client';
+import { OrderDto } from '../types/api.types';
 import { OrderCaptureData } from './order-capture.types';
 import { OrderCaptureCanvas } from './order-capture.canvas';
+import { OrderCaptureMapper } from './order-capture.mapper';
 
 export class OrderCaptureService {
   public static async copyTableCapture(data: OrderCaptureData): Promise<boolean> {
@@ -19,7 +21,7 @@ export class OrderCaptureService {
       console.warn('[OrderCaptureService] Error al copiar imagen:', err);
       try {
         const blob = await OrderCaptureCanvas.generate(data);
-        this.downloadBlob(blob, `Presupuesto_Ruben_Dario.png`);
+        this.downloadBlob(blob, `Presupuesto_Ruben_Dario_${data.orderNumber || 'Borrador'}.png`);
         ToastService.success('Captura descargada como imagen.');
         return true;
       } catch {
@@ -29,21 +31,21 @@ export class OrderCaptureService {
     }
   }
 
+  public static async copyOrderCapture(order: OrderDto, fallbackNumber?: number | null): Promise<boolean> {
+    const data = OrderCaptureMapper.fromOrder(order, fallbackNumber);
+    return this.copyTableCapture(data);
+  }
+
   public static async copyOrderPdf(orderId: string, orderNumber?: number | null): Promise<boolean> {
     try {
-      // 1. Invocar endpoint del servidor para copiar al portapapeles de Windows (CF_HDROP)
       await ApiClient.copyOrderPdf(orderId);
-
-      // 2. Intentar también en el portapapeles del navegador del cliente si es compatible
       try {
         const res = await fetch(`/api/orders/receipt/${orderId}`);
         const blob = await res.blob();
         if (navigator.clipboard && typeof ClipboardItem !== 'undefined') {
           await navigator.clipboard.write([new ClipboardItem({ 'application/pdf': blob })]);
         }
-      } catch {
-        // Ignorar si el navegador restringe tipos binarios; el host ya lo copió en Windows
-      }
+      } catch {}
 
       ToastService.success('¡PDF copiado al portapapeles! Listo para pegar con Ctrl + V.');
       return true;
@@ -62,4 +64,3 @@ export class OrderCaptureService {
     URL.revokeObjectURL(url);
   }
 }
-

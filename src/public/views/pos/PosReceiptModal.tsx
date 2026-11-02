@@ -23,36 +23,8 @@ export const PosReceiptModal: React.FC<PosReceiptModalProps> = ({ orderId, order
   const handleCopyCapture = async () => {
     setCopyingImg(true);
     try {
-      const order = orderData || await ApiClient.getOrderById(orderId);
-      const rawAdv = (order as any).advancement;
-      const advCents = typeof rawAdv === 'object' && rawAdv !== null ? rawAdv.cents : (rawAdv || 0);
-
-      const items = (order.items || []).map((it) => {
-        const rawP = (it as any).price ?? (it as any).unitPrice ?? (it as any).unit_price;
-        const p = typeof rawP === 'object' && rawP !== null ? rawP.cents : (rawP || 0);
-        const rawSub = (it as any).subtotal ?? (p * it.quantity);
-        const subCents = typeof rawSub === 'object' && rawSub !== null ? rawSub.cents : rawSub;
-        return {
-          quantity: it.quantity,
-          name: (it as any).product_name || (it as any).productName || 'Producto',
-          unitPrice: p / 100,
-          subtotal: subCents / 100,
-        };
-      });
-
-      const calculatedSum = items.reduce((acc, it) => acc + it.subtotal, 0);
-      const rawTotalVal = (order as any).totalPrice ?? (order as any).total_price ?? (order as any).total;
-      const totalCents = typeof rawTotalVal === 'object' && rawTotalVal !== null ? rawTotalVal.cents : (rawTotalVal || 0);
-      const totalAmount = totalCents > 0 ? totalCents / 100 : calculatedSum;
-
-      await OrderCaptureService.copyTableCapture({
-        orderNumber: order.number || orderNumber,
-        items,
-        total: totalAmount,
-        advancement: advCents / 100,
-        paymentMethod: (order as any).paymentMethod || (order as any).payment_method || 'Efectivo',
-        customerName: order.customer?.name,
-      });
+      const order = orderData || (await ApiClient.getOrderById(orderId));
+      await OrderCaptureService.copyOrderCapture(order, orderNumber);
     } catch (e: any) {
       console.error(e);
     } finally {
