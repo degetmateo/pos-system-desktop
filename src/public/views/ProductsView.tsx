@@ -190,6 +190,8 @@ export const ProductsView: React.FC = () => {
       <ProductModal
         isOpen={modalOpen}
         product={selectedProduct}
+        providers={providers}
+        onProviderCreated={(p) => setProviders((prev) => [...prev, p])}
         onClose={() => setModalOpen(false)}
         onSaved={() => loadData(search, providerFilter, sortKey, page)}
       />

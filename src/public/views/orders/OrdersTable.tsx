@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Printer, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Eye, Printer, Download, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { OrderDto } from '../../types/api.types';
 
 interface OrdersTableProps {
@@ -8,6 +8,7 @@ interface OrdersTableProps {
   sortKey: string;
   onSortChange: (newSortKey: string) => void;
   onSelectOrder: (order: OrderDto) => void;
+  onRemakeOrder?: (order: OrderDto) => void;
 }
 
 export const OrdersTable: React.FC<OrdersTableProps> = ({
@@ -16,6 +17,7 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
   sortKey,
   onSortChange,
   onSelectOrder,
+  onRemakeOrder,
 }) => {
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Cargando órdenes...</div>;
@@ -128,6 +130,16 @@ export const OrdersTable: React.FC<OrdersTableProps> = ({
                 <td>
                   <div style={{ display: 'flex', gap: '4px' }}>
                     <button className="btn btn-secondary" style={{ padding: '5px' }} onClick={() => onSelectOrder(o)} title="Ver Detalle"><Eye size={15} /></button>
+                    {onRemakeOrder && (
+                      <button
+                        className="btn btn-secondary"
+                        style={{ padding: '5px' }}
+                        onClick={() => onRemakeOrder(o)}
+                        title="Rehacer orden (cargar en nueva orden)"
+                      >
+                        <RotateCcw size={15} color="var(--brand-celeste-hover)" />
+                      </button>
+                    )}
                     <a href={`/api/orders/receipt/${o.id}?action=print`} target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ padding: '5px' }} title="Imprimir"><Printer size={15} /></a>
                     <a href={`/api/orders/receipt/${o.id}?action=save`} download className="btn btn-secondary" style={{ padding: '5px' }} title="Descargar"><Download size={15} /></a>
                   </div>

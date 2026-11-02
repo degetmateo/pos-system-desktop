@@ -1,6 +1,6 @@
 {
   "name": "rd",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "RD Pos-System-Desktop",
   "repository": {
     "type": "git",
@@ -22,7 +22,11 @@
     "make": "pnpm run build && pnpm run rebuild:electron && electron-forge make",
     "start:prod": "pnpm run package && .\\out\\rd-win32-x64\\rd.exe",
     "release": "pnpm run build && pnpm run rebuild:electron && electron-forge publish",
-    "publish": "pnpm run build && pnpm run rebuild:electron && electron-forge publish"
+    "publish": "pnpm run build && pnpm run rebuild:electron && electron-forge publish",
+    "package:win": "pnpm run build && electron-forge package --platform=win32 --arch=x64",
+    "make:win": "pnpm run build && electron-forge make --platform=win32 --arch=x64",
+    "release:win": "bash scripts/release-win.sh",
+    "publish:win": "bash scripts/release-win.sh"
   },
   "keywords": [],
   "author": "degetmateo",

@@ -4,11 +4,16 @@ import { OrderDto } from '../types/api.types';
 import { ApiClient } from '../services/api.client';
 import { ToastService } from '../services/toast.service';
 import { ViewPreferenceStorage } from '../services/view-preference.storage';
+import { OrderRemakeService } from '../services/order-remake.service';
 import { OrdersTable } from './orders/OrdersTable';
 import { OrderDetailModal } from './orders/OrderDetailModal';
 import { Pagination } from '../components/Pagination';
 
-export const OrdersView: React.FC = () => {
+interface OrdersViewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const OrdersView: React.FC<OrdersViewProps> = ({ onNavigate }) => {
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const initialPrefs = ViewPreferenceStorage.getOrders();
   const [search, setSearch] = useState(initialPrefs.search);
@@ -233,6 +238,11 @@ export const OrdersView: React.FC = () => {
         sortKey={sortKey}
         onSortChange={(k) => { setSortKey(k); setPage(1); }}
         onSelectOrder={setSelectedOrder}
+        onRemakeOrder={(o) => {
+          OrderRemakeService.remakeOrder(o);
+          setSelectedOrder(null);
+          onNavigate?.('pos-v2');
+        }}
       />
 
       <Pagination
@@ -246,6 +256,11 @@ export const OrdersView: React.FC = () => {
       <OrderDetailModal
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        onRemakeOrder={(o) => {
+          OrderRemakeService.remakeOrder(o);
+          setSelectedOrder(null);
+          onNavigate?.('pos-v2');
+        }}
       />
     </div>
   );

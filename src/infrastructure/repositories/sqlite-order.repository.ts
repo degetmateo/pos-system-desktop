@@ -5,6 +5,7 @@ import { OrderItem } from '../../domain/models/order-item.entity';
 import { IOrderRepository, OrderFilters } from '../../application/ports/order-repository.port';
 import { SqliteMetadataRepository } from './sqlite-metadata.repository';
 import { SqliteOrderMapper, OrderRow, ItemRow } from './mappers/sqlite-order.mapper';
+import { OrderQueryBuilder } from './search/order-query.builder';
 
 export class SqliteOrderRepository implements IOrderRepository {
   private readonly metadataRepo: SqliteMetadataRepository;
@@ -23,16 +24,14 @@ export class SqliteOrderRepository implements IOrderRepository {
   }
 
   public async findAll(filters?: OrderFilters): Promise<Order[]> {
-    const { clause, params } = this.buildFilter(filters);
-    let sql = `SELECT o.*, c.name as customer_name, c.cuil as customer_cuil FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE ${clause} ${this.resolveOrderBy(filters?.sorting)}`;
-    if (filters?.limit) { sql += ' LIMIT ? OFFSET ?'; params.push(filters.limit, filters.offset || 0); }
-    const rows = this.db.prepare(sql).all(...params) as OrderRow[];
+    const { selectSql, selectParams } = OrderQueryBuilder.build(filters);
+    const rows = this.db.prepare(selectSql).all(...selectParams) as OrderRow[];
     return rows.map((r) => SqliteOrderMapper.toEntity(r, this.loadItems(r.id)));
   }
 
   public async count(filters?: OrderFilters): Promise<number> {
-    const { clause, params } = this.buildFilter(filters);
-    const row = this.db.prepare(`SELECT COUNT(*) as total FROM orders o LEFT JOIN customers c ON o.customer_id = c.id WHERE ${clause}`).get(...params) as { total: number } | undefined;
+    const { countSql, countParams } = OrderQueryBuilder.build(filters);
+    const row = this.db.prepare(countSql).get(...countParams) as { total: number } | undefined;
     return row?.total || 0;
   }
 
@@ -44,76 +43,6 @@ export class SqliteOrderRepository implements IOrderRepository {
     sql += ' GROUP BY date ORDER BY date ASC';
     const rows = this.db.prepare(sql).all(...params) as { date: string; total: number }[];
     return { labels: rows.map((r) => r.date), values: rows.map((r) => (Number(r.total) || 0) / 100) };
-  }
-
-  private buildFilter(f?: OrderFilters): { clause: string; params: unknown[] } {
-    const p: unknown[] = [];
-    const parts = ['1 = 1'];
-    if (f?.id) { parts.push('o.id = ?'); p.push(f.id); }
-    if (f?.customerId) { parts.push('o.customer_id = ?'); p.push(f.customerId); }
-
-    const searchTerm = f?.search?.trim() || f?.customerName?.trim();
-    if (searchTerm) {
-      const numMatch = searchTerm.replace(/^#/, '');
-      if (/^\d+$/.test(numMatch)) {
-        parts.push('(o.number = ? OR c.name LIKE ? COLLATE NOCASE OR c.cuil LIKE ?)');
-        p.push(Number(numMatch), `%${searchTerm}%`, `%${searchTerm}%`);
-      } else {
-        const words = searchTerm.split(/\s+/).filter(Boolean);
-        for (const w of words) {
-          parts.push('(c.name LIKE ? COLLATE NOCASE OR c.cuil LIKE ?)');
-          p.push(`%${w}%`, `%${w}%`);
-        }
-      }
-    }
-
-    if (f?.orderNumber) { parts.push('o.number = ?'); p.push(f.orderNumber); }
-    if (f?.type) { parts.push('o.type = ?'); p.push(f.type); }
-    if (f?.status) { parts.push('o.status = ?'); p.push(f.status); }
-    if (f?.paymentMethod) { parts.push('o.payment_method = ?'); p.push(f.paymentMethod); }
-
-    if (f?.startDate) {
-      parts.push('date(o.created_at) >= date(?)');
-      p.push(f.startDate);
-    }
-    if (f?.endDate) {
-      parts.push('date(o.created_at) <= date(?)');
-      p.push(f.endDate);
-    }
-
-    if (f?.minTotal !== undefined && f?.minTotal !== null) {
-      parts.push('o.total_price >= ?');
-      p.push(f.minTotal);
-    }
-    if (f?.maxTotal !== undefined && f?.maxTotal !== null) {
-      parts.push('o.total_price <= ?');
-      p.push(f.maxTotal);
-    }
-
-    return { clause: parts.join(' AND '), params: p };
-  }
-
-  private resolveOrderBy(sorting?: string | null): string {
-    switch (sorting) {
-      case 'created_at_desc':
-        return 'ORDER BY o.created_at DESC';
-      case 'created_at_asc':
-        return 'ORDER BY o.created_at ASC';
-      case 'number_desc':
-        return 'ORDER BY o.number DESC';
-      case 'number_asc':
-        return 'ORDER BY o.number ASC';
-      case 'total_desc':
-        return 'ORDER BY o.total_price DESC';
-      case 'total_asc':
-        return 'ORDER BY o.total_price ASC';
-      case 'customer_asc':
-        return 'ORDER BY COALESCE(c.name, "Consumidor Final") COLLATE NOCASE ASC';
-      case 'customer_desc':
-        return 'ORDER BY COALESCE(c.name, "Consumidor Final") COLLATE NOCASE DESC';
-      default:
-        return 'ORDER BY o.created_at DESC';
-    }
   }
 
   public async save(order: Order): Promise<void> {

@@ -1,13 +1,14 @@
 import React from 'react';
-import { X, Printer, Download } from 'lucide-react';
+import { X, Printer, Download, RotateCcw } from 'lucide-react';
 import { OrderDto } from '../../types/api.types';
 
 interface OrderDetailModalProps {
   order: OrderDto | null;
   onClose: () => void;
+  onRemakeOrder?: (order: OrderDto) => void;
 }
 
-export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClose }) => {
+export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClose, onRemakeOrder }) => {
   if (!order) return null;
 
   const printUrl = `/api/orders/receipt/${order.id}?action=print`;
@@ -73,6 +74,16 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({ order, onClo
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+          {onRemakeOrder && (
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => onRemakeOrder(order)}
+              title="Cargar todos los datos de esta orden en una nueva orden para rehacerla"
+            >
+              <RotateCcw size={16} color="var(--brand-celeste-hover)" /> Rehacer Orden
+            </button>
+          )}
           <a href={printUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
             <Printer size={16} /> Imprimir Comprobante
           </a>

@@ -29,7 +29,7 @@ export const App: React.FC = () => {
       case 'pos-v2': return <PosV2View onSwitchToV1={() => setCurrentView('pos')} />;
       case 'products': return <ProductsView />;
       case 'customers': return <CustomersView />;
-      case 'orders': return <OrdersView />;
+      case 'orders': return <OrdersView onNavigate={(v) => setCurrentView(v)} />;
       case 'lists': return <PriceListsView />;
       case 'backups': return <BackupsView />;
       case 'home':

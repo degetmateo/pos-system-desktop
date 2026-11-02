@@ -65,6 +65,7 @@ flowchart TD
 * **Modalidad V2 en Planilla Rápida (Hoja de Cálculo / Excel):** Carga continua de artículos en tabla dinámica con autocompletado flotante de productos sobre el nombre, navegación con teclado (flechas y `Enter` para saltar de fila o generar nuevas filas automáticamente) y alta/actualización directa en base de datos.
 * **Experiencia Móvil Nativa (Responsive POS):** Interfaz adaptativa optimizada para teléfonos celulares y tablets en red LAN con tarjetas táctiles de carrito, botones de cantidad ergonómicos y prevención de zoom automático.
 * Escaneo de códigos de barra mediante pistola lectora o cámara web con decodificación en vivo.
+* **Atajo para Rehacer Órdenes:** Botón directo tanto en el historial de órdenes como en el modal de detalle de comprobante que carga todos los datos de una orden existente (cliente, tipo de orden, medio de pago, adelanto registrado e ítems con sus precios) en una nueva orden para rehacerla y modificarla libremente en la vista V2 (hoja de cálculo / Excel) antes de confirmar.
 * **Cálculo de Descuentos por Volumen:** En ventas minoristas, evalúa dinámicamente las cantidades de cada producto y aplica los precios de escala definidos.
 * Registro de métodos de pago (Efectivo, Transferencia, Tarjeta, Cuenta Corriente) y pagos a cuenta / adelantos (`advancement`).
 * Emisión e impresión directa de comprobantes de venta (no válidos como factura) con detalle de importes, descuentos y datos bancarios para transferencia.
@@ -79,7 +80,7 @@ flowchart TD
 * **Historial de Precios y Auditoría:** Registro cronológico exhaustivo de cada cambio de precio (`price_history`) con valor anterior, nuevo, diferencia monetaria y porcentaje de variación.
 * **Ordenamiento por Actualización de Precios:** Capacidad de ordenar productos por su última fecha de modificación de precios (`price_updated_at`), facilitando la revisión de artículos desactualizados.
 * Generador de códigos de barras internos normalizados (`RD<YY><000000000>`).
-* Búsqueda por palabras múltiples (*multi-token search*) insensible a mayúsculas/minúsculas.
+* **Búsqueda Multi-Término con Ranking por Relevancia:** Búsqueda independiente por cada palabra del término ingresado insensible a mayúsculas/minúsculas. Si el cliente recuerda sólo palabras sueltas del nombre de un artículo o cliente, se listan los resultados que coincidan con al menos una de ellas, posicionando más arriba los resultados con mayor cantidad de coincidencias.
 * Baja lógica (*soft delete*) para proteger la integridad histórica de ventas.
 
 ### 3. Clientes y Proveedores
@@ -113,7 +114,7 @@ El proyecto se encuentra en un proceso planificado de refactorización integral 
 | **Arquitectura Frontend** | Migrado | **React 19** + **TypeScript** + **Vite** + **QR LAN** |
 | **Arquitectura Backend** | Migrado | **Capas y Clases** (PEAA + GoF + SOLID) |
 | **Límite de Clases/Archivos**| Cumplido | **~100 líneas máximo** por clase/archivo (SRP) |
-| **Testing** | 100% Pasando | **Vitest** (54 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS V1/V2, Persistencia de Borradores/Filtros, Historial de Precios, Express, Firewall) |
+| **Testing** | 100% Pasando | **Vitest** (82 tests: Dominio, Casos de Uso, Repositorios, Migraciones, POS V1/V2, Persistencia de Borradores/Filtros, Historial de Precios, Búsqueda Multi-Término por Relevancia, Servicio de Rehacer Órdenes, Express, Firewall) |
 | **Retrocompatibilidad** | Garantizada | **SchemaMigrationRunner** con migraciones atómicas y defensivas |
 
 Para detalles exhaustivos sobre los patrones de diseño (Repository, Service Layer, Domain Model, Value Objects, Factory, Adapter, Strategy), requerimientos y decisiones técnicas, consultar el archivo [`REQUERIMIENTOS.md`](./REQUERIMIENTOS.md).
@@ -145,9 +146,12 @@ pnpm start
 * `pnpm test`: Ejecuta la suite de pruebas unitarias e integradas con Vitest directamente sobre el entorno de Electron Node (`cross-env ELECTRON_RUN_AS_NODE=1`), compartiendo el mismo ABI 140 sin conflictos de compilación.
 * `pnpm run build`: Compila TypeScript para el backend (`tsconfig.server.json`) y empaqueta el frontend con Vite.
 * `pnpm run package`: Empaqueta la aplicación completa en binarios ejecutables locales para Windows en `out/rd-win32-x64/rd.exe`.
+* `pnpm run package:win`: Empaqueta explícitamente para la plataforma Windows (`win32 x64`) desde cualquier sistema operativo (Linux, macOS o Windows).
 * `pnpm run start:prod`: Empaqueta la aplicación y lanza de inmediato el binario empaquetado `out\rd-win32-x64\rd.exe` para probar la aplicación exactamente como se comportará en producción.
 * `pnpm run make`: Genera los instaladores oficiales y distribuibles de producción (instalador Squirrel Windows: `rd-0.0.22 Setup.exe`, `.nupkg` y `RELEASES` en `out/make/squirrel.windows/x64/`).
-* `pnpm run publish` (o `pnpm release`): Compila, recompila módulos nativos y publica la release en GitHub Releases con los instaladores (`@electron-forge/publisher-github`). *Nota*: usar siempre `pnpm run publish` o `pnpm release` en lugar de `pnpm publish` a secas (ya que este último es un comando reservado de PNPM que intenta subir librerías a npmjs.org).
+* `pnpm run make:win`: Genera los distribuibles e instaladores especificando la plataforma Windows (`win32 x64`) en `out/make/`.
+* `pnpm run release` (o `pnpm run publish`): Compila, recompila módulos nativos y publica la release en GitHub Releases con los instaladores (`@electron-forge/publisher-github`).
+* `pnpm run release:win` (o `bash scripts/release-win.sh`): Script especializado para realizar el release de Windows desde Linux/macOS. Valida `GITHUB_TOKEN`, compila la app y publica en GitHub Releases o genera los artefactos locales (`--make-only` / `--dry-run`).
 
 ### 🛡️ Acceso Móvil (LAN) y Firewall de Windows en Producción
 En modo desarrollo (`pnpm start`), el binario que atiende las conexiones es `electron.exe`. Al compilar e instalar en producción (`Squirrel.Windows`), cada versión se aloja en un directorio dinámico (`AppData\Local\rd\app-<version>\rd.exe`), lo que provoca que Windows Defender Firewall bloquee por defecto las conexiones entrantes desde celulares si no existe una regla por puerto.

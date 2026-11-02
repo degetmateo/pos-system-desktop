@@ -7,10 +7,10 @@ import { ProductDiscountsSubForm } from './ProductDiscountsSubForm';
 import { ProductProviderSelectModal } from './ProductProviderSelectModal';
 
 interface Props {
-  isOpen: boolean; product: ProductDto | null; providers: ProviderDto[]; onClose: () => void; onSaved: () => void; onProviderCreated?: (p: ProviderDto) => void;
+  isOpen: boolean; product: ProductDto | null; providers?: ProviderDto[]; onClose: () => void; onSaved: () => void; onProviderCreated?: (p: ProviderDto) => void;
 }
 
-export const ProductModal: React.FC<Props> = ({ isOpen, product, providers, onClose, onSaved, onProviderCreated }) => {
+export const ProductModal: React.FC<Props> = ({ isOpen, product, providers = [], onClose, onSaved, onProviderCreated }) => {
   const [data, setData] = useState<Partial<ProductDto>>({});
   const [loading, setLoading] = useState(false);
   const [provModalOpen, setProvModalOpen] = useState(false);
@@ -55,7 +55,7 @@ export const ProductModal: React.FC<Props> = ({ isOpen, product, providers, onCl
     } catch (e: any) { ToastService.error(e.message); } finally { setLoading(false); }
   };
 
-  const selectedProv = providers.find((p) => p.id === data.providerId);
+  const selectedProv = (providers || []).find((p) => p.id === data.providerId);
   return (
     <div className="modal-overlay"><div className="modal-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -88,7 +88,7 @@ export const ProductModal: React.FC<Props> = ({ isOpen, product, providers, onCl
           <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Guardando...' : 'Guardar'}</button>
         </div>
       </form>
-      <ProductProviderSelectModal isOpen={provModalOpen} selectedProviderId={data.providerId || null} providers={providers} onSelectProvider={(id) => setData({ ...data, providerId: id || undefined })} onProviderCreated={(p) => onProviderCreated?.(p)} onClose={() => setProvModalOpen(false)} />
+      <ProductProviderSelectModal isOpen={provModalOpen} selectedProviderId={data.providerId || null} providers={providers || []} onSelectProvider={(id) => setData({ ...data, providerId: id || undefined })} onProviderCreated={(p) => onProviderCreated?.(p)} onClose={() => setProvModalOpen(false)} />
     </div></div>
   );
 };

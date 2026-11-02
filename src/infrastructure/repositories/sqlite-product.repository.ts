@@ -3,6 +3,7 @@ import { Product } from '../../domain/models/product.entity';
 import { MinorPrice } from '../../domain/models/minor-price.entity';
 import { IProductRepository, ProductFilters } from '../../application/ports/product-repository.port';
 import { SqliteProductMapper, ProductRow, MinorPriceRow } from './mappers/sqlite-product.mapper';
+import { ProductQueryBuilder } from './search/product-query.builder';
 
 export class SqliteProductRepository implements IProductRepository {
   constructor(private readonly db: DatabaseInstance) {}
@@ -17,103 +18,15 @@ export class SqliteProductRepository implements IProductRepository {
     return row ? SqliteProductMapper.toEntity(row, this.loadMinorPrices(row.id)) : null;
   }
 
-  private buildFilterClauses(filters?: ProductFilters): { whereClause: string; params: unknown[] } {
-    let whereClause = 'WHERE deleted = 0';
-    const params: unknown[] = [];
-
-    if (filters?.id) {
-      whereClause += ' AND id = ?';
-      params.push(filters.id);
-    }
-
-    if (filters?.barcode) {
-      whereClause += ' AND barcode = ?';
-      params.push(filters.barcode);
-    }
-
-    const searchTerm = filters?.search?.trim() || filters?.name?.trim();
-    if (searchTerm) {
-      const words = searchTerm.split(/\s+/).filter(Boolean);
-      for (const w of words) {
-        whereClause += ' AND (name LIKE ? COLLATE NOCASE OR barcode LIKE ? OR description LIKE ? COLLATE NOCASE)';
-        params.push(`%${w}%`, `%${w}%`, `%${w}%`);
-      }
-    }
-
-    if (filters?.providerId) {
-      if (filters.providerId === 'none') {
-        whereClause += ' AND (provider_id IS NULL OR provider_id = "")';
-      } else {
-        whereClause += ' AND provider_id = ?';
-        params.push(filters.providerId);
-      }
-    }
-
-    if (filters?.minPrice !== undefined && filters?.minPrice !== null) {
-      whereClause += ' AND price_minor >= ?';
-      params.push(filters.minPrice);
-    }
-
-    if (filters?.maxPrice !== undefined && filters?.maxPrice !== null) {
-      whereClause += ' AND price_minor <= ?';
-      params.push(filters.maxPrice);
-    }
-
-    return { whereClause, params };
-  }
-
-  private resolveOrderBy(sorting?: string | null): string {
-    switch (sorting) {
-      case 'abc':
-      case 'name_asc':
-        return 'ORDER BY name COLLATE NOCASE ASC';
-      case 'name_desc':
-        return 'ORDER BY name COLLATE NOCASE DESC';
-      case 'price_asc':
-        return 'ORDER BY price_minor ASC';
-      case 'price_desc':
-        return 'ORDER BY price_minor DESC';
-      case 'price_major_asc':
-        return 'ORDER BY price_major ASC';
-      case 'price_major_desc':
-        return 'ORDER BY price_major DESC';
-      case 'created_at_desc':
-        return 'ORDER BY created_at DESC';
-      case 'created_at_asc':
-      case 'created_at':
-        return 'ORDER BY created_at ASC';
-      case 'updated_at':
-      case 'updated_at_desc':
-        return 'ORDER BY updated_at DESC';
-      case 'price_updated_at_desc':
-        return 'ORDER BY COALESCE(price_updated_at, updated_at, created_at) DESC';
-      case 'price_updated_at_asc':
-        return 'ORDER BY COALESCE(price_updated_at, updated_at, created_at) ASC';
-      case 'barcode_asc':
-        return 'ORDER BY barcode ASC';
-      case 'barcode_desc':
-        return 'ORDER BY barcode DESC';
-      default:
-        return 'ORDER BY created_at ASC';
-    }
-  }
-
   public async findAll(filters?: ProductFilters): Promise<Product[]> {
-    const { whereClause, params } = this.buildFilterClauses(filters);
-    let sql = `SELECT * FROM products ${whereClause} ${this.resolveOrderBy(filters?.sorting)}`;
-    if (filters?.limit) {
-      sql += ' LIMIT ? OFFSET ?';
-      params.push(filters.limit, filters.offset || 0);
-    }
-
-    const rows = this.db.prepare(sql).all(...params) as ProductRow[];
+    const { selectSql, selectParams } = ProductQueryBuilder.build(filters);
+    const rows = this.db.prepare(selectSql).all(...selectParams) as ProductRow[];
     return rows.map((r) => SqliteProductMapper.toEntity(r, this.loadMinorPrices(r.id)));
   }
 
   public async count(filters?: ProductFilters): Promise<number> {
-    const { whereClause, params } = this.buildFilterClauses(filters);
-    const sql = `SELECT COUNT(*) as total FROM products ${whereClause}`;
-    const row = this.db.prepare(sql).get(...params) as { total: number } | undefined;
+    const { countSql, countParams } = ProductQueryBuilder.build(filters);
+    const row = this.db.prepare(countSql).get(...countParams) as { total: number } | undefined;
     return row?.total || 0;
   }
 

@@ -48,6 +48,7 @@ module.exports = {
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
+      platforms: ['win32'],
       config: {
         name: 'rd',
         setupIcon: './assets/logo.ico',
@@ -55,14 +56,16 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['darwin'],
+      platforms: ['darwin', 'win32'],
     },
     {
       name: '@electron-forge/maker-deb',
+      platforms: ['linux'],
       config: {},
     },
     {
       name: '@electron-forge/maker-rpm',
+      platforms: ['linux'],
       config: {},
     },
   ],

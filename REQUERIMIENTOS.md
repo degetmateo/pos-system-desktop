@@ -30,10 +30,11 @@
   * Tabla `price_history` que almacena de forma inmutable cada actualización de precios minoristas o mayoristas.
   * Atributos auditados: ID, ID de producto (`product_id`), Tipo de precio (`minor` | `major`), Precio anterior en centavos (`old_price`), Precio nuevo en centavos (`new_price`), Diferencia monetaria (`difference`), Variación porcentual (`percentage_diff`) y Marca temporal (`created_at`).
   * Endpoint `GET /api/products/:id/price-history` y modal visual de historial para inspección rápida de fluctuaciones.
-* **RF-04 (Búsqueda, Paginación y Ordenamiento Avanzado):**
-  * Búsqueda por múltiples palabras clave (*multi-token matching*) en nombres de producto insensibles a mayúsculas/minúsculas (`COLLATE NOCASE`), descripción o código de barras.
-  * Filtros por ID, código de barras, proveedor y estado de inventario (con stock, stock bajo, agotados).
-  * Métodos de ordenamiento: Alfabético (A-Z / Z-A), Precio minorista (asc/desc), Precio mayorista (asc/desc), Stock (asc/desc), Fecha de creación y **Última actualización de precio** (`price_updated_at_desc` / `price_updated_at_asc`).
+* **RF-04 (Búsqueda Multi-Término Independiente y Ranking por Relevancia):**
+  * Tokenización del término de búsqueda en palabras independientes. El motor recupera resultados que coincidan con al menos una de las palabras ingresadas (`OR` lógico en lugar de un `AND` restrictivo) para tolerar que el usuario recuerde sólo datos parciales o desordenados del producto o cliente.
+  * **Ranking por Relevancia:** Ordenamiento prioritario dinámico (`ORDER BY match_score DESC`) en el que cuantas más palabras coincidan en un resultado, más arriba aparecerá en el listado, con bonificación adicional por coincidencia de frase completa o prefijo.
+  * Filtros por ID, código de barras, proveedor y estado.
+  * Métodos de ordenamiento secundarios: Alfabético (A-Z / Z-A), Precio minorista (asc/desc), Precio mayorista (asc/desc), Fecha de creación y **Última actualización de precio** (`price_updated_at_desc` / `price_updated_at_asc`).
   * Paginación en servidor (`LIMIT` y `OFFSET`).
 
 ### 2.2. Gestión de Clientes y Proveedores
@@ -52,6 +53,10 @@
   * Escaneo o selección rápida de productos para incorporación al carrito de venta.
   * **Cálculo Automático de Descuentos:** En compras minoristas, el sistema analiza en tiempo real las reglas de escala (`minor_prices`) y aplica el precio promocional correspondiente si la cantidad del producto alcanza o supera el umbral configurado.
   * Desglose de importes: Precio base, descuentos aplicados, precio final, adelanto recibido (`advancement`) y saldo pendiente.
+* **RF-07b (Atajo para Rehacer y Modificar Órdenes):**
+  * Mecanismo accesible directamente desde la tabla de órdenes (`OrdersTable`) y desde el modal de detalle (`OrderDetailModal`).
+  * Clona todos los datos de una orden emitida (cliente, tipo de orden mayorista o minorista, forma de pago, adelanto registrado e ítems con sus precios y cantidades) y los carga en un nuevo borrador de orden en la vista de edición ágil V2 (con réplica en V1).
+  * Habilita al operador para modificar cualquier campo o ítem antes de registrar la nueva orden.
 * **RF-08 (Métodos de Pago y Estados):**
   * Registro de forma de pago utilizada: Efectivo (`cash`), Transferencia (`transfer`), Tarjeta (`card`), Cuenta Corriente (`current_account`).
   * Estados de orden: Pendiente, Completada, Cancelada.
@@ -432,6 +437,56 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
     * Inyecta el archivo directamente en el portapapeles de Windows en formato nativo de lista de archivos (`CF_HDROP`) invocando PowerShell `Set-Clipboard -Path`.
   * **Beneficio Operativo:** Permite que el usuario simplemente presione `Ctrl + V` en un chat de WhatsApp o correo electrónico para adjuntar el documento PDF al instante, sin tener que descargarlo en su carpeta de descargas ni tener que abrir el explorador de archivos.
   * Incorporado como botón `<Copy /> Copiar PDF` en el modal de confirmación `PosReceiptModal`.
+
+### 9.13. Búsqueda Multi-Término Independiente y Ranking por Relevancia
+* **Problema:** En catálogos extensos, si el usuario recuerda términos aislados o desordenados de un producto o cliente (ej. "cuaderno gloria rayado" o "juan librería"), una búsqueda estricta con `AND` o coincidencia de subcadena completa descartaba resultados válidos si el usuario no ingresaba el nombre exacto.
+* **Solución Arquitectónica (Strategy & Builder Pattern):**
+  * **Backend SQLite (`SqliteSearchRelevanceBuilder`):**
+    * Tokeniza el input en palabras independientes.
+    * Cláusula `WHERE`: Evalúa la presencia de al menos una palabra (`OR` lógico entre palabras) en los campos designados (`name`, `barcode`, `description` para productos; `name`, `cuil`, `phone`, `email`, `address` para clientes; `c.name`, `c.cuil`, `o.number` para órdenes).
+    * Cálculo de Relevancia (`match_score`): En SQLite, las expresiones booleanas devuelven `1` o `0`. Se calcula la suma ponderada de coincidencias por palabra (`(C_1) + (C_2) + ...`), añadiendo una bonificación por coincidencia de frase exacta (`((name LIKE ?) * 5)`).
+    * Cláusula `ORDER BY`: Ordena prioritariamente por `match_score DESC`, seguido del ordenamiento secundario seleccionado por el usuario.
+    * Clases dedicadas de consulta (`ProductQueryBuilder`, `CustomerQueryBuilder`, `OrderQueryBuilder`) que desacoplan la persistencia y mantienen los repositorios estrictamente bajo el límite de ~100 líneas (SRP).
+  * **Frontend en Memoria (`RelevanceSearchRanker`):**
+    * Servicio utilitario reutilizable con tipado genérico (`RelevanceSearchRanker.rank<T>`).
+    * Aplica el mismo algoritmo de ranking por frecuencia de términos, coincidencia de frase completa y prefijos para modales con colecciones locales (`PosCustomerSelectModal`, `ProductProviderSelectModal`).
+
+### 9.14. Flujo y Atajo para Rehacer Órdenes
+* **Caso de Uso:** Cuando un cliente solicita un pedido recurrente o una cotización similar a una venta anterior, el operador necesita cargar todos los datos de dicha orden en una nueva orden para modificarla (cambiar cantidades, precios, agregar o quitar ítems, etc.) sin tener que reescribir todo desde cero.
+* **Diseño e Implementación (`OrderRemakeService`):**
+  * **Patrones GoF (Prototype & Factory) y PEAA (Service Layer):**
+    * `OrderRemakeService.remakeOrder(order: OrderDto)` extrae los datos de la orden histórica.
+    * Mapea cada ítem a una fila de la vista de planilla rápida V2 (`PosV2RowItem`), regenerando identificadores únicos (`crypto.randomUUID()`) para garantizar que la nueva orden sea una entidad completamente desacoplada e independiente.
+    * Preserva el cliente asociado, el tipo de orden (`minor` / `major`), la forma de pago y el adelanto registrado.
+    * Persiste el borrador de manera atómica en `OrderDraftStorage.saveDraftV2` (y en `saveDraftV1` para retrocompatibilidad).
+  * **Integración en la Interfaz de Usuario:**
+    * **Botón en Tabla de Órdenes (`OrdersTable`):** Botón con ícono `<RotateCcw />` y tooltip descriptivo en la columna de acciones de cada fila.
+    * **Botón en Modal de Detalle (`OrderDetailModal`):** Botón destacado "Rehacer Orden" junto a las opciones de impresión y descarga PDF.
+    * Redirección reactiva automática hacia la vista de creación de órdenes V2 (`PosV2View`), donde todos los datos aparecen precargados y listos para edición inmediata celda por celda mediante teclado o mouse.
+
+### 9.15. Cobertura de Tests y Calidad Arquitectónica
+* La suite completa de pruebas automáticas asciende a **82 tests** ejecutándose de manera continua sobre Electron Node (ABI 140):
+  * Búsqueda multi-término independiente y ranking por relevancia en backend (`multi-term-search.test.ts`).
+  * Servicio de ranking de búsqueda en memoria para frontend (`relevance-search.ranker.test.ts`).
+  * Servicio de clonación y carga para rehacer órdenes (`order-remake.service.test.ts`).
+  * Cumplimiento estricto del límite de ~100 líneas por archivo y encapsulamiento en clases.
+
+### 9.16. Pipeline de Release para Windows desde Host Linux y Tolerancia a Fallos
+* **Resolución de Error en `ProductModal` (`providers.find`):**
+  * Se corrigió la omisión de la propiedad `providers` en la invocación de `<ProductModal />` desde `ProductsView.tsx`.
+  * Se dotó a `ProductModal.tsx` de un valor por defecto defensivo (`providers = []`) y validación segura `(providers || []).find(...)`, evitando excepciones fatales de React ante listas no inicializadas.
+* **Script de Release para Plataforma Windows (`scripts/release-win.sh`):**
+  * Script interactivo y automatizado para entornos Linux / macOS:
+    * Valida y carga automáticamente credenciales desde `.env` (`GITHUB_TOKEN`).
+    * Compila el backend de TypeScript y el bundle de Vite.
+    * Invoca `electron-forge publish --platform=win32 --arch=x64` para generar distribuibles dirigidos al cliente final en Windows.
+    * Admite flags complementarios: `--make-only` (para generación exclusiva de instaladores locales en `out/make/` sin subir a GitHub) y `--dry-run` (simulación de publicación).
+  * **Comandos en `package.json`:** Se añadieron los atajos `pnpm run release:win`, `pnpm run make:win` y `pnpm run package:win`.
+  * **Integración Continua Oficial (`.github/workflows/release.yml`):**
+    * Automatización en GitHub Actions sobre runner nativo de Windows (`runs-on: windows-latest`).
+    * Compilación de dependencias nativas C++ (`better-sqlite3`) en el entorno de destino, generación de instalador Squirrel Windows (`Setup.exe`, `.nupkg`) y publicación automática al crear un release o disparar manualmente el workflow.
+
+
 
 
 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, X, Plus, Building2, Check } from 'lucide-react';
 import { ProviderDto } from '../../types/api.types';
+import { RelevanceSearchRanker } from '../../services/relevance-search.ranker';
 import { ApiClient } from '../../services/api.client';
 import { ToastService } from '../../services/toast.service';
 
@@ -20,7 +21,7 @@ export const ProductProviderSelectModal: React.FC<Props> = ({
 
   if (!isOpen) return null;
 
-  const filtered = providers.filter((p) => p.name.toLowerCase().includes(query.toLowerCase().trim()));
+  const filtered = RelevanceSearchRanker.rank(providers, query, (p) => [p.name, p.barcodePrefix]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

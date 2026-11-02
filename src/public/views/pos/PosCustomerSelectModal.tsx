@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, X, User, Check } from 'lucide-react';
 import { CustomerDto } from '../../types/api.types';
+import { RelevanceSearchRanker } from '../../services/relevance-search.ranker';
 
 interface PosCustomerSelectModalProps {
   isOpen: boolean;
@@ -21,11 +22,7 @@ export const PosCustomerSelectModal: React.FC<PosCustomerSelectModalProps> = ({
 
   if (!isOpen) return null;
 
-  const filtered = customers.filter((c) => {
-    const q = query.toLowerCase().trim();
-    if (!q) return true;
-    return c.name.toLowerCase().includes(q) || (c.cuil && c.cuil.includes(q)) || (c.phone && c.phone.includes(q));
-  });
+  const filtered = RelevanceSearchRanker.rank(customers, query, (c) => [c.name, c.cuil, c.phone]);
 
   return (
     <div className="modal-overlay">
