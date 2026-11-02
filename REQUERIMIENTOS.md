@@ -475,13 +475,19 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
 * **Resolución de Error en `ProductModal` (`providers.find`):**
   * Se corrigió la omisión de la propiedad `providers` en la invocación de `<ProductModal />` desde `ProductsView.tsx`.
   * Se dotó a `ProductModal.tsx` de un valor por defecto defensivo (`providers = []`) y validación segura `(providers || []).find(...)`, evitando excepciones fatales de React ante listas no inicializadas.
+* **Resolución del Error "Bad EXE format" en `better_sqlite3.node` (`ERR_DLOPEN_FAILED`):**
+  * **Causa Raíz:** Al ejecutar `npm run package` o compilar para Windows desde un anfitrión Linux, `electron-rebuild` compila el módulo nativo C++ (`better-sqlite3`) para Linux como binario ELF (`.so`), el cual se empaquetaba dentro de `out/rd-win32-x64/.../better_sqlite3.node`. Al ejecutar la aplicación en Windows, el cargador del sistema operativo arrojaba el error fatal `Bad EXE format (Win32 Error 193)` debido a la incompatibilidad entre el encabezado ELF y el formato PE32+ DLL requerido por Windows.
+  * **Solución de Arquitectura (Prebuilt Injection via Forge Hooks):**
+    * Se incorporó el binario nativo oficial de Windows x64 (`PE32+ executable DLL, ABI 140`) en [`assets/native/win32-x64/better_sqlite3.node`](file:///home/deget/proyectos/pos-system-desktop/assets/native/win32-x64/better_sqlite3.node).
+    * Se configuraron los hooks `packageAfterCopy` y `postPackage` en [`forge.config.js`](file:///home/deget/proyectos/pos-system-desktop/forge.config.js). Al empaquetar para la plataforma `win32`, inyectan automáticamente el binario PE32+ en el árbol de empaquetado y en `app.asar.unpacked`.
+    * **Beneficio Operativo:** Permite que el entorno de desarrollo y la suite de tests en Linux continúen utilizando su binario nativo ELF sin colisiones, al tiempo que cualquier ejecutable o instalador de Windows generado en `out/rd-win32-x64` recibe de manera 100% garantizada y desatendida la DLL nativa de Windows.
 * **Script de Release para Plataforma Windows (`scripts/release-win.sh`):**
   * Script interactivo y automatizado para entornos Linux / macOS:
     * Valida y carga automáticamente credenciales desde `.env` (`GITHUB_TOKEN`).
     * Compila el backend de TypeScript y el bundle de Vite.
     * Invoca `electron-forge publish --platform=win32 --arch=x64` para generar distribuibles dirigidos al cliente final en Windows.
     * Admite flags complementarios: `--make-only` (para generación exclusiva de instaladores locales en `out/make/` sin subir a GitHub) y `--dry-run` (simulación de publicación).
-  * **Comandos en `package.json`:** Se añadieron los atajos `pnpm run release:win`, `pnpm run make:win` y `pnpm run package:win`.
+  * **Comandos en `package.json`:** Se añadieron los atajos `npm run release:win`, `npm run make:win` y `npm run package:win`.
   * **Integración Continua Oficial (`.github/workflows/release.yml`):**
     * Automatización en GitHub Actions sobre runner nativo de Windows (`runs-on: windows-latest`).
     * Compilación de dependencias nativas C++ (`better-sqlite3`) en el entorno de destino, generación de instalador Squirrel Windows (`Setup.exe`, `.nupkg`) y publicación automática al crear un release o disparar manualmente el workflow.

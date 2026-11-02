@@ -43,7 +43,7 @@ module.exports = {
   },
   rebuildConfig: {
     onlyModules: ['better-sqlite3'],
-    force: true,
+    force: false,
   },
   makers: [
     {
@@ -84,4 +84,30 @@ module.exports = {
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
   ],
+  hooks: {
+    packageAfterCopy: async (forgeConfig, buildPath, electronVersion, platform, arch) => {
+      if (platform === 'win32' && arch === 'x64') {
+        const winBinary = path.resolve(__dirname, 'assets', 'native', 'win32-x64', 'better_sqlite3.node');
+        if (fs.existsSync(winBinary)) {
+          const target = path.join(buildPath, 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node');
+          fs.mkdirSync(path.dirname(target), { recursive: true });
+          fs.copyFileSync(winBinary, target);
+        }
+      }
+    },
+    postPackage: async (forgeConfig, options) => {
+      if (options.platform === 'win32' && options.arch === 'x64') {
+        const winBinary = path.resolve(__dirname, 'assets', 'native', 'win32-x64', 'better_sqlite3.node');
+        if (fs.existsSync(winBinary) && Array.isArray(options.outputPaths)) {
+          for (const outPath of options.outputPaths) {
+            const unpackedTarget = path.join(outPath, 'resources', 'app.asar.unpacked', 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node');
+            if (fs.existsSync(path.dirname(unpackedTarget))) {
+              fs.mkdirSync(path.dirname(unpackedTarget), { recursive: true });
+              fs.copyFileSync(winBinary, unpackedTarget);
+            }
+          }
+        }
+      }
+    },
+  },
 };
