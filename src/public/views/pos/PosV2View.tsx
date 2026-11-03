@@ -15,8 +15,8 @@ interface PosV2ViewProps {
 
 export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
   const {
-    rows, orderType, customerId, customers, paymentMethod, advancement, loading, createdOrder,
-    setOrderType, setCustomerId, setPaymentMethod, setAdvancement, setCreatedOrder,
+    rows, orderType, customerId, selectedCustomer, paymentMethod, advancement, loading, createdOrder,
+    setOrderType, handleSelectCustomer, setPaymentMethod, setAdvancement, setCreatedOrder,
     handleUpdateRow, handleDeleteRow, handleAddRow, handleCellEnter, handleTabUnitPrice, handleSelectProduct, handleReset, handleSubmit,
   } = usePosV2Order();
 
@@ -57,7 +57,7 @@ export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
       total: calculatedSum,
       advancement: (advancement || 0) / 100,
       paymentMethod,
-      customerName: customers.find((c) => c.id === customerId)?.name,
+      customerName: selectedCustomer?.name,
     });
   };
 
@@ -79,7 +79,8 @@ export const PosV2View: React.FC<PosV2ViewProps> = ({ onSwitchToV1 }) => {
           <PosTopBar
             barcodeInput={barcodeInput} barcodeInputRef={barcodeInputRef} onBarcodeChange={setBarcodeInput}
             onBarcodeSubmit={handleBarcode}
-            orderType={orderType} onOrderTypeChange={setOrderType} customerId={customerId} onCustomerChange={setCustomerId} customers={customers}
+            orderType={orderType} onOrderTypeChange={setOrderType}
+            customerId={customerId} selectedCustomer={selectedCustomer} onSelectCustomer={handleSelectCustomer}
           />
           <div className="card" style={{ padding: '12px', overflow: 'visible' }}>
             <PosV2Grid

@@ -7,6 +7,7 @@ export interface ProductPreferences {
 export interface CustomerPreferences {
   search: string;
   typeFilter: string;
+  importanceFilter: string;
   docFilter: string;
   sortKey: string;
 }
@@ -54,22 +55,21 @@ export class ViewPreferenceStorage {
   }
 
   public static saveProducts(prefs: Partial<ProductPreferences>): void {
-    const current = this.getProducts();
-    this.safeSet(this.PRODUCTS_KEY, { ...current, ...prefs });
+    this.safeSet(this.PRODUCTS_KEY, { ...this.getProducts(), ...prefs });
   }
 
   public static getCustomers(): CustomerPreferences {
     return this.safeGet<CustomerPreferences>(this.CUSTOMERS_KEY, {
       search: '',
       typeFilter: '',
+      importanceFilter: '',
       docFilter: '',
       sortKey: 'name_asc',
     });
   }
 
   public static saveCustomers(prefs: Partial<CustomerPreferences>): void {
-    const current = this.getCustomers();
-    this.safeSet(this.CUSTOMERS_KEY, { ...current, ...prefs });
+    this.safeSet(this.CUSTOMERS_KEY, { ...this.getCustomers(), ...prefs });
   }
 
   public static getOrders(): OrderPreferences {
@@ -83,7 +83,6 @@ export class ViewPreferenceStorage {
   }
 
   public static saveOrders(prefs: Partial<OrderPreferences>): void {
-    const current = this.getOrders();
-    this.safeSet(this.ORDERS_KEY, { ...current, ...prefs });
+    this.safeSet(this.ORDERS_KEY, { ...this.getOrders(), ...prefs });
   }
 }

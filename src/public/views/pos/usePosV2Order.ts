@@ -14,13 +14,22 @@ export function usePosV2Order() {
   );
   const [orderType, setOrderType] = useState<'minor' | 'major'>(initialDraft?.orderType || 'minor');
   const [customerId, setCustomerId] = useState<string>(initialDraft?.customerId || '');
-  const [customers, setCustomers] = useState<CustomerDto[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerDto | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>(initialDraft?.paymentMethod || 'cash');
   const [advancement, setAdvancement] = useState<number>(initialDraft?.advancement || 0);
   const [loading, setLoading] = useState<boolean>(false);
   const [createdOrder, setCreatedOrder] = useState<OrderDto | null>(null);
 
-  useEffect(() => { ApiClient.getCustomers().then(setCustomers).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!customerId) { setSelectedCustomer(null); return; }
+    if (selectedCustomer?.id === customerId) return;
+    ApiClient.getCustomerById(customerId).then(setSelectedCustomer).catch(() => setSelectedCustomer(null));
+  }, [customerId, selectedCustomer?.id]);
+
+  const handleSelectCustomer = (cust: CustomerDto | null) => {
+    setSelectedCustomer(cust);
+    setCustomerId(cust?.id || '');
+  };
 
   useEffect(() => {
     OrderDraftStorage.saveDraftV2({ rows, orderType, customerId, paymentMethod, advancement });
@@ -119,8 +128,8 @@ export function usePosV2Order() {
   };
 
   return {
-    rows, orderType, customerId, customers, paymentMethod, advancement, loading, createdOrder,
-    setOrderType, setCustomerId, setPaymentMethod, setAdvancement, setCreatedOrder,
+    rows, orderType, customerId, selectedCustomer, paymentMethod, advancement, loading, createdOrder,
+    setOrderType, handleSelectCustomer, setPaymentMethod, setAdvancement, setCreatedOrder,
     handleUpdateRow, handleDeleteRow, handleAddRow, handleCellEnter, handleTabUnitPrice, handleSelectProduct, handleReset, handleSubmit,
   };
 }

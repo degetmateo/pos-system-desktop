@@ -12,17 +12,16 @@ interface PosTopBarProps {
   orderType: 'minor' | 'major';
   onOrderTypeChange: (type: 'minor' | 'major') => void;
   customerId: string;
-  onCustomerChange: (id: string) => void;
-  customers: CustomerDto[];
+  selectedCustomer: CustomerDto | null;
+  onSelectCustomer: (customer: CustomerDto | null) => void;
 }
 
 export const PosTopBar: React.FC<PosTopBarProps> = ({
   barcodeInput, barcodeInputRef, onBarcodeChange, onBarcodeSubmit, onOpenSearch,
-  orderType, onOrderTypeChange, customerId, onCustomerChange, customers
+  orderType, onOrderTypeChange, customerId, selectedCustomer, onSelectCustomer,
 }) => {
   const [customerModalOpen, setCustomerModalOpen] = useState(false);
-  const selectedCust = customers.find((c) => c.id === customerId);
-  const customerLabel = selectedCust ? selectedCust.name : 'Consumidor Final';
+  const customerLabel = selectedCustomer ? selectedCustomer.name : 'Consumidor Final';
 
   return (
     <div className="card" style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -85,10 +84,10 @@ export const PosTopBar: React.FC<PosTopBarProps> = ({
         <PosCustomerSelectModal
           isOpen={customerModalOpen}
           selectedCustomerId={customerId}
-          customers={customers}
-          onSelectCustomer={(id, defType) => {
-            onCustomerChange(id);
-            if (defType) onOrderTypeChange(defType);
+          onSelectCustomer={(cust) => {
+            onSelectCustomer(cust);
+            if (cust?.defaultOrderType) onOrderTypeChange(cust.defaultOrderType);
+            else if (!cust) onOrderTypeChange('minor');
           }}
           onClose={() => setCustomerModalOpen(false)}
         />
@@ -96,4 +95,3 @@ export const PosTopBar: React.FC<PosTopBarProps> = ({
     </div>
   );
 };
-

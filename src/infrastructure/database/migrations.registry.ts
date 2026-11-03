@@ -1,5 +1,9 @@
 import { Database as DatabaseInstance } from 'better-sqlite3';
 import { IMigration } from './migration.interface';
+import { migration006WhatsappTables } from './migrations/006-whatsapp-tables.migration';
+import { migration007ReconcileWhatsappTables } from './migrations/007-reconcile-whatsapp-tables.migration';
+import { migration008WhatsappCrmAndStats } from './migrations/008-whatsapp-crm-and-stats.migration';
+import { migration009PurgeWhatsappStatusMessages } from './migrations/009-purge-whatsapp-status-messages.migration';
 
 export function addColumnIfNotExists(db: DatabaseInstance, table: string, col: string, def: string): void {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
@@ -50,7 +54,6 @@ export const MIGRATIONS_REGISTRY: IMigration[] = [
       addColumnIfNotExists(db, 'orders', 'advancement', 'INTEGER DEFAULT 0');
       addColumnIfNotExists(db, 'orders', 'payment_method', 'TEXT DEFAULT NULL');
       addColumnIfNotExists(db, 'products', 'deleted', 'INTEGER DEFAULT 0');
-
       // Índices de alta performance para acelerar búsquedas
       db.exec(`
         CREATE INDEX IF NOT EXISTS idx_products_barcode ON products(barcode);
@@ -88,14 +91,9 @@ export const MIGRATIONS_REGISTRY: IMigration[] = [
       addColumnIfNotExists(db, 'products', 'price_updated_at', 'TEXT DEFAULT NULL');
       db.exec(`
         CREATE TABLE IF NOT EXISTS price_history (
-          id TEXT PRIMARY KEY,
-          product_id TEXT NOT NULL,
-          price_type TEXT NOT NULL,
-          old_price INTEGER NOT NULL,
-          new_price INTEGER NOT NULL,
-          difference INTEGER NOT NULL,
-          percentage_diff REAL NOT NULL,
-          created_at TEXT NOT NULL
+          id TEXT PRIMARY KEY, product_id TEXT NOT NULL, price_type TEXT NOT NULL,
+          old_price INTEGER NOT NULL, new_price INTEGER NOT NULL, difference INTEGER NOT NULL,
+          percentage_diff REAL NOT NULL, created_at TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_price_history_product_id ON price_history(product_id);
         CREATE INDEX IF NOT EXISTS idx_price_history_created_at ON price_history(created_at);
@@ -114,5 +112,8 @@ export const MIGRATIONS_REGISTRY: IMigration[] = [
       }
     },
   },
+  migration006WhatsappTables,
+  migration007ReconcileWhatsappTables,
+  migration008WhatsappCrmAndStats,
+  migration009PurgeWhatsappStatusMessages,
 ];
-

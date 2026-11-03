@@ -9,6 +9,8 @@ import { BarcodeController } from '../controllers/barcode.controller';
 import { OptionsController } from '../controllers/options.controller';
 import { InfoController } from '../controllers/info.controller';
 import { ListController } from '../controllers/list.controller';
+import { WhatsappController } from '../controllers/whatsapp.controller';
+import { StatisticsController } from '../controllers/statistics.controller';
 
 export interface ExpressAppControllers {
   productController: ProductController;
@@ -19,6 +21,8 @@ export interface ExpressAppControllers {
   optionsController: OptionsController;
   infoController: InfoController;
   listController: ListController;
+  whatsappController?: WhatsappController;
+  statisticsController?: StatisticsController;
 }
 
 export class ExpressApp {
@@ -35,8 +39,8 @@ export class ExpressApp {
   }
 
   private configureMiddlewares(): void {
-    this.app.use(express.json());
-    this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(express.json({ limit: '25mb' }));
+    this.app.use(express.urlencoded({ extended: true, limit: '25mb' }));
     this.app.use(express.static(this.publicPath));
     this.app.use('/public', express.static(this.publicPath));
     const logoPng = path.join(this.publicPath, 'logo.png');
@@ -45,7 +49,7 @@ export class ExpressApp {
     this.app.get('/logo.ico', (_req, res) => res.sendFile(fs.existsSync(logoIco) ? logoIco : path.resolve(process.cwd(), 'assets/logo.ico')));
     this.app.use((_req, res, next) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       res.setHeader('X-Frame-Options', 'SAMEORIGIN');
       res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -66,6 +70,8 @@ export class ExpressApp {
     this.app.use('/api/options', c.optionsController.router);
     this.app.use('/api/info', c.infoController.router);
     this.app.use('/api/lists', c.listController.router);
+    if (c.whatsappController) this.app.use('/api/whatsapp', c.whatsappController.router);
+    if (c.statisticsController) this.app.use('/api/statistics', c.statisticsController.router);
   }
 
   private configureSpaFallback(): void {
@@ -84,4 +90,3 @@ export class ExpressApp {
     });
   }
 }
-

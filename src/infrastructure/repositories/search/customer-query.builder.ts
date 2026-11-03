@@ -8,10 +8,20 @@ export interface BuiltCustomerQuery {
   countParams: unknown[];
 }
 
+const SEARCHABLE_FIELDS = ['name', 'whatsapp_name', 'cuil', 'phone', 'email', 'address', 'description'];
+
+const IMPORTANCE_WEIGHT_SQL = `CASE importance
+  WHEN 'important' THEN 4
+  WHEN 'normal' THEN 3
+  WHEN 'low' THEN 2
+  WHEN 'ignore' THEN 1
+  ELSE 3
+END`;
+
 export class CustomerQueryBuilder {
   public static build(filters?: CustomerFilters): BuiltCustomerQuery {
     const searchTerm = filters?.search?.trim() || filters?.name?.trim();
-    const rel = SqliteSearchRelevanceBuilder.build(searchTerm, ['name', 'cuil', 'phone', 'email', 'address']);
+    const rel = SqliteSearchRelevanceBuilder.build(searchTerm, SEARCHABLE_FIELDS);
 
     const whereParts: string[] = ['1 = 1'];
     const otherParams: unknown[] = [];
@@ -20,28 +30,30 @@ export class CustomerQueryBuilder {
       whereParts.push('id = ?');
       otherParams.push(filters.id);
     }
-    if (filters?.type) {
+    if (filters?.type === 'unassigned') {
+      whereParts.push("(default_order_type IS NULL OR TRIM(default_order_type) = '')");
+    } else if (filters?.type) {
       whereParts.push('default_order_type = ?');
       otherParams.push(filters.type);
     }
+    if (filters?.importance) {
+      whereParts.push('importance = ?');
+      otherParams.push(filters.importance);
+    }
     if (filters?.hasCuil !== undefined && filters?.hasCuil !== null) {
-      whereParts.push(filters.hasCuil ? 'cuil IS NOT NULL AND TRIM(cuil) != ""' : '(cuil IS NULL OR TRIM(cuil) = "")');
+      whereParts.push(filters.hasCuil ? "cuil IS NOT NULL AND TRIM(cuil) != ''" : "(cuil IS NULL OR TRIM(cuil) = '')");
     }
     if (filters?.hasPhone !== undefined && filters?.hasPhone !== null) {
-      whereParts.push(filters.hasPhone ? 'phone IS NOT NULL AND TRIM(phone) != ""' : '(phone IS NULL OR TRIM(phone) = "")');
+      whereParts.push(filters.hasPhone ? "phone IS NOT NULL AND TRIM(phone) != ''" : "(phone IS NULL OR TRIM(phone) = '')");
     }
     if (filters?.hasEmail !== undefined && filters?.hasEmail !== null) {
-      whereParts.push(filters.hasEmail ? 'email IS NOT NULL AND TRIM(email) != ""' : '(email IS NULL OR TRIM(email) = "")');
+      whereParts.push(filters.hasEmail ? "email IS NOT NULL AND TRIM(email) != ''" : "(email IS NULL OR TRIM(email) = '')");
     }
 
-    if (rel.hasSearch) {
-      whereParts.push(rel.whereClause);
-    }
+    if (rel.hasSearch) whereParts.push(rel.whereClause);
 
     const whereClause = `WHERE ${whereParts.join(' AND ')}`;
-    const baseOrder = this.resolveOrderBy(filters?.sorting);
-    const finalOrder = rel.orderClause(baseOrder);
-
+    const finalOrder = rel.orderClause(this.resolveOrderBy(filters?.sorting));
     const selectProjection = rel.hasSearch ? `*, ${rel.scoreSelect}` : '*';
     let selectSql = `SELECT ${selectProjection} FROM customers ${whereClause} ${finalOrder}`;
     const selectParams: unknown[] = rel.hasSearch
@@ -55,7 +67,6 @@ export class CustomerQueryBuilder {
 
     const countSql = `SELECT COUNT(*) as total FROM customers ${whereClause}`;
     const countParams = rel.hasSearch ? [...otherParams, ...rel.whereParams] : [...otherParams];
-
     return { selectSql, countSql, selectParams, countParams };
   }
 
@@ -69,8 +80,9 @@ export class CustomerQueryBuilder {
       case 'created_at': return 'ORDER BY created_at ASC';
       case 'cuil_asc': return 'ORDER BY cuil ASC';
       case 'cuil_desc': return 'ORDER BY cuil DESC';
+      case 'importance_desc': return `ORDER BY ${IMPORTANCE_WEIGHT_SQL} DESC, name COLLATE NOCASE ASC`;
+      case 'importance_asc': return `ORDER BY ${IMPORTANCE_WEIGHT_SQL} ASC, name COLLATE NOCASE ASC`;
       default: return 'ORDER BY name COLLATE NOCASE ASC';
     }
   }
 }
-

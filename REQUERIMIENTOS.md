@@ -38,9 +38,10 @@
   * Paginación en servidor (`LIMIT` y `OFFSET`).
 
 ### 2.2. Gestión de Clientes y Proveedores
-* **RF-05 (Administración de Clientes):**
-  * CRUD de clientes: ID (UUID v7), Razón Social / Nombre, CUIL/CUIT, Email, Teléfono, Dirección fiscal/física.
-  * Asignación de tipo de lista por defecto (`default_order_type`): `minor` (minorista) o `major` (mayorista).
+* **RF-05 (Administración de Clientes e Integración con Agenda WhatsApp):**
+  * CRUD completo de clientes: ID (UUID v7), Razón Social / Nombre, **Nombre agendado en WhatsApp (`whatsapp_name`)**, CUIL/CUIT, Email, Teléfono, Dirección fiscal/física, Notas (`description`) y **Nivel de Importancia (`importance`: `important`, `normal`, `low`, `ignore`)**.
+  * Asignación opcional de tipo de lista por defecto (`default_order_type`): `minor` (minorista), `major` (mayorista) o **`NULL` (`Sin asignar` por defecto para contactos dados de alta automáticamente desde WhatsApp)**.
+  * Búsqueda multi-término por relevancia sobre `name`, `whatsapp_name`, `phone`, `email`, `cuil`, `address` y `description`, más filtros combinables por tipo (`minor`, `major`, `unassigned`) e importancia.
 * **RF-06 (Administración de Proveedores):**
   * Registro y listado de proveedores comerciales con ID, Nombre y prefijo asignado de códigos de barra.
   * Integridad referencial: al eliminar un proveedor, los productos asociados deben desvincularse (`provider_id = NULL`) sin perder el producto ni las ventas históricas.
@@ -87,9 +88,31 @@
   * Marcado atómico de productos sincronizados (`synchronized = 1`) y control de estado de sincronización concurrente (*flag lock*).
 
 ### 2.6. Reportes y Analítica
-* **RF-15 (Dashboard de Métricas):**
-  * Visualización temporal de facturación diaria y volumen de ventas mediante gráficos de líneas interactivos.
-  * Filtrado por rangos de fecha con persistencia de selección.
+* **RF-15 (Vista Integral de Estadísticas, Precios, Compras y Mensajería):**
+  * Endpoint consolidado `GET /api/statistics?period=7d|30d|90d|365d|all` (o rango personalizado `startDate` / `endDate`) y vista interactiva `StatisticsView` con `Chart.js`.
+  * **Ventas y Órdenes:** Facturación total, cantidad de órdenes, ticket promedio, descuentos aplicados, saldos pendientes, evolución temporal diaria (Minorista vs. Mayorista) y desglose por medio de pago.
+  * **Clientes y Productos:** Ranking de compras por cliente (con insignia de importancia y nombre de WhatsApp) y ranking de artículos más vendidos por unidades e ingresos.
+  * **Precios del Catálogo e Historial:** Resumen estadístico de precios minoristas/mayoristas vigentes (promedio, mínimo y máximo) y auditoría de variaciones en `price_history` dentro del lapso seleccionado.
+  * **Analítica de WhatsApp:** Cantidad diaria de mensajes entrantes/salientes, contactos activos, ranking de actividad por contacto y fechas de primera/última interacción.
+
+### 2.7. Mensajería Comercial e Integración de WhatsApp del Negocio
+* **RF-16 (Vinculación Multi-Dispositivo mediante Código QR):**
+  * Integración directa de WhatsApp mediante `@whiskeysockets/baileys` (protocolo Multi-Device nativo sobre WebSockets, sin requerir instancia externa de navegador).
+  * Nueva vista dedicada que genera y refresca dinámicamente el código QR de vinculación para escanear desde el teléfono celular del negocio (`Dispositivos vinculados -> Vincular un dispositivo`).
+  * Persistencia local de sesión y llaves criptográficas en `userData/whatsapp-auth/` con reconexión automática transparente al iniciar la aplicación Electron y opción de desvinculación manual (`logout`).
+* **RF-17 (Interfaz Estilo WhatsApp Web Integrada en la App):**
+  * Panel lateral de conversaciones ordenadas por fijación (`pinned`) y criterio seleccionable (**Recientes**, **Importancia** o **Mayores Compradores**), con filtros rápidos por categoría (`Activos`, `Prioritarios`, `Importante`, `Normal`, `Poca importancia`, `Ignorar`), búsqueda multi-término por relevancia sobre nombre, agenda de WhatsApp, cliente vinculado, teléfono y vista previa, e insignia de mensajes no leídos.
+  * Ventana de chat interactiva con historial persistido en SQLite (`whatsapp_chats` y `whatsapp_messages`), burbujas entrantes/salientes, marcas horarias y estados de entrega/lectura en tiempo real (`pending`, `sent`, `delivered`, `read`).
+  * Canal de actualización en tiempo real mediante **Server-Sent Events (SSE)** (`/api/whatsapp/events`) consumible tanto desde Electron como desde dispositivos en la red LAN.
+* **RF-18 (Soporte Multimedia y Pegado Directo de Presupuestos `Ctrl + V`):**
+  * Envío y recepción de mensajes de texto, imágenes (`image`), documentos PDF/Excel (`document`), audios (`audio`) y videos (`video`), resguardados localmente en `userData/whatsapp-media/`.
+  * Soporte nativo de pegado desde el portapapeles (`onPaste` / `Ctrl + V`) en el cuadro de composición del chat para adjuntar instantáneamente las capturas de presupuesto o comprobantes generados desde el POS.
+* **RF-19 (Inicio Rápido de Conversación y Sinergia con Cartera de Clientes):**
+  * Creación de nuevas conversaciones ingresando un número telefónico con código de país o seleccionando clientes con teléfono registrado en el módulo de Clientes, estableciendo una base extensible para futuras automatizaciones comerciales sobre WhatsApp.
+* **RF-20 (Unificación LID/PN, Auto-Sincronización CRM, Aviso de Prioridad e Importancia):**
+  * **Unificación de Chats por Número Telefónico:** Resolución y fusión transaccional automática de identificadores internos `@lid` hacia el JID telefónico canónico `@s.whatsapp.net` (`whatsapp_lid_mappings` + `signalRepository.lidMapping`), evitando que un mismo contacto quede separado en dos conversaciones y reemplazando números internos de 14–15 dígitos por el nombre agendado del contacto.
+  * **Sincronización Automática con Base de Datos de Clientes:** Al recibir un mensaje de un número telefónico, si el cliente ya existe en `customers` (comparando teléfonos normalizados), se almacena cómo está agendado en WhatsApp (`whatsapp_name`) y se vincula el chat (`customer_id`); si no existe, se crea automáticamente con su nombre de WhatsApp, su teléfono y `default_order_type = NULL` (`Sin asignar`).
+  * **Detección de Clientes Prioritarios e Importancia:** Cálculo automático de volumen histórico de compras (`totalOrdersCount`, `totalSpentCents`, `isPriorityBuyer`) mostrado como aviso destacado (`★ Prioritario`) en la tarjeta y cabecera del chat, complementado con etiquetas editables de nivel de importancia (`Importante`, `Normal`, `Poca importancia`, `Ignorar`).
 
 ---
 
@@ -133,7 +156,7 @@ Tras el análisis estático y dinámico del repositorio actual, se identificaron
 
 ## 5. Decisiones de Diseño y Patrones Arquitectónicos
 
-Para lograr un sistema robusto, escalable, tipado y mantenible, se adopta una arquitectura en capas fundamentada en las directrices de **PEAA (Patterns of Enterprise Application Architecture)** de Martin Fowler y los patrones de diseño clásicos de **GoF (Gang of Four)**, asegurando que cada componente se encapsule en clases con alta cohesión y bajo acoplamiento.
+Para lograr un sistema robusto, escalable, tipado y mantenible, se adopta una arquitectura en capas fundamentada en las directrices de **PEAA (Patterns of Enterprise Application Architecture)** de Martin Fowler, los patrones de diseño clásicos de **GoF (Gang of Four)** y los patrones de arquitectura distribuida de **POSAD / POSA (Pattern-Oriented Software Architecture)**, asegurando que cada componente se encapsule en clases con alta cohesión, responsabilidad única (SRP) y bajo acoplamiento.
 
 ### 5.1. Arquitectura en Capas (Layered Architecture)
 
@@ -208,6 +231,18 @@ Para lograr un sistema robusto, escalable, tipado y mantenible, se adopta una ar
    * **Command (Comando):**
      * Encapsulamiento de tareas programadas de mantenimiento y lotes de migración de datos.
 
+### 5.3b. Patrones de Arquitectura Orientada a Patrones y Sistemas Distribuidos (POSAD / POSA)
+
+1. **Layers (Capas Estrictas):**
+   * Aislamiento unidireccional entre Presentación (SPA/Controllers), Aplicación (`WhatsappService`, `OrderService`), Dominio (`WhatsappJid`, `WhatsappChat`, `WhatsappMessage`, `Order`) e Infraestructura (`SQLite`, `Baileys`).
+2. **Publisher-Subscriber / Event Channel:**
+   * `WhatsappEventBus` desacopla la recepción asíncrona de tramas del socket de WhatsApp respecto de los consumidores de interfaz.
+   * `WhatsappSseBroadcaster` proyecta el bus de eventos sobre un canal **Server-Sent Events (`text/event-stream`)** en `/api/whatsapp/events`, notificando en tiempo real tanto a la ventana local de Electron como a cualquier operador conectado por LAN.
+3. **Wrapper Facade & Broker:**
+   * `BaileysWhatsappAdapter`, `BaileysSocketFactory` y `BaileysModuleLoader` encapsulan el protocolo binario Multi-Device y la interoperabilidad ESM/CommonJS tras puertos tipados (`IWhatsappClientPort`), mientras el servidor Express actúa como Broker HTTP/SSE para todos los clientes de la red local.
+4. **Composition Root / Dependency Injection Container:**
+   * `AppContainer` (`src/desktop/app.container.ts`) centraliza la construcción e inyección de repositorios, servicios, adaptadores y controladores, manteniendo `electron.main.ts` limpio y enfocado únicamente en el ciclo de vida del proceso principal.
+
 ### 5.4. Regla de Oro de Mantenibilidad: SRP y Límite de ~100 Líneas
 
 Para garantizar que el sistema sea comprensible, testeable y fácilmente extensible por cualquier desarrollador:
@@ -232,6 +267,7 @@ Para garantizar que el sistema sea comprensible, testeable y fácilmente extensi
 | **Herramienta Frontend** | Vanilla JS con scripts globales | **Vite** + **TypeScript** | HMR instantáneo, empaquetado optimizado, tree-shaking, gestión de librerías vía npm en lugar de lib/. |
 | **Framework de Pruebas**| Ninguno | **Vitest** | Ejecución ultra-rápida nativa de TypeScript, suite completa de tests unitarios, de mocks y de integración. |
 | **Generación de Archivos**| `exceljs`, `pdfmake` | `exceljs`, `pdfmake` | Se conservan los motores probados de generación de Excel y PDF, pero encapsulados bajo adaptadores orientados a objetos. |
+| **Mensajería WhatsApp** | Externa (Navegador Web) | **`@whiskeysockets/baileys`** + **SSE** + **SQLite** | Vinculación directa por QR en Electron, sin binarios C++ adicionales (WASM puro), persistencia local de chats/multimedia y vista estilo WhatsApp Web integrada. |
 
 ---
 
@@ -467,11 +503,13 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
     * Redirección reactiva automática hacia la vista de creación de órdenes V2 (`PosV2View`), donde todos los datos aparecen precargados y listos para edición inmediata celda por celda mediante teclado o mouse.
 
 ### 9.15. Cobertura de Tests y Calidad Arquitectónica
-* La suite completa de pruebas automáticas asciende a **82 tests** ejecutándose de manera continua sobre Electron Node (ABI 140):
+* La suite completa de pruebas automáticas asciende a **113 tests en 30 archivos de prueba** ejecutándose de manera continua sobre Electron Node (ABI 140):
   * Búsqueda multi-término independiente y ranking por relevancia en backend (`multi-term-search.test.ts`).
   * Servicio de ranking de búsqueda en memoria para frontend (`relevance-search.ranker.test.ts`).
   * Servicio de clonación y carga para rehacer órdenes (`order-remake.service.test.ts`).
-  * Cumplimiento estricto del límite de ~100 líneas por archivo y encapsulamiento en clases.
+  * Cola cooperativa en segundo plano y store asíncrono no bloqueante (`background-task.queue.test.ts`, `whatsapp-background-store.test.ts`).
+  * Dominio, Servicio, Bus de Eventos, Infraestructura Baileys, Unificación LID/PN, Sincronización CRM, Estadísticas y Utilidades Frontend de WhatsApp (`whatsapp-domain.test.ts`, `whatsapp-crm-domain.test.ts`, `whatsapp.service.test.ts`, `whatsapp-baileys-infra.test.ts`, `whatsapp-lid-and-crm-sync.test.ts`, `whatsapp.controller.test.ts`, `statistics-and-crm.controller.test.ts`, `whatsapp-format.helper.test.ts`).
+  * Cumplimiento estricto del límite de ~100 líneas por archivo y encapsulamiento en clases (SRP).
 
 ### 9.16. Pipeline de Release para Windows desde Host Linux y Tolerancia a Fallos
 * **Resolución de Error en `ProductModal` (`providers.find`):**
@@ -493,6 +531,57 @@ Al utilizar módulos de C++ nativos como `better-sqlite3` en conjunto con Electr
   * **Integración Continua Oficial (`.github/workflows/release.yml`):**
     * Automatización en GitHub Actions sobre runner nativo de Windows (`runs-on: windows-latest`).
     * Compilación de dependencias nativas C++ (`better-sqlite3`) en el entorno de destino, generación de instalador Squirrel Windows (`Setup.exe`, `.nupkg`) y publicación automática al crear un release o disparar manualmente el workflow.
+
+### 9.17. Integración Nativa de WhatsApp del Negocio (Baileys + Vista Estilo WhatsApp Web)
+* **Motivación de Negocio:** Integrar el WhatsApp comercial directamente dentro de la aplicación Electron para vincular el teléfono mediante código QR, operar las conversaciones igual que en WhatsApp Web sin abandonar el POS y habilitar una base arquitectónica limpia sobre la cual incorporar futuras automatizaciones comerciales (envío directo de comprobantes, notificaciones de pedidos señados, vinculación con cuentas de clientes, respuestas asistidas, etc.).
+* **Persistencia y Migraciones `v6` / `v7` (`006_whatsapp_tables` y `007_reconcile_whatsapp_tables_schema`):**
+  * Creación y reconciliación defensiva en `006-whatsapp-tables.migration.ts` y `007-reconcile-whatsapp-tables.migration.ts` de las tablas `whatsapp_chats` y `whatsapp_messages` (validando `PRAGMA table_info` y llaves primarias `jid` e `(id, chat_jid)` para reparar automáticamente esquemas previos incompatibles en `data.db`), con índices compuestos (`idx_whatsapp_chats_last_ts`, `idx_whatsapp_chats_name`, `idx_whatsapp_messages_chat_ts`) y búsqueda local multi-término por relevancia (`SqliteSearchRelevanceBuilder`).
+* **Diseño en Capas (PEAA, GoF y POSAD con límite de ~100 líneas por archivo):**
+  * **Capa de Dominio:**
+    * `WhatsappJid` (`Value Object`): Normaliza sufijos multi-dispositivo (`user:device@s.whatsapp.net` → `user@s.whatsapp.net`) y heredados (`@c.us`), construye JIDs desde números telefónicos y filtra canales de difusión (`status@broadcast`, `@newsletter`).
+    * `WhatsappChat` y `WhatsappMessage` (`Domain Entities`): Encapsulan contadores de no leídos, actualización de nombres de contacto, vistas previas multimedia (`📷 Imagen`, `📄 Documento`, `🎵 Audio`) y serialización `toJSON()`.
+  * **Capa de Aplicación:**
+    * `WhatsappService` (`Service Layer`): Orquesta vinculación, cierre de sesión, inicio de chats por teléfono, lectura de historiales, marcado de leídos y envío de texto y archivos adjuntos a través de los puertos `IWhatsappClientPort`, `IWhatsappChatRepository` e `IWhatsappMessageRepository`.
+    * `WhatsappEventBus` (`GoF Observer` / `POSAD Publisher-Subscriber`): Bus tipado en memoria para eventos de estado, QR, nuevos mensajes, tildes de lectura y sincronización inicial.
+  * **Capa de Infraestructura (`src/infrastructure/adapters/whatsapp/`):**
+    * `BaileysModuleLoader`: Resuelve de forma limpia la carga dinámica ESM de `@whiskeysockets/baileys` desde el runtime CommonJS de Electron y provee un logger silencioso sin workers externos.
+    * `BaileysSocketFactory` (`GoF Factory Method`) y `BaileysWhatsappAdapter` (`GoF Adapter` / `POSAD Wrapper Facade`): Gestionan el ciclo de vida del socket, persistencia de credenciales en `userData/whatsapp-auth/`, reconexión automática ante microcortes y limpieza segura al desvincular.
+    * `BaileysMessageParser` y `BaileysOutboundMapper` (`PEAA Data Mapper`): Desempaquetan mensajes efímeros/`viewOnce`, resuelven JIDs alternativos LID (`remoteJidAlt`) y construyen payloads multimedia salientes.
+    * `BaileysEventHandler` y `BaileysHistorySyncHandler`: Sincronizan lotes históricos (`messaging-history.set`) y eventos en vivo (`messages.upsert`, `messages.update`, `chats.upsert`, `contacts.update`), descargando adjuntos entrantes en `WhatsappMediaStorage` (`userData/whatsapp-media/`) con protección estricta contra *path traversal*.
+  * **Capa de Presentación y Contenedor Desktop:**
+    * `WhatsappController` y `WhatsappSseBroadcaster`: Exponen `/api/whatsapp/status`, `/api/whatsapp/events` (SSE), `/api/whatsapp/connect`, `/api/whatsapp/logout`, `/api/whatsapp/chats`, `/api/whatsapp/chats/start`, `/api/whatsapp/chats/:jid/messages`, `/api/whatsapp/chats/:jid/media` (subida `multer`) y `/api/whatsapp/media/:filename`.
+    * `AppContainer` (`src/desktop/app.container.ts`): Desacopla el ensamblaje de dependencias de `electron.main.ts` y dispara `connectIfSessionExists()` al iniciar Electron.
+  * **Capa de Interfaz Frontend (`src/public/views/whatsapp/`):**
+    * Componentes cohesivos y responsivos: `WhatsappView`, `WhatsappQrPanel` (código QR en vivo con `qrcode.react` e instrucciones paso a paso), `WhatsappSidebar`, `WhatsappChatCard`, `WhatsappChatWindow`, `WhatsappComposer` (con soporte para adjuntar archivos y pegar capturas del portapapeles con `Ctrl + V`), `WhatsappMessageBubble`, `WhatsappNewChatModal` (búsqueda e inicio directo con clientes agendados del POS), `useWhatsappState` y `WhatsappFormatHelper`.
+
+### 9.18. Unificación de Identidades WhatsApp (`@lid` ↔ `@s.whatsapp.net`), Sincronización CRM, Prioridad Comercial y Vista de Estadísticas
+* **Diagnóstico de Bugs en Baileys Multi-Device v7:**
+  1. **Conversaciones duplicadas para un mismo contacto ("mateo"):** En la sincronización inicial (`messaging-history.set`), WhatsApp Multi-Device entrega conversaciones con identificadores internos de privacidad (`@lid`), mientras que los mensajes entrantes posteriores o chats iniciados localmente operan sobre el JID telefónico (`@s.whatsapp.net`). Sin una tabla de identidad cruzada ni reconciliación transaccional, el mismo contacto quedaba dividido en dos chats separados.
+  2. **Números internos de 14–15 dígitos (`23738351374505`, `211596009849020`):** Corresponden a identificadores `@lid` crudos mostrados como nombre cuando no se cruzaban las propiedades de agenda (`c.lid`, `c.phoneNumber`, `rawChat.pnJid`, `rawChat.displayName`, `lidPnMappings` y `sock.signalRepository.lidMapping`).
+* **Solución Arquitectónica y Nuevas Capacidades (`v8: 008_whatsapp_crm_lid_and_stats`):**
+  * **Migración `008-whatsapp-crm-and-stats.migration.ts`:** Añade de forma idempotente `customers.whatsapp_name`, `customers.importance`, `whatsapp_chats.customer_id`, `whatsapp_chats.lid_jid`, `whatsapp_chats.importance`, crea la tabla `whatsapp_lid_mappings (lid_jid PRIMARY KEY, pn_jid, contact_name)` con índices de velocidad y limpia nombres residuales compuestos por cadenas puras de 11+ dígitos en chats `@lid`.
+  * **Value Objects de Dominio (`PhoneNormalizer` y `CustomerImportance`):**
+    * `PhoneNormalizer`: Normaliza teléfonos argentinos e internacionales a una clave canónica comparable (quitando prefijos `549`, `0` interurbano y `15` móvil para comparar consistentemente `+54 9 11 ...`, `011 15 ...` o `11 ...`), y valida nombres significativos descartando identificadores numéricos crudos de `@lid`.
+    * `CustomerImportance`: Encapsula los niveles `important` (*Importante*), `normal` (*Normal*), `low` (*Poca importancia*) e `ignore` (*Ignorar*), sus pesos de ordenamiento y etiquetas.
+    * `OrderType.createOptional`: Permite clientes con `defaultOrderType = null` (*Sin asignar* por defecto).
+  * **Reconciliación Transaccional LID ↔ PN (`SqliteWhatsappIdentityRepository`, `BaileysContactMapper`, `BaileysLidReconciler`):**
+    * Captura mapeos desde `messaging-history.set` (`lidPnMappings`, `contacts`, `chats`), eventos `lid-mapping.update`, `contacts.upsert`/`update`, `messages.upsert` (`remoteJid` + `remoteJidAlt` / `senderPn`) y consulta proactivamente `sock.signalRepository.lidMapping.getPNsForLIDs(...)` al abrir la conexión (`connection === 'open'`).
+    * Cuando un `@lid` se resuelve a su `@s.whatsapp.net`, `mergeLidChatIntoPn` migra todos los mensajes (`INSERT OR IGNORE` + borrado del duplicado), suma no leídos, preserva el mejor nombre agendado, elimina el chat `@lid` huérfano y emite `chat_deleted` + `chat_updated` por SSE para actualizar la UI en vivo sin recargar.
+  * **Sincronización Automática WhatsApp ↔ Clientes (`WhatsappCustomerSyncService`):**
+    * Al recibir o sincronizar un contacto con número telefónico, busca en `SqliteCustomerRepository.findByPhone` por clave normalizada:
+      * Si existe: conserva su nombre formal y actualiza `whatsapp_name` e índice `whatsapp_chats.customer_id`.
+      * Si no existe: crea automáticamente el `Customer` con su nombre agendado en WhatsApp, teléfono formateado y `defaultOrderType = null` (`Sin asignar`).
+  * **Enriquecimiento Comercial, Prioridad e Importancia (`SqliteWhatsappChatEnricher`, `WhatsappChatCard`, `ImportanceBadge`):**
+    * Cruza en una única consulta SQL optimizada `whatsapp_chats`, `customers`, `orders` y `whatsapp_messages` para calcular `totalOrdersCount`, `totalSpentCents`, `totalMessagesCount` e `isPriorityBuyer` (`>= 2` órdenes o `>= \$50.000` acumulados).
+    * Muestra el aviso `★ Prioritario` con el resumen de compras en la card y cabecera del chat, selector rápido de importancia (`Importante`, `Normal`, `Poca importancia`, `Ignorar`) sincronizado con el cliente, ordenamiento lateral (**Recientes**, **Importancia**, **Mayores Compradores**) y filtros rápidos por categoría.
+  * **Módulo Dedicado de Estadísticas (`StatisticsController`, `StatisticsService`, `SqliteStatisticsRepository` + Query Collaborators + `StatisticsView`):**
+    * Consultas cohesivas segregadas por dominio (`SqliteSalesStatsQuery`, `SqliteProductStatsQuery`, `SqliteWhatsappStatsQuery`) respetando SRP y el límite de ~100 líneas por archivo.
+    * Vista `StatisticsView` con gráficos `Chart.js` (`ChartCanvas`, `StatsKpiGrid`, `StatsSalesCharts`, `StatsCommercialTables`, `StatsPriceAnalytics`, `StatsWhatsappPanel`) para inspeccionar ventas por período, medios de pago, mejores clientes, productos más vendidos, resumen y variaciones de precios (`price_history`) y volumen diario/por contacto de mensajes de WhatsApp.
+  * **Procesamiento y Sincronización No Bloqueante en Segundo Plano (`POSAD Active Object` + `GoF Observer / Proxy Cache`):**
+    * **Backend (`BackgroundTaskQueue`):** Cola cooperativa de doble prioridad (`high` para mensajes entrantes en vivo y `low` para sincronización masiva, contactos, reconciliación LID y descarga diferida de multimedia) que procesa lotes pequeños cediendo el turno de I/O con `setImmediate()` entre cada bloque, combinada con un *Identity Map* telefónico $O(1)$ en `SqliteCustomerRepository` y subconsultas indexadas correlacionadas en `SqliteWhatsappChatEnricher.findByJid`.
+    * **Frontend (`WhatsappBackgroundStore` + `WhatsappStoreState`):** Sincronizador singleton iniciado en segundo plano al abrir la app que mantiene una única suscripción SSE persistente, cachea mensajes por conversación, coalesce ráfagas `history_sync` y despacha actualizaciones mediante `startTransition` sin re-renderizar ni bloquear `POS`, `Productos` ni `Órdenes`.
+    * **Auto-Scroll Determinista al Final del Chat (`WhatsappChatWindow`):** Control directo de `scrollTop = scrollHeight` en `useLayoutEffect` antes del pintado al abrir cualquier conversación, enviar/recibir mensajes o decodificar imágenes adjuntas (`onLoad`).
+
 
 
 

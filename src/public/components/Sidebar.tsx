@@ -1,6 +1,7 @@
-import React from 'react';
-import { Home, ShoppingCart, Package, Users, FileText, FileSpreadsheet, Database, X } from 'lucide-react';
+import React, { useSyncExternalStore } from 'react';
+import { Home, ShoppingCart, Package, Users, FileText, FileSpreadsheet, Database, MessageCircle, BarChart3, X } from 'lucide-react';
 import logoImg from '../logo.png';
+import { whatsappBackgroundStore } from '../services/whatsapp-background.store';
 
 interface SidebarProps {
   currentView: string;
@@ -9,11 +10,31 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+const WhatsappNavBadge: React.FC = () => {
+  const unread = useSyncExternalStore(
+    whatsappBackgroundStore.subscribe,
+    () => whatsappBackgroundStore.getSnapshot().totalUnread,
+    () => 0
+  );
+  if (unread <= 0) return null;
+  return (
+    <span style={{
+      marginLeft: 'auto', background: '#25d366', color: '#fff', fontSize: '0.72rem',
+      fontWeight: 700, minWidth: '20px', height: '20px', borderRadius: '10px',
+      padding: '0 6px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    }}>
+      {unread > 99 ? '99+' : unread}
+    </span>
+  );
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpen, onClose }) => {
   const navItems = [
     { id: 'home', label: 'Inicio (Red LAN)', icon: <Home size={18} /> },
     { id: 'pos', label: 'Nueva Orden (V1)', icon: <ShoppingCart size={18} /> },
     { id: 'pos-v2', label: 'Nueva Orden (V2)', icon: <ShoppingCart size={18} /> },
+    { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={18} /> },
+    { id: 'statistics', label: 'Estadísticas', icon: <BarChart3 size={18} /> },
     { id: 'products', label: 'Productos', icon: <Package size={18} /> },
     { id: 'customers', label: 'Clientes', icon: <Users size={18} /> },
     { id: 'orders', label: 'Órdenes', icon: <FileText size={18} /> },
@@ -51,14 +72,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpe
           >
             {item.icon}
             <span>{item.label}</span>
+            {item.id === 'whatsapp' && <WhatsappNavBadge />}
           </button>
         ))}
       </nav>
 
       <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', fontSize: '0.75rem', color: '#64748b' }}>
-        RD POS v0.0.25
+        RD v0.1.0
       </div>
     </aside>
   );
 };
-

@@ -1,4 +1,5 @@
 import { ProductDto, CustomerDto, ProviderDto, OrderDto, BackupDto, PaginatedResult, AppInfo, PriceHistoryDto } from '../types/api.types';
+import { StatisticsOverviewDto } from '../types/statistics.types';
 
 export class ApiClient {
   private static async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -13,6 +14,9 @@ export class ApiClient {
 
   public static getInfo = () => ApiClient.request<AppInfo>('/api/info');
   public static getNewBarcode = () => ApiClient.request<string>('/api/barcodes/new');
+
+  public static getStatistics = (params?: Record<string, string>) =>
+    ApiClient.request<StatisticsOverviewDto>(`/api/statistics${params ? `?${new URLSearchParams(params)}` : ''}`);
 
   public static getProducts = (params?: Record<string, string | number>) =>
     ApiClient.request<ProductDto[]>(`/api/products${params ? `?${new URLSearchParams(params as any)}` : ''}`);
@@ -42,10 +46,13 @@ export class ApiClient {
   public static getCustomersPaginated = (params?: Record<string, string | number>) =>
     ApiClient.request<PaginatedResult<CustomerDto>>(`/api/customers?${new URLSearchParams({ ...params, page: String(params?.page || 1) } as any)}`);
 
-  public static createCustomer = (data: Partial<CustomerDto>) =>
+  public static getCustomerById = (id: string) =>
+    ApiClient.request<CustomerDto>(`/api/customers/${encodeURIComponent(id)}`);
+
+  public static createCustomer = (data: Record<string, unknown>) =>
     ApiClient.request<CustomerDto>('/api/customers', { method: 'POST', body: JSON.stringify(data) });
 
-  public static updateCustomer = (id: string, data: Partial<CustomerDto>) =>
+  public static updateCustomer = (id: string, data: Record<string, unknown>) =>
     ApiClient.request<CustomerDto>(`/api/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 
   public static deleteCustomer = (id: string) =>

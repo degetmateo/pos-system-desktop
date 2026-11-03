@@ -1,3 +1,5 @@
+export type CustomerImportanceCode = 'important' | 'normal' | 'low' | 'ignore';
+
 export interface MinorPriceRule {
   id?: string;
   productId?: string;
@@ -35,11 +37,14 @@ export interface PriceHistoryDto {
 export interface CustomerDto {
   id: string;
   name: string;
+  whatsappName?: string | null;
+  description?: string | null;
   cuil: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
   defaultOrderType: 'minor' | 'major' | null;
+  importance?: CustomerImportanceCode;
 }
 
 export interface ProviderDto {
@@ -97,4 +102,3 @@ export interface PaginatedResult<T> {
   page: number;
   totalPages: number;
 }
-

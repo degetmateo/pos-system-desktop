@@ -26,7 +26,7 @@ export class ProductQueryBuilder {
     }
     if (filters?.providerId) {
       if (filters.providerId === 'none') {
-        whereParts.push('(provider_id IS NULL OR provider_id = "")');
+        whereParts.push("(provider_id IS NULL OR provider_id = '')");
       } else {
         whereParts.push('provider_id = ?');
         otherParams.push(filters.providerId);

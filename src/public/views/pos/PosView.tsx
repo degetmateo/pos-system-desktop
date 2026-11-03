@@ -20,7 +20,7 @@ export const PosView: React.FC<PosViewProps> = ({ onSwitchToV2 }) => {
   const [items, setItems] = useState<CartItem[]>(initialDraft?.items || []);
   const [orderType, setOrderType] = useState<'minor' | 'major'>(initialDraft?.orderType || 'minor');
   const [customerId, setCustomerId] = useState<string>(initialDraft?.customerId || '');
-  const [customers, setCustomers] = useState<CustomerDto[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerDto | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<string>(initialDraft?.paymentMethod || 'cash');
   const [advancement, setAdvancement] = useState<number>(initialDraft?.advancement || 0);
   const [barcodeInput, setBarcodeInput] = useState<string>('');
@@ -29,10 +29,13 @@ export const PosView: React.FC<PosViewProps> = ({ onSwitchToV2 }) => {
   const [createdOrder, setCreatedOrder] = useState<{ id: string; number: number } | null>(null);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => { barcodeInputRef.current?.focus(); }, []);
+
   useEffect(() => {
-    ApiClient.getCustomers().then(setCustomers).catch(() => {});
-    barcodeInputRef.current?.focus();
-  }, []);
+    if (!customerId) { setSelectedCustomer(null); return; }
+    if (selectedCustomer?.id === customerId) return;
+    ApiClient.getCustomerById(customerId).then(setSelectedCustomer).catch(() => setSelectedCustomer(null));
+  }, [customerId, selectedCustomer?.id]);
 
   useEffect(() => {
     OrderDraftStorage.saveDraftV1({ items, orderType, customerId, paymentMethod, advancement });
@@ -107,7 +110,9 @@ export const PosView: React.FC<PosViewProps> = ({ onSwitchToV2 }) => {
           <PosTopBar
             barcodeInput={barcodeInput} barcodeInputRef={barcodeInputRef} onBarcodeChange={setBarcodeInput}
             onBarcodeSubmit={handleBarcode} onOpenSearch={() => setSearchOpen(true)}
-            orderType={orderType} onOrderTypeChange={handleType} customerId={customerId} onCustomerChange={setCustomerId} customers={customers}
+            orderType={orderType} onOrderTypeChange={handleType}
+            customerId={customerId} selectedCustomer={selectedCustomer}
+            onSelectCustomer={(cust) => { setSelectedCustomer(cust); setCustomerId(cust?.id || ''); }}
           />
           <div className="card" style={{ padding: '0', overflow: 'hidden' }}>
             <PosCartTable items={items} onUpdateQty={handleQty} onRemoveItem={handleRemove} />

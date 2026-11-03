@@ -35,6 +35,10 @@ export class ToastService {
     this.show(text, 'error');
   }
 
+  public static info(text: string): void {
+    this.show(text, 'info');
+  }
+
   private static notify(): void {
     this.listeners.forEach((listener) => listener([...this.toasts]));
   }

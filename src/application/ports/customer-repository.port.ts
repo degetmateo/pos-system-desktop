@@ -7,13 +7,16 @@ export type CustomerSorting =
   | 'created_at_desc'
   | 'created_at_asc'
   | 'cuil_asc'
-  | 'cuil_desc';
+  | 'cuil_desc'
+  | 'importance_desc'
+  | 'importance_asc';
 
 export interface CustomerFilters {
   id?: string | null;
   name?: string | null;
   search?: string | null;
   type?: string | null;
+  importance?: string | null;
   hasCuil?: boolean | null;
   hasPhone?: boolean | null;
   hasEmail?: boolean | null;
@@ -24,6 +27,7 @@ export interface CustomerFilters {
 
 export interface ICustomerRepository {
   findById(id: string): Promise<Customer | null>;
+  findByPhone(phone: string): Promise<Customer | null>;
   findAll(filters?: CustomerFilters): Promise<Customer[]>;
   count(filters?: CustomerFilters): Promise<number>;
   save(customer: Customer): Promise<void>;

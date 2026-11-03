@@ -11,13 +11,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, currentView }) 
   const [lanIp, setLanIp] = useState<string>('localhost:4000');
 
   useEffect(() => {
-    ApiClient.getInfo().then((i) => setLanIp(i.ip || 'localhost:4000')).catch(() => {});
+    ApiClient.getInfo().then((i) => setLanIp(i.ip || 'localhost:4000')).catch(() => { });
   }, []);
 
   const titles: Record<string, string> = {
     home: 'Inicio y Conexión LAN',
     pos: 'Punto de Venta (V1)',
     'pos-v2': 'Nueva Orden (Modo Planilla V2)',
+    whatsapp: 'WhatsApp',
+    statistics: 'Estadísticas',
     products: 'Catálogo de Productos',
     customers: 'Gestión de Clientes',
     orders: 'Historial de Órdenes',
@@ -42,4 +44,3 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, currentView }) 
     </header>
   );
 };
-
