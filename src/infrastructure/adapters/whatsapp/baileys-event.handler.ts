@@ -8,6 +8,7 @@ import { WhatsappChat } from '../../../domain/models/whatsapp-chat.entity';
 import { WhatsappMessage } from '../../../domain/models/whatsapp-message.entity';
 import { BackgroundTaskQueue } from '../../concurrency/background-task.queue';
 import { BaileysHistorySyncHandler } from './baileys-history-sync.handler';
+import { BaileysIncrementalSyncHandler } from './baileys-incremental-sync.handler';
 import { BaileysLidReconciler } from './baileys-lid.reconciler';
 import { BaileysMessageParser } from './baileys-message.parser';
 import { BaileysModuleLoader } from './baileys-module.loader';
@@ -15,6 +16,7 @@ import { WhatsappMediaStorage } from './whatsapp-media.storage';
 
 export class BaileysEventHandler {
   private readonly historyHandler: BaileysHistorySyncHandler;
+  private readonly incrementalHandler: BaileysIncrementalSyncHandler;
   private sock: WASocket | null = null;
 
   constructor(
@@ -30,6 +32,9 @@ export class BaileysEventHandler {
     this.historyHandler = new BaileysHistorySyncHandler(
       chatRepo, messageRepo, eventBus, identityRepo, lidReconciler, customerSync
     );
+    this.incrementalHandler = new BaileysIncrementalSyncHandler(
+      chatRepo, eventBus, identityRepo, lidReconciler, customerSync
+    );
   }
 
   public bind(sock: WASocket): void {
@@ -44,13 +49,13 @@ export class BaileysEventHandler {
       if (lid && pn) this.taskQueue.enqueue('low', () => this.lidReconciler?.applyMappingAndMerge(lid, pn));
     });
     sock.ev.on('chats.upsert', (chats) => {
-      this.taskQueue.enqueue('low', () => this.historyHandler.handleChatsUpsert(chats));
+      this.taskQueue.enqueue('low', () => this.incrementalHandler.handleChatsUpsert(chats));
     });
     sock.ev.on('contacts.upsert', (contacts) => {
-      this.taskQueue.enqueue('low', () => this.historyHandler.handleContactsUpdate(contacts));
+      this.taskQueue.enqueue('low', () => this.incrementalHandler.handleContactsUpdate(contacts));
     });
     sock.ev.on('contacts.update', (contacts) => {
-      this.taskQueue.enqueue('low', () => this.historyHandler.handleContactsUpdate(contacts));
+      this.taskQueue.enqueue('low', () => this.incrementalHandler.handleContactsUpdate(contacts));
     });
     sock.ev.on('messages.upsert', ({ messages, type }) => {
       const isNotify = type === 'notify';

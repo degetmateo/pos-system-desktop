@@ -71,6 +71,13 @@ export class SqliteWhatsappChatEnricher {
     return row ? this.mapRow(row) : null;
   }
 
+  public findByJids(jids: string[]): WhatsappChatDto[] {
+    if (jids.length === 0) return [];
+    const placeholders = jids.map(() => '?').join(',');
+    const sql = `${LIST_SELECT} WHERE wc.jid IN (${placeholders}) ORDER BY wc.pinned DESC, wc.last_message_timestamp DESC`;
+    return (this.db.prepare(sql).all(...jids) as EnrichedChatRow[]).map((r) => this.mapRow(r));
+  }
+
   public findAll(opts?: WhatsappChatListOptions): WhatsappChatDto[] {
     const rel = SqliteSearchRelevanceBuilder.build(opts?.search, [
       'wc.name', 'wc.phone', 'wc.last_message_text', 'c.name', 'c.whatsapp_name', 'c.cuil',

@@ -54,8 +54,9 @@ export interface WhatsappMessageDto {
 export type WhatsappRealtimeEvent =
   | { type: 'status'; payload: WhatsappStatusDto }
   | { type: 'chat_updated'; payload: WhatsappChatDto }
+  | { type: 'chats_batch_updated'; payload: WhatsappChatDto[] }
   | { type: 'chat_deleted'; payload: { jid: string } }
   | { type: 'message_upsert'; payload: WhatsappMessageDto }
   | { type: 'message_status'; payload: { id: string; chatJid: string; status: WhatsappMessageStatus } }
-  | { type: 'history_sync'; payload: { chatsCount: number; messagesCount: number } }
+  | { type: 'history_sync'; payload: { chatsCount: number; messagesCount: number; done?: boolean } }
   | { type: 'session_cleared'; payload: Record<string, never> };

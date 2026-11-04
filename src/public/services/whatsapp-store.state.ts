@@ -87,6 +87,22 @@ export class WhatsappStoreState {
         : prev.chats.filter((c) => c.jid !== incoming.jid);
       return { next: { ...prev, chats, totalUnread: this.computeTotalUnread(chats) }, shouldRefreshChats: false, shouldMarkReadJid: null };
     }
+    if (ev.type === 'chats_batch_updated') {
+      let nextChats = prev.chats;
+      for (const rawItem of ev.payload) {
+        const incoming = prev.selectedJid === rawItem.jid && rawItem.unreadCount > 0
+          ? { ...rawItem, unreadCount: 0 }
+          : rawItem;
+        nextChats = WhatsappFormatHelper.matchesFilter(incoming, prev.importanceFilter)
+          ? WhatsappFormatHelper.upsertAndSortChats(nextChats, incoming, prev.sortBy)
+          : nextChats.filter((c) => c.jid !== incoming.jid);
+      }
+      return {
+        next: { ...prev, chats: nextChats, totalUnread: this.computeTotalUnread(nextChats) },
+        shouldRefreshChats: false,
+        shouldMarkReadJid: null,
+      };
+    }
     if (ev.type === 'chat_deleted') {
       cache.delete(ev.payload.jid);
       const chats = prev.chats.filter((c) => c.jid !== ev.payload.jid);
@@ -111,7 +127,10 @@ export class WhatsappStoreState {
       }
       return { next: prev, shouldRefreshChats: false, shouldMarkReadJid: null };
     }
-    if (ev.type === 'history_sync') return { next: prev, shouldRefreshChats: true, shouldMarkReadJid: null };
+    if (ev.type === 'history_sync') {
+      const isDone = ev.payload.done !== false;
+      return { next: { ...prev, syncingBackground: !isDone }, shouldRefreshChats: isDone, shouldMarkReadJid: null };
+    }
     if (ev.type === 'session_cleared') {
       cache.clear();
       return { next: { ...prev, chats: [], messages: [], selectedJid: null, totalUnread: 0 }, shouldRefreshChats: false, shouldMarkReadJid: null };

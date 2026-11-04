@@ -26,34 +26,44 @@ export class BaileysContactMapper {
     contacts: Contact[],
     lidPnMappings?: Array<{ lid: string; pn: string }>
   ): Promise<Map<string, string>> {
-    await BackgroundTaskQueue.processInChunks(lidPnMappings || [], 120, (chunk) => {
-      for (const m of chunk) identityRepo?.saveMapping(m.lid, m.pn);
-    });
+    if (identityRepo && lidPnMappings?.length) {
+      await BackgroundTaskQueue.processInChunks(lidPnMappings, 100, (chunk) => {
+        identityRepo.saveMappingsBatch(chunk.map((m) => ({ lidJid: m.lid, pnJid: m.pn })));
+      }, 2);
+    }
 
     const names = new Map<string, string>();
-    await BackgroundTaskQueue.processInChunks(contacts, 80, (chunk) => {
+    await BackgroundTaskQueue.processInChunks(contacts, 75, (chunk) => {
+      const mapBatch: Array<{ lidJid: string; pnJid: string; contactName?: string | null }> = [];
+      const nameBatch: Array<{ jid: string; contactName: string }> = [];
       for (const c of chunk) {
         const label = this.pickContactLabel(c);
         const { lid, pn } = this.extractLidAndPn(c);
-        if (lid && pn) identityRepo?.saveMapping(lid, pn, label);
+        if (lid && pn) mapBatch.push({ lidJid: lid, pnJid: pn, contactName: label });
         for (const candidate of [c.id, c.phoneNumber, c.lid]) {
           const j = WhatsappJid.tryCreate(candidate)?.getValue();
           if (j && label) {
             names.set(j, label);
-            identityRepo?.saveContactName(j, label);
+            nameBatch.push({ jid: j, contactName: label });
           }
         }
       }
-    });
+      if (identityRepo) {
+        if (mapBatch.length > 0) identityRepo.saveMappingsBatch(mapBatch);
+        if (nameBatch.length > 0) identityRepo.saveContactNamesBatch(nameBatch);
+      }
+    }, 2);
 
-    await BackgroundTaskQueue.processInChunks(chats, 80, (chunk) => {
+    await BackgroundTaskQueue.processInChunks(chats, 75, (chunk) => {
+      const mapBatch: Array<{ lidJid: string; pnJid: string; contactName?: string | null }> = [];
       for (const rc of chunk) {
         const label = this.pickChatLabel(rc);
-        if (rc.id && rc.pnJid) identityRepo?.saveMapping(rc.id, rc.pnJid, label);
-        if (rc.lidJid && rc.pnJid) identityRepo?.saveMapping(rc.lidJid, rc.pnJid, label);
-        if (rc.lidJid && rc.id?.endsWith('@s.whatsapp.net')) identityRepo?.saveMapping(rc.lidJid, rc.id, label);
+        if (rc.id && rc.pnJid) mapBatch.push({ lidJid: rc.id, pnJid: rc.pnJid, contactName: label });
+        if (rc.lidJid && rc.pnJid) mapBatch.push({ lidJid: rc.lidJid, pnJid: rc.pnJid, contactName: label });
+        if (rc.lidJid && rc.id?.endsWith('@s.whatsapp.net')) mapBatch.push({ lidJid: rc.lidJid, pnJid: rc.id, contactName: label });
       }
-    });
+      if (identityRepo && mapBatch.length > 0) identityRepo.saveMappingsBatch(mapBatch);
+    }, 2);
     return names;
   }
 }

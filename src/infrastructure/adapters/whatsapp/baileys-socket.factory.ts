@@ -25,7 +25,7 @@ export class BaileysSocketFactory {
       logger: BaileysModuleLoader.createSilentLogger(),
       printQRInTerminal: false,
       browser: baileys.Browsers.ubuntu('RD POS Desktop'),
-      syncFullHistory: true,
+      syncFullHistory: false,
       shouldIgnoreJid: (jid: string) =>
         Boolean(
           WhatsappJid.isStatusOrBroadcastRaw(jid) ||

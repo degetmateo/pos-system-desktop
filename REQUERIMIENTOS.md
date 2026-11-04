@@ -113,6 +113,10 @@
   * **Unificación de Chats por Número Telefónico:** Resolución y fusión transaccional automática de identificadores internos `@lid` hacia el JID telefónico canónico `@s.whatsapp.net` (`whatsapp_lid_mappings` + `signalRepository.lidMapping`), evitando que un mismo contacto quede separado en dos conversaciones y reemplazando números internos de 14–15 dígitos por el nombre agendado del contacto.
   * **Sincronización Automática con Base de Datos de Clientes:** Al recibir un mensaje de un número telefónico, si el cliente ya existe en `customers` (comparando teléfonos normalizados), se almacena cómo está agendado en WhatsApp (`whatsapp_name`) y se vincula el chat (`customer_id`); si no existe, se crea automáticamente con su nombre de WhatsApp, su teléfono y `default_order_type = NULL` (`Sin asignar`).
   * **Detección de Clientes Prioritarios e Importancia:** Cálculo automático de volumen histórico de compras (`totalOrdersCount`, `totalSpentCents`, `isPriorityBuyer`) mostrado como aviso destacado (`★ Prioritario`) en la tarjeta y cabecera del chat, complementado con etiquetas editables de nivel de importancia (`Importante`, `Normal`, `Poca importancia`, `Ignorar`).
+* **RF-21 (Sincronización Progresiva en Segundo Plano y Actualización por Observador):**
+  * **Carga Inicial Ligera (`syncFullHistory: false`):** Sincronización acotada a conversaciones recientes activas al conectar la sesión, evitando que Baileys solicite historiales gigantescos que saturen el CPU y la base de datos al inicio.
+  * **Streaming Cooperativo por Lotes (POSAD Active Object):** Ingesta fragmentada de mensajes, mapeos de agenda y chats en micro-lotes con pausas cooperativas (`yieldToEventLoop(yieldDelayMs)`), garantizando que el Event Loop de Node.js procese I/O de red, IPC y solicitudes de Express con latencia imperceptible.
+  * **Actualización Progresiva de la Vista (GoF Observer):** Transmisión continua del evento SSE `chats_batch_updated` hacia el cliente (`WhatsappBackgroundStore`), incorporando los chats de manera reactiva e incremental sin congelar la ventana ni disparar recargas masivas (`getChats()`).
 
 ---
 

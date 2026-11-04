@@ -72,5 +72,57 @@ describe('WhatsappStoreState (Background Sync & Proxy Cache Reducer)', () => {
     expect(res.next).toBe(state);
     expect(cache.get('bg@s.whatsapp.net')?.map((m) => m.id)).toEqual(['M1', 'M2']);
   });
+
+  it('progressively streams and merges chats_batch_updated without triggering full refresh', () => {
+    const cache = new Map<string, WhatsappMessageDto[]>();
+    const initial = WhatsappStoreState.createInitial();
+
+    const batch1 = [
+      makeChat({ jid: '10@s.whatsapp.net', name: 'Cliente Diez', lastMessageTimestamp: 5000 }),
+      makeChat({ jid: '20@s.whatsapp.net', name: 'Cliente Veinte', lastMessageTimestamp: 4000 }),
+    ];
+    const res1 = WhatsappStoreState.reduceRealtimeEvent(
+      initial,
+      { type: 'chats_batch_updated', payload: batch1 },
+      cache
+    );
+    expect(res1.shouldRefreshChats).toBe(false);
+    expect(res1.next.chats).toHaveLength(2);
+    expect(res1.next.chats[0].jid).toBe('10@s.whatsapp.net');
+
+    const batch2 = [
+      makeChat({ jid: '30@s.whatsapp.net', name: 'Cliente Treinta', lastMessageTimestamp: 6000 }),
+    ];
+    const res2 = WhatsappStoreState.reduceRealtimeEvent(
+      res1.next,
+      { type: 'chats_batch_updated', payload: batch2 },
+      cache
+    );
+    expect(res2.shouldRefreshChats).toBe(false);
+    expect(res2.next.chats).toHaveLength(3);
+    // Verified sorted by recent timestamp: 6000 -> 5000 -> 4000
+    expect(res2.next.chats.map((c) => c.jid)).toEqual(['30@s.whatsapp.net', '10@s.whatsapp.net', '20@s.whatsapp.net']);
+  });
+
+  it('tracks syncingBackground state during history_sync phases', () => {
+    const cache = new Map<string, WhatsappMessageDto[]>();
+    const state = WhatsappStoreState.createInitial();
+
+    const startRes = WhatsappStoreState.reduceRealtimeEvent(
+      state,
+      { type: 'history_sync', payload: { chatsCount: 10, messagesCount: 50, done: false } },
+      cache
+    );
+    expect(startRes.next.syncingBackground).toBe(true);
+    expect(startRes.shouldRefreshChats).toBe(false);
+
+    const finishRes = WhatsappStoreState.reduceRealtimeEvent(
+      startRes.next,
+      { type: 'history_sync', payload: { chatsCount: 10, messagesCount: 50, done: true } },
+      cache
+    );
+    expect(finishRes.next.syncingBackground).toBe(false);
+    expect(finishRes.shouldRefreshChats).toBe(true);
+  });
 });
 

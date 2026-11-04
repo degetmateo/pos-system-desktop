@@ -33,12 +33,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpe
     { id: 'home', label: 'Inicio (Red LAN)', icon: <Home size={18} /> },
     { id: 'pos', label: 'Nueva Orden (V1)', icon: <ShoppingCart size={18} /> },
     { id: 'pos-v2', label: 'Nueva Orden (V2)', icon: <ShoppingCart size={18} /> },
-    { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={18} /> },
-    { id: 'statistics', label: 'Estadísticas', icon: <BarChart3 size={18} /> },
     { id: 'products', label: 'Productos', icon: <Package size={18} /> },
     { id: 'customers', label: 'Clientes', icon: <Users size={18} /> },
     { id: 'orders', label: 'Órdenes', icon: <FileText size={18} /> },
     { id: 'lists', label: 'Listas Excel', icon: <FileSpreadsheet size={18} /> },
+    { id: 'whatsapp', label: 'WhatsApp', icon: <MessageCircle size={18} /> },
+    { id: 'statistics', label: 'Estadísticas', icon: <BarChart3 size={18} /> },
     { id: 'backups', label: 'Backups / DB', icon: <Database size={18} /> },
   ];
 
@@ -78,7 +78,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, onNavigate, isOpe
       </nav>
 
       <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', fontSize: '0.75rem', color: '#64748b' }}>
-        RD v0.1.0
+        RD v0.1.1
       </div>
     </aside>
   );

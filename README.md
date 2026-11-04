@@ -91,7 +91,10 @@ flowchart TD
   * **Si el cliente ya existe:** conserva su razón social formal y guarda/actualiza su nombre agendado en WhatsApp (`whatsapp_name`), vinculando el chat con `customer_id`.
   * **Si no existe:** crea automáticamente el registro del cliente con su nombre agendado en WhatsApp, su número telefónico y el **tipo de cliente sin asignar por defecto (`null`)**.
 * **Detección de Clientes Prioritarios e Insignias de Importancia:** Cruza en tiempo real los chats con el historial de órdenes para destacar clientes prioritarios (`★ Prioritario` por volumen de compras/órdenes) directamente en la card del chat y en la cabecera. Permite clasificar contactos con niveles de importancia (`Importante`, `Normal`, `Poca importancia`, `Ignorar`) con badges visuales y ordenar o filtrar el panel lateral por **Recientes**, **Importancia** o **Mayores Compradores**.
-* **Sincronización y Recepción 100% en Segundo Plano (No Bloqueante):** Procesamiento cooperativo por lotes (`BackgroundTaskQueue` con `setImmediate`, colas de prioridad `high`/`low` y descarga diferida de multimedia) en backend y almacén reactivo global en segundo plano (`WhatsappBackgroundStore` con `useSyncExternalStore`, `startTransition`, *Proxy Cache* de mensajes y coalescencia de eventos SSE) en frontend, permitiendo facturar o navegar el catálogo sin bloqueos mientras llegan mensajes o se sincroniza el historial, con apertura instantánea de la vista y posicionamiento automático del scroll al último mensaje.
+* **Sincronización y Recepción Progresiva en Segundo Plano (GoF Observer + POSAD Active Object):**
+  * **Carga Inicial Optimizada:** Configuración `syncFullHistory: false` en Baileys para descargar únicamente las conversaciones activas recientes al vincular o iniciar sesión, eliminando la sobrecarga masiva de solicitar años de historial al teléfono.
+  * **Streaming Cooperativo por Lotes:** Procesamiento fragmentado de mensajes, nombres y chats en `BackgroundTaskQueue` con micro-pausas cooperativas (`yieldToEventLoop(yieldDelayMs)`), garantizando que el Event Loop atienda solicitudes HTTP de Express, eventos IPC de Electron y renderizado con cero congelamientos.
+  * **Actualización Reactiva de la Vista (Observador):** Emisión progresiva de lotes vía Server-Sent Events (`chats_batch_updated`), consumidos por `WhatsappBackgroundStore` en frontend con `useSyncExternalStore`, React `startTransition` y *Proxy Cache* de mensajes, permitiendo al operador facturar o buscar productos con total fluidez mientras la interfaz de WhatsApp se actualiza incrementalmente.
 * **Tiempo Real vía Server-Sent Events (SSE):** Recepción instantánea de mensajes entrantes, contador global de no leídos en el menú lateral, fusión de chats duplicados (`chat_deleted`), sincronización de historial/contactos y confirmaciones (`✓`, `✓✓`) mediante `/api/whatsapp/events`.
 * **Envío de Texto, Imágenes, Audio y Documentos (con Pegado `Ctrl + V`):** Permite adjuntar archivos PDF/imágenes o pegar directamente con `Ctrl + V` las capturas de presupuestos generadas en el POS dentro del cuadro de escritura de WhatsApp.
 * **Persistencia y Analítica Local de Conversaciones:** Historial de chats, mapeos de identidad y métricas diarias/por contacto almacenados localmente en SQLite (`whatsapp_chats`, `whatsapp_messages`, `whatsapp_lid_mappings`) con reconexión automática al abrir la app.
@@ -237,7 +240,7 @@ rd/
 │       ├── App.tsx             # Componente raíz con enrutamiento de vistas y layout responsivo
 │       ├── main.tsx            # Punto de montaje React 19
 │       └── index.html          # HTML principal con viewport mobile y logo favicon
-├── tests/                      # Suite de pruebas unitarias e integradas con Vitest (113 tests)
+├── tests/                      # Suite de pruebas unitarias e integradas con Vitest (115 tests)
 ├── forge.config.js             # Configuración de empaquetado y publicación de Electron Forge
 ├── package.json                # Configuración de dependencias, scripts de build y tests
 ├── tsconfig.json               # Configuración de TypeScript

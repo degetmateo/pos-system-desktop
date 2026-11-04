@@ -136,6 +136,8 @@ describe('WhatsApp Baileys Infrastructure (Parser, Sync, Storage & Repositories)
     const msgRepo = new SqliteWhatsappMessageRepository(db);
     const bus = new WhatsappEventBus();
     const storage = new WhatsappMediaStorage(tmpMediaDir);
+    const emittedEvents: any[] = [];
+    bus.subscribe((e) => emittedEvents.push(e));
     const historyHandler = new BaileysHistorySyncHandler(chatRepo, msgRepo, bus);
     const eventHandler = new BaileysEventHandler(chatRepo, msgRepo, storage, bus);
 
@@ -164,6 +166,15 @@ describe('WhatsApp Baileys Infrastructure (Parser, Sync, Storage & Repositories)
 
     const msgs = await msgRepo.findByChatJid('5491199887766@s.whatsapp.net');
     expect(msgs.map((m) => m.id)).toEqual(['M1', 'M2']);
+
+    const batchEvents = emittedEvents.filter((e) => e.type === 'chats_batch_updated');
+    expect(batchEvents.length).toBeGreaterThan(0);
+    expect(batchEvents[0].payload[0].jid).toBe('5491199887766@s.whatsapp.net');
+
+    const historyEvents = emittedEvents.filter((e) => e.type === 'history_sync');
+    expect(historyEvents.length).toBe(2);
+    expect(historyEvents[0].payload.done).toBe(false);
+    expect(historyEvents[1].payload.done).toBe(true);
   });
 });
 

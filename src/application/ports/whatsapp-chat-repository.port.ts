@@ -8,6 +8,7 @@ export interface IWhatsappChatRepository {
   findByJid(jid: string): Promise<WhatsappChat | null>;
   findAll(search?: string, limit?: number): Promise<WhatsappChat[]>;
   findEnrichedByJid(jid: string): Promise<WhatsappChatDto | null>;
+  findEnrichedByJids(jids: string[]): Promise<WhatsappChatDto[]>;
   findAllEnriched(options?: WhatsappChatListOptions): Promise<WhatsappChatDto[]>;
   linkCustomer(jid: string, customerId: string, preferredChatName?: string | null): Promise<void>;
   updateImportance(jid: string, importance: CustomerImportanceCode): Promise<void>;

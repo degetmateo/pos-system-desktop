@@ -1,25 +1,41 @@
 import { Database as DatabaseInstance } from 'better-sqlite3';
-import { IWhatsappIdentityRepository } from '../../application/ports/whatsapp-identity-repository.port';
+import {
+  ContactNameEntry,
+  IdentityMappingEntry,
+  IWhatsappIdentityRepository,
+} from '../../application/ports/whatsapp-identity-repository.port';
 import { WhatsappChat } from '../../domain/models/whatsapp-chat.entity';
 import { PhoneNormalizer } from '../../domain/value-objects/phone-normalizer.vo';
 import { WhatsappJid } from '../../domain/value-objects/whatsapp-jid.vo';
-import { SqliteWhatsappMapper, WhatsappChatRow, WhatsappMessageRow } from './mappers/sqlite-whatsapp.mapper';
+import { SqliteWhatsappIdentityMerger } from './sqlite-whatsapp-identity.merger';
 
 export class SqliteWhatsappIdentityRepository implements IWhatsappIdentityRepository {
   constructor(private readonly db: DatabaseInstance) {}
 
   public saveMapping(lidJid: string, pnJid: string, contactName?: string | null): void {
-    const lid = WhatsappJid.tryCreate(lidJid);
-    const pn = WhatsappJid.tryCreate(pnJid);
-    if (!lid?.isLid() || !pn?.isPhoneJid()) return;
-    const cleanName = PhoneNormalizer.isMeaningfulContactName(contactName) ? contactName!.trim() : null;
-    this.db.prepare(`
+    this.saveMappingsBatch([{ lidJid, pnJid, contactName }]);
+  }
+
+  public saveMappingsBatch(mappings: IdentityMappingEntry[]): void {
+    if (mappings.length === 0) return;
+    const stmt = this.db.prepare(`
       INSERT INTO whatsapp_lid_mappings (lid_jid, pn_jid, contact_name, updated_at) VALUES (?, ?, ?, ?)
       ON CONFLICT(lid_jid) DO UPDATE SET
         pn_jid = excluded.pn_jid,
         contact_name = COALESCE(excluded.contact_name, whatsapp_lid_mappings.contact_name),
         updated_at = excluded.updated_at
-    `).run(lid.getValue(), pn.getValue(), cleanName, new Date().toISOString());
+    `);
+    const now = new Date().toISOString();
+    const tx = this.db.transaction((items: IdentityMappingEntry[]) => {
+      for (const m of items) {
+        const lid = WhatsappJid.tryCreate(m.lidJid);
+        const pn = WhatsappJid.tryCreate(m.pnJid);
+        if (!lid?.isLid() || !pn?.isPhoneJid()) continue;
+        const cleanName = PhoneNormalizer.isMeaningfulContactName(m.contactName) ? m.contactName!.trim() : null;
+        stmt.run(lid.getValue(), pn.getValue(), cleanName, now);
+      }
+    });
+    tx(mappings);
   }
 
   public getPnForLid(lidJid: string): string | null {
@@ -31,11 +47,23 @@ export class SqliteWhatsappIdentityRepository implements IWhatsappIdentityReposi
   }
 
   public saveContactName(jid: string, contactName: string): void {
-    const parsed = WhatsappJid.tryCreate(jid);
-    if (!parsed || !PhoneNormalizer.isMeaningfulContactName(contactName)) return;
-    const col = parsed.isLid() ? 'lid_jid' : 'pn_jid';
-    this.db.prepare(`UPDATE whatsapp_lid_mappings SET contact_name = ?, updated_at = ? WHERE ${col} = ?`)
-      .run(contactName.trim(), new Date().toISOString(), parsed.getValue());
+    this.saveContactNamesBatch([{ jid, contactName }]);
+  }
+
+  public saveContactNamesBatch(entries: ContactNameEntry[]): void {
+    if (entries.length === 0) return;
+    const updateLid = this.db.prepare('UPDATE whatsapp_lid_mappings SET contact_name = ?, updated_at = ? WHERE lid_jid = ?');
+    const updatePn = this.db.prepare('UPDATE whatsapp_lid_mappings SET contact_name = ?, updated_at = ? WHERE pn_jid = ?');
+    const now = new Date().toISOString();
+    const tx = this.db.transaction((items: ContactNameEntry[]) => {
+      for (const e of items) {
+        const parsed = WhatsappJid.tryCreate(e.jid);
+        if (!parsed || !PhoneNormalizer.isMeaningfulContactName(e.contactName)) continue;
+        const stmt = parsed.isLid() ? updateLid : updatePn;
+        stmt.run(e.contactName.trim(), now, parsed.getValue());
+      }
+    });
+    tx(entries);
   }
 
   public getContactName(jid: string): string | null {
@@ -64,52 +92,10 @@ export class SqliteWhatsappIdentityRepository implements IWhatsappIdentityReposi
     const lid = WhatsappJid.tryCreate(lidJid);
     const pn = WhatsappJid.tryCreate(pnJid);
     if (!lid?.isLid() || !pn?.isPhoneJid()) return null;
-
-    return this.db.transaction((): WhatsappChat | null => {
-      this.saveMapping(lid.getValue(), pn.getValue(), preferredName);
-      const lidRow = this.db.prepare('SELECT * FROM whatsapp_chats WHERE jid = ?').get(lid.getValue()) as WhatsappChatRow | undefined;
-      const pnRow = this.db.prepare('SELECT * FROM whatsapp_chats WHERE jid = ?').get(pn.getValue()) as WhatsappChatRow | undefined;
-
-      this.db.prepare(`
-        INSERT OR IGNORE INTO whatsapp_messages (id, chat_jid, sender_jid, sender_name, from_me, body, message_type, media_path, mime_type, file_name, status, timestamp)
-        SELECT id, ?, sender_jid, sender_name, from_me, body, message_type, media_path, mime_type, file_name, status, timestamp
-        FROM whatsapp_messages WHERE chat_jid = ?
-      `).run(pn.getValue(), lid.getValue());
-      this.db.prepare('DELETE FROM whatsapp_messages WHERE chat_jid = ?').run(lid.getValue());
-      if (!lidRow && !pnRow) return null;
-
-      const bestName = [preferredName, this.getContactName(pn.getValue()), pnRow?.name, lidRow?.name]
-        .find((n) => PhoneNormalizer.isMeaningfulContactName(n)) || null;
-      const latestRaw = this.db.prepare('SELECT * FROM whatsapp_messages WHERE chat_jid = ? ORDER BY timestamp DESC LIMIT 1')
-        .get(pn.getValue()) as WhatsappMessageRow | undefined;
-      const latest = latestRaw ? SqliteWhatsappMapper.toMessageDomain(latestRaw) : null;
-
-      const merged = new WhatsappChat({
-        jid: pn, name: bestName, phone: pn.getPhone(),
-        customerId: pnRow?.customer_id || lidRow?.customer_id || null,
-        lidJid: lid.getValue(), importance: ((pnRow?.importance || lidRow?.importance) as any) || null,
-        unreadCount: (pnRow?.unread_count || 0) + (lidRow?.unread_count || 0),
-        lastMessageText: latest?.previewText() || pnRow?.last_message_text || lidRow?.last_message_text || null,
-        lastMessageTimestamp: Math.max(latest?.timestamp || 0, pnRow?.last_message_timestamp || 0, lidRow?.last_message_timestamp || 0),
-        lastMessageFromMe: latest ? latest.fromMe : Boolean(pnRow?.last_message_from_me ?? lidRow?.last_message_from_me),
-        pinned: Boolean(pnRow?.pinned || lidRow?.pinned),
-      });
-
-      this.db.prepare('DELETE FROM whatsapp_chats WHERE jid = ?').run(lid.getValue());
-      this.db.prepare(`
-        INSERT INTO whatsapp_chats (jid, name, phone, customer_id, lid_jid, importance, is_group, unread_count, last_message_text, last_message_timestamp, last_message_from_me, pinned, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(jid) DO UPDATE SET
-          name = excluded.name, phone = excluded.phone, customer_id = excluded.customer_id, lid_jid = excluded.lid_jid,
-          importance = excluded.importance, unread_count = excluded.unread_count, last_message_text = excluded.last_message_text,
-          last_message_timestamp = excluded.last_message_timestamp, last_message_from_me = excluded.last_message_from_me,
-          pinned = excluded.pinned, updated_at = excluded.updated_at
-      `).run(
-        merged.jid.getValue(), merged.name, merged.phone, merged.customerId, merged.lidJid, merged.importance,
-        merged.unreadCount, merged.lastMessageText, merged.lastMessageTimestamp,
-        merged.lastMessageFromMe ? 1 : 0, merged.pinned ? 1 : 0, merged.updatedAt.toISOString()
-      );
-      return merged;
-    })();
+    return SqliteWhatsappIdentityMerger.merge(
+      this.db, lid, pn, preferredName,
+      (j) => this.getContactName(j),
+      (l, p, n) => this.saveMapping(l, p, n)
+    );
   }
 }

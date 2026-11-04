@@ -85,6 +85,7 @@ export class SqliteWhatsappChatRepository implements IWhatsappChatRepository {
   }
 
   public async findEnrichedByJid(jid: string): Promise<WhatsappChatDto | null> { return this.enricher.findByJid(jid); }
+  public async findEnrichedByJids(jids: string[]): Promise<WhatsappChatDto[]> { return this.enricher.findByJids(jids); }
   public async findAllEnriched(options?: WhatsappChatListOptions): Promise<WhatsappChatDto[]> { return this.enricher.findAll(options); }
 
   public async linkCustomer(jid: string, customerId: string, preferredChatName?: string | null): Promise<void> {

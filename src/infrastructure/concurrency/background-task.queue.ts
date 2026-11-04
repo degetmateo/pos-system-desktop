@@ -13,14 +13,18 @@ export class BackgroundTaskQueue {
   private processing = false;
   private idleResolvers: Array<() => void> = [];
 
-  public static yieldToEventLoop(): Promise<void> {
+  public static yieldToEventLoop(delayMs: number = 0): Promise<void> {
+    if (delayMs > 0) {
+      return new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
     return new Promise((resolve) => setImmediate(resolve));
   }
 
   public static async processInChunks<T>(
     items: readonly T[],
     chunkSize: number,
-    processor: (chunk: T[]) => Promise<void> | void
+    processor: (chunk: T[]) => Promise<void> | void,
+    yieldDelayMs: number = 0
   ): Promise<void> {
     if (items.length === 0) return;
     const safeChunk = Math.max(1, chunkSize);
@@ -28,7 +32,7 @@ export class BackgroundTaskQueue {
       const slice = items.slice(i, i + safeChunk);
       await processor(slice);
       if (i + safeChunk < items.length) {
-        await BackgroundTaskQueue.yieldToEventLoop();
+        await BackgroundTaskQueue.yieldToEventLoop(yieldDelayMs);
       }
     }
   }
