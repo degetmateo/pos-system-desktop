@@ -98,7 +98,7 @@ export const PosCustomerSelectModal: React.FC<PosCustomerSelectModalProps> = ({
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {c.name} {c.whatsappName ? <span style={{ fontWeight: 500, color: '#008069', fontSize: '0.8rem' }}>({c.whatsappName})</span> : null}
+                    {c.name} {c.whatsappName ? <span style={{ fontWeight: 500, color: 'var(--text-muted)', fontSize: '0.8rem' }}>({c.whatsappName})</span> : null}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                     {c.cuil ? `CUIT: ${c.cuil}` : 'Sin CUIT'} {c.phone ? `| Tel: ${c.phone}` : ''}

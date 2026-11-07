@@ -1,6 +1,6 @@
 {
   "name": "rd",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "RD Pos-System-Desktop",
   "repository": {
     "type": "git",
@@ -66,7 +66,6 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "7.0.0-rc14",
     "@zxing/browser": "^0.2.1",
     "@zxing/library": "^0.23.0",
     "better-sqlite3": "^12.6.0",

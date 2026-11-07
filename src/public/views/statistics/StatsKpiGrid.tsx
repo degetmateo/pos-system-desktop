@@ -1,5 +1,5 @@
 import React from 'react';
-import { DollarSign, ShoppingBag, MessageCircle, Package } from 'lucide-react';
+import { DollarSign, ShoppingBag, Users, Package } from 'lucide-react';
 import { StatisticsKpisDto } from '../../types/statistics.types';
 import { formatArsFromCents } from '../../components/ImportanceBadge';
 
@@ -26,11 +26,11 @@ export const StatsKpiGrid: React.FC<StatsKpiGridProps> = ({ kpis }) => {
       bg: '#d1fae5',
     },
     {
-      title: 'Mensajes de WhatsApp',
-      value: String(kpis.totalMessagesCount),
-      sub: `${kpis.incomingMessagesCount} recibidos • ${kpis.outgoingMessagesCount} enviados`,
-      detail: `${kpis.activeWhatsappChatsCount} conversaciones con actividad`,
-      icon: <MessageCircle size={22} color="#008069" />,
+      title: 'Cartera de Clientes',
+      value: `${kpis.totalCustomersCount} reg.`,
+      sub: `${kpis.priorityCustomersCount} clientes con compras frecuentes`,
+      detail: 'Base de datos comercial',
+      icon: <Users size={22} color="#0d9488" />,
       bg: '#ccfbf1',
     },
     {

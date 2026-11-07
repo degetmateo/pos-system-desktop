@@ -7,7 +7,6 @@ import { StatsKpiGrid } from './statistics/StatsKpiGrid';
 import { StatsSalesCharts } from './statistics/StatsSalesCharts';
 import { StatsCommercialTables } from './statistics/StatsCommercialTables';
 import { StatsPriceAnalytics } from './statistics/StatsPriceAnalytics';
-import { StatsWhatsappPanel } from './statistics/StatsWhatsappPanel';
 
 const PERIODS = [
   { id: '7d', label: '7 días' },
@@ -52,7 +51,7 @@ export const StatisticsView: React.FC = () => {
         <div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Estadísticas y Analítica</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            Ventas, compras de clientes, variaciones de precios y mensajería de WhatsApp ({data?.period.label || 'Cargando...'})
+            Ventas, compras de clientes y variaciones de precios ({data?.period.label || 'Cargando...'})
           </p>
         </div>
 
@@ -101,7 +100,6 @@ export const StatisticsView: React.FC = () => {
           <StatsSalesCharts salesSeries={data.salesSeries} paymentBreakdown={data.paymentBreakdown} />
           <StatsCommercialTables topCustomers={data.topCustomers} topProducts={data.topProducts} />
           <StatsPriceAnalytics summary={data.productPriceSummary} recentChanges={data.recentPriceChanges} />
-          <StatsWhatsappPanel dailySeries={data.whatsappDailySeries} topContacts={data.whatsappTopContacts} />
         </>
       ) : null}
     </div>

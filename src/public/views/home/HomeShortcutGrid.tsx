@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, FileSpreadsheet, MessageCircle, BarChart3, Package, Users, FileText, Database } from 'lucide-react';
+import { ShoppingCart, FileSpreadsheet, BarChart3, Package, Users, FileText, Database } from 'lucide-react';
 
 interface HomeShortcutGridProps {
   onNavigate: (view: string) => void;
@@ -9,12 +9,11 @@ export const HomeShortcutGrid: React.FC<HomeShortcutGridProps> = ({ onNavigate }
   const shortcuts = [
     { id: 'pos', title: 'Punto de Venta (V1)', desc: 'Facturación estándar por búsqueda o lector de barras', icon: <ShoppingCart size={24} color="#0284c7" /> },
     { id: 'pos-v2', title: 'Nueva Orden V2 (Excel)', desc: 'Planilla rápida con autocompletado y edición de precios', icon: <FileSpreadsheet size={24} color="#059669" /> },
-    { id: 'whatsapp', title: 'WhatsApp', desc: 'Atención al cliente, clientes prioritarios y QR integrado', icon: <MessageCircle size={24} color="#00a884" /> },
-    { id: 'statistics', title: 'Estadísticas', desc: 'Gráficos de ventas, precios, compras de clientes y mensajes', icon: <BarChart3 size={24} color="#7c3aed" /> },
+    { id: 'statistics', title: 'Estadísticas', desc: 'Gráficos de ventas, facturación, compras de clientes y precios', icon: <BarChart3 size={24} color="#7c3aed" /> },
     { id: 'products', title: 'Productos', desc: 'Catálogo, precios y descuentos', icon: <Package size={24} color="#10b981" /> },
-    { id: 'customers', title: 'Clientes', desc: 'Agenda sincronizada con WhatsApp e importancia', icon: <Users size={24} color="#8b5cf6" /> },
+    { id: 'customers', title: 'Clientes', desc: 'Cartera comercial, contactos e importancia', icon: <Users size={24} color="#8b5cf6" /> },
     { id: 'orders', title: 'Órdenes', desc: 'Historial de ventas y comprobantes', icon: <FileText size={24} color="#f59e0b" /> },
-    { id: 'backups', title: 'Mantenimiento', desc: 'Copias de seguridad y base de datos', icon: <Database size={24} color="#64748b" /> },
+    { id: 'backups', title: 'Mantenimiento', desc: 'Copias de seguridad, exportaciones y base de datos', icon: <Database size={24} color="#64748b" /> },
   ];
 
   return (

@@ -18,10 +18,6 @@ export interface StatisticsKpisDto {
   priorityCustomersCount: number;
   totalProductsCount: number;
   priceChangesCount: number;
-  totalMessagesCount: number;
-  incomingMessagesCount: number;
-  outgoingMessagesCount: number;
-  activeWhatsappChatsCount: number;
 }
 
 export interface SalesSeriesPointDto {
@@ -77,26 +73,6 @@ export interface RecentPriceChangeDto {
   createdAt: string;
 }
 
-export interface WhatsappDailyPointDto {
-  date: string;
-  totalCount: number;
-  incomingCount: number;
-  outgoingCount: number;
-}
-
-export interface WhatsappContactStatDto {
-  jid: string;
-  name: string;
-  phone: string | null;
-  customerId: string | null;
-  importance: string;
-  totalMessages: number;
-  incomingCount: number;
-  outgoingCount: number;
-  firstMessageTimestamp: number;
-  lastMessageTimestamp: number;
-}
-
 export interface StatisticsOverviewDto {
   period: { startDate: string | null; endDate: string | null; label: string };
   kpis: StatisticsKpisDto;
@@ -106,7 +82,5 @@ export interface StatisticsOverviewDto {
   topProducts: TopProductStatDto[];
   productPriceSummary: ProductPriceSummaryDto;
   recentPriceChanges: RecentPriceChangeDto[];
-  whatsappDailySeries: WhatsappDailyPointDto[];
-  whatsappTopContacts: WhatsappContactStatDto[];
 }
 

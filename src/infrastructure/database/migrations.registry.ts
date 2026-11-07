@@ -4,6 +4,7 @@ import { migration006WhatsappTables } from './migrations/006-whatsapp-tables.mig
 import { migration007ReconcileWhatsappTables } from './migrations/007-reconcile-whatsapp-tables.migration';
 import { migration008WhatsappCrmAndStats } from './migrations/008-whatsapp-crm-and-stats.migration';
 import { migration009PurgeWhatsappStatusMessages } from './migrations/009-purge-whatsapp-status-messages.migration';
+import { migration010DropWhatsappTables } from './migrations/010-drop-whatsapp-tables.migration';
 
 export function addColumnIfNotExists(db: DatabaseInstance, table: string, col: string, def: string): void {
   const cols = db.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
@@ -116,4 +117,5 @@ export const MIGRATIONS_REGISTRY: IMigration[] = [
   migration007ReconcileWhatsappTables,
   migration008WhatsappCrmAndStats,
   migration009PurgeWhatsappStatusMessages,
+  migration010DropWhatsappTables,
 ];

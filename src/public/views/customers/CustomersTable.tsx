@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, MessageCircle } from 'lucide-react';
+import { Edit2, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Tag } from 'lucide-react';
 import { CustomerDto } from '../../types/api.types';
 import { ImportanceBadge } from '../../components/ImportanceBadge';
 
@@ -44,7 +44,7 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
           <tr>
             <th style={{ cursor: 'pointer', userSelect: 'none' }} onClick={() => onSortChange(sortKey === 'name_asc' ? 'name_desc' : 'name_asc')}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <span>Nombre / Agenda WSP</span>
+                <span>Nombre / Alias</span>
                 {renderSortIcon('name_asc', 'name_desc')}
               </div>
             </th>
@@ -67,8 +67,8 @@ export const CustomersTable: React.FC<CustomersTableProps> = ({
               <td>
                 <div style={{ fontWeight: 600 }}>{c.name}</div>
                 {c.whatsappName && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: '#008069', marginTop: '2px' }}>
-                    <MessageCircle size={12} /> Agendado WSP: <strong>{c.whatsappName}</strong>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    <Tag size={12} /> Alias: <strong>{c.whatsappName}</strong>
                   </div>
                 )}
               </td>

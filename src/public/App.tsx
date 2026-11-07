@@ -11,17 +11,11 @@ import { CustomersView } from './views/CustomersView';
 import { OrdersView } from './views/OrdersView';
 import { PriceListsView } from './views/PriceListsView';
 import { BackupsView } from './views/BackupsView';
-import { WhatsappView } from './views/WhatsappView';
 import { StatisticsView } from './views/StatisticsView';
-import { whatsappBackgroundStore } from './services/whatsapp-background.store';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('home');
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
-
-  React.useEffect(() => {
-    whatsappBackgroundStore.startInBackground();
-  }, []);
 
   React.useEffect(() => {
     if (document.activeElement instanceof HTMLElement) {
@@ -34,7 +28,6 @@ export const App: React.FC = () => {
     switch (currentView) {
       case 'pos': return <PosView onSwitchToV2={() => setCurrentView('pos-v2')} />;
       case 'pos-v2': return <PosV2View onSwitchToV1={() => setCurrentView('pos')} />;
-      case 'whatsapp': return <WhatsappView />;
       case 'statistics': return <StatisticsView />;
       case 'products': return <ProductsView />;
       case 'customers': return <CustomersView />;

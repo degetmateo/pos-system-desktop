@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Download, History, RotateCcw, Wrench } from 'lucide-react';
+import { Database, Download, FileJson, FileSpreadsheet, History, RotateCcw, Wrench } from 'lucide-react';
 import { BackupDto } from '../types/api.types';
 import { ApiClient } from '../services/api.client';
 import { ToastService } from '../services/toast.service';
@@ -56,9 +56,25 @@ export const BackupsView: React.FC = () => {
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Mantenimiento y Respaldo</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Copias de seguridad automáticas, exportación y restauración de datos</p>
         </div>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button className="btn btn-primary" disabled={loading} onClick={handleCreateBackup}><Database size={16} /> Crear Respaldo Ahora</button>
           <a href="/api/options/download-database" download="data.db" className="btn btn-secondary"><Download size={16} /> Descargar data.db</a>
+          <a
+            href="/api/options/export-products-bulk?format=json"
+            download="productos-bulk-import.json"
+            className="btn btn-secondary"
+            title="Exportar catálogo en formato JSON según BULK_PRODUCT_IMPORT_SPEC.md"
+          >
+            <FileJson size={16} /> Exportar Productos (Bulk JSON)
+          </a>
+          <a
+            href="/api/options/export-products-bulk?format=xlsx"
+            download="productos-bulk-import.xlsx"
+            className="btn btn-secondary"
+            title="Exportar catálogo en formato Excel según BULK_PRODUCT_IMPORT_SPEC.md"
+          >
+            <FileSpreadsheet size={16} /> Exportar Productos (Bulk Excel)
+          </a>
           <button className="btn btn-secondary" onClick={handleDefrag} title="Ejecutar VACUUM"><Wrench size={16} /> Optimizar</button>
         </div>
       </div>

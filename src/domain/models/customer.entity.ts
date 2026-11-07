@@ -49,17 +49,6 @@ export class Customer {
     this.updatedAt = props.updatedAt || new Date();
   }
 
-  public withWhatsappContactInfo(whatsappName: string | null, replaceNumericName: boolean): Customer {
-    const cleanWsp = whatsappName?.trim() || this.whatsappName;
-    const nextName = replaceNumericName && cleanWsp ? cleanWsp : this.name;
-    return new Customer({
-      ...this,
-      name: nextName,
-      whatsappName: cleanWsp,
-      updatedAt: new Date(),
-    });
-  }
-
   public withImportance(importance: CustomerImportanceCode | string): Customer {
     return new Customer({ ...this, importance, updatedAt: new Date() });
   }

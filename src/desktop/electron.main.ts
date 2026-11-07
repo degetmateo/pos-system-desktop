@@ -33,22 +33,12 @@ app.whenReady().then(async () => {
   ipcMain.handle('ping', () => 'pong');
   mainWindow = WindowFactory.createMainWindow(path.join(__dirname, 'preload.js'));
 
-  setTimeout(() => {
-    void container?.whatsappAdapter.connectIfSessionExists().catch((err) => {
-      console.error('[WhatsApp] Auto-connect error:', err);
-    });
-  }, 350);
-
   globalShortcut.register('CommandOrControl+Shift+I', () => {
     if (mainWindow) mainWindow.webContents.toggleDevTools();
   });
 }).catch((err) => {
   console.error('Fatal startup error:', err);
   dialog.showErrorBox('Error al iniciar', err?.message || String(err));
-});
-
-app.on('before-quit', () => {
-  void container?.whatsappAdapter.disconnect();
 });
 
 app.on('window-all-closed', () => {

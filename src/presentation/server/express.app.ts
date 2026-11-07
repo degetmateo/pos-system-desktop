@@ -9,7 +9,6 @@ import { BarcodeController } from '../controllers/barcode.controller';
 import { OptionsController } from '../controllers/options.controller';
 import { InfoController } from '../controllers/info.controller';
 import { ListController } from '../controllers/list.controller';
-import { WhatsappController } from '../controllers/whatsapp.controller';
 import { StatisticsController } from '../controllers/statistics.controller';
 
 export interface ExpressAppControllers {
@@ -21,7 +20,6 @@ export interface ExpressAppControllers {
   optionsController: OptionsController;
   infoController: InfoController;
   listController: ListController;
-  whatsappController?: WhatsappController;
   statisticsController?: StatisticsController;
 }
 
@@ -70,7 +68,6 @@ export class ExpressApp {
     this.app.use('/api/options', c.optionsController.router);
     this.app.use('/api/info', c.infoController.router);
     this.app.use('/api/lists', c.listController.router);
-    if (c.whatsappController) this.app.use('/api/whatsapp', c.whatsappController.router);
     if (c.statisticsController) this.app.use('/api/statistics', c.statisticsController.router);
   }
 

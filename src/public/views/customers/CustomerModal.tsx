@@ -62,7 +62,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, customer, 
               <input required type="text" className="input" value={data.name || ''} onChange={(e) => setData({ ...data, name: e.target.value })} />
             </div>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Nombre agendado en WhatsApp</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Nombre de fantasía / Alias</label>
               <input type="text" className="input" placeholder="Ej: Mateo Kiosco" value={data.whatsappName || ''} onChange={(e) => setData({ ...data, whatsappName: e.target.value })} />
             </div>
           </div>
@@ -93,7 +93,7 @@ export const CustomerModal: React.FC<CustomerModalProps> = ({ isOpen, customer, 
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
             <div>
-              <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Teléfono / WhatsApp</label>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600 }}>Teléfono</label>
               <input type="text" className="input" value={data.phone || ''} onChange={(e) => setData({ ...data, phone: e.target.value })} />
             </div>
             <div>
